@@ -15,6 +15,7 @@ import { ExperienceGraph, routeOrigins } from "../ui/graph-view.js";
 import { greedyPath, QGrid, valueLegend } from "../ui/grid-view.js";
 import { Ledger } from "../ui/ledger.js";
 import { LineChart } from "../ui/line-chart.js";
+import { Mission } from "../ui/mission.js";
 import { equation, tex } from "../ui/math.js";
 import { WarehouseScene } from "../ui/scene3d.js";
 import { lessonFooter, lessonHeader, predict, prose, step, wideStep } from "../ui/shell.js";
@@ -461,6 +462,7 @@ export function mount(root) {
         : h("p", { class: "ledger-empty" }, "No transitions yet."),
     );
 
+    mission.update();
     replace(
       challengeStatus,
       caught
@@ -477,9 +479,24 @@ export function mount(root) {
   replace(ledgerSlot, ledger().el);
   methodPicker.select(method);
 
+  const routeLength = (key) => greedyPath(env, runs[key].agent.Q).length - 1;
+  const mission = new Mission({
+    title: "Acting, learning, and two different routes",
+    goal: "See that acting and learning are separate steps, then let both algorithms learn and compare the routes they end up with.",
+    steps: [
+      { text: "Press Step environment three times. The robot moves; learning steps stays the same.", baseline: () => run().envSteps, done: (b) => run().envSteps - b >= 3 },
+      { text: "Press Learn once three times. Each press updates one entry; the right panel shows the computation.", baseline: () => run().agent.learnSteps, done: (b) => run().agent.learnSteps - b >= 3 },
+      { text: "With Q-learning selected, press Run 50 episodes. The shaded line in the graph is its greedy route.", done: () => runs.q_learning.episodes >= 50 },
+      { text: "Select SARSA and press Run 50 episodes. Compare its route.", done: () => runs.sarsa.episodes >= 50 },
+    ],
+    conclusion: () =>
+      `Q-learning's greedy route takes ${routeLength("q_learning")} moves and runs along the ledge; SARSA's takes ${routeLength("sarsa")} and keeps its distance. Both learned from ε-greedy experience. Q-learning's target uses the best next move, so it learns the shortest route as if it would never slip. SARSA's target uses the move it will actually make, including random ones, so it learns that the ledge is risky.`,
+  });
+
   const bench = h(
     "div",
     { class: "bench" },
+    mission.el,
     h(
       "div",
       { class: "toolbar" },

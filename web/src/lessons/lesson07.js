@@ -14,6 +14,7 @@ import { button, h, replace, s, shortcuts, slider } from "../ui/dom.js";
 import { fmt, fmtShort, fmtSigned } from "../ui/format.js";
 import { Ledger } from "../ui/ledger.js";
 import { LineChart } from "../ui/line-chart.js";
+import { Mission } from "../ui/mission.js";
 import { equation, tex } from "../ui/math.js";
 import { lessonFooter, lessonHeader, predict, prose, step, wideStep } from "../ui/shell.js";
 import { extractDef, lineOf } from "../ui/source.js";
@@ -288,7 +289,21 @@ export function mount(root) {
     onInput: (v) => ((n = v), render()),
   });
 
+  const mission = new Mission({
+    title: "Who can learn when?",
+    goal: "Collect part of an episode, try to learn with both methods, then finish the episode and try again.",
+    steps: [
+      { text: "Press Step environment until the episode table has 3 rows.", done: () => episode.length >= 3 || episode.done },
+      { text: "Press TD: learn once. TD updates right away. MC: learn once is greyed out.", baseline: () => td.learnSteps, done: (b) => td.learnSteps > b },
+      { text: "Press Finish episode.", done: () => episode.done },
+      { text: "Press MC: learn once. Now Monte Carlo can learn too.", baseline: () => mc.learnSteps, done: (b) => mc.learnSteps > b },
+    ],
+    conclusion:
+      "TD's target, r + γV(s′), needs one reward and the current guess for the next state, so TD can learn after every step. Monte Carlo's target, the return G, adds up every reward until the end, so it has to wait for the episode to finish. The n-step slider under the table shows the targets in between.",
+  });
+
   function render() {
+    mission.update();
     replace(
       figure,
       chainValues({
@@ -416,6 +431,7 @@ export function mount(root) {
       h(
         "div",
         { class: "bench" },
+        mission.el,
         h(
           "div",
           { class: "toolbar" },

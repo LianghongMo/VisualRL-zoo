@@ -22,10 +22,22 @@ export function valueStrength(q, domain) {
 
 export const inkOn = (q, domain) => (valueStrength(q, domain) > 0.45 ? "#ffffff" : "var(--ink)");
 
+// Colors are mixed here rather than with CSS color-mix(), which some browsers lack: an SVG fill it
+// cannot parse turns black.
+let palette = null;
+function tokenRGB(name, fallback) {
+  const raw = (typeof document !== "undefined" && getComputedStyle(document.documentElement).getPropertyValue(name).trim()) || fallback;
+  const hex = raw.replace("#", "");
+  return [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
+}
+
 export function valueFill(q, domain) {
-  if (!Number.isFinite(q) || q === 0) return "var(--zero)";
-  const t = Math.min(1, Math.log1p(Math.abs(q)) / Math.log1p(domain));
-  return `color-mix(in oklab, ${q < 0 ? "var(--neg)" : "var(--pos)"} ${Math.round(t * 88)}%, var(--zero))`;
+  palette ??= { neg: tokenRGB("--neg", "#16397a"), pos: tokenRGB("--pos", "#5aa9f0"), zero: tokenRGB("--zero", "#f2f5fa") };
+  if (!Number.isFinite(q) || q === 0) return `rgb(${palette.zero.join(",")})`;
+  const t = valueStrength(q, domain);
+  const end = q < 0 ? palette.neg : palette.pos;
+  const mix = palette.zero.map((z, i) => Math.round(z + (end[i] - z) * t));
+  return `rgb(${mix.join(",")})`;
 }
 
 export function valueLegend(domain, label = "Q(s,a)") {

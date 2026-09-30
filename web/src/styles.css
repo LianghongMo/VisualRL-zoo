@@ -2457,3 +2457,138 @@ path.sg-edge.hl,
   opacity: 0.35;
   border-radius: 4px;
 }
+
+.callout.error {
+  border-color: var(--learn);
+  background: var(--learn-wash);
+}
+
+.error-banner {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 50;
+  background: var(--learn);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: var(--step--1);
+}
+
+.error-banner code {
+  color: #fff;
+}
+
+/* ---------- task cards ---------- */
+
+.mission {
+  border: 1.5px solid var(--env);
+  border-radius: 12px;
+  background: var(--paper);
+  padding: 14px 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.mission-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mission-head .grow {
+  flex: 1;
+}
+
+.mission-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--env);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+.mission-goal {
+  color: var(--ink-2);
+  font-size: var(--step--1);
+  max-width: var(--measure);
+}
+
+.mission-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.mission-steps li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  font-size: var(--step-0);
+  color: var(--ink-3);
+}
+
+.mission-mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1.5px solid var(--rule-strong);
+  background: var(--paper);
+}
+
+.mission-steps li.current {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.mission-steps li.current .mission-mark {
+  border-color: var(--env);
+  color: var(--env-ink);
+  background: var(--env-wash);
+}
+
+.mission-steps li.done {
+  color: var(--ink-2);
+}
+
+.mission-steps li.done .mission-mark {
+  background: var(--learn);
+  border-color: var(--learn);
+  color: #fff;
+}
+
+.mission-now {
+  color: var(--env-ink);
+  font-weight: 700;
+}
+
+.mission-result {
+  background: var(--learn-wash);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-size: var(--step--1);
+  max-width: 80ch;
+}
+
+.mission-restart {
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--ink-3);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+}

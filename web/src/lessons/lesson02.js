@@ -11,6 +11,7 @@ import { button, h, replace, shortcuts } from "../ui/dom.js";
 import { ARROWS, fmt } from "../ui/format.js";
 import { Ledger } from "../ui/ledger.js";
 import { LoopDiagram } from "../ui/loop-diagram.js";
+import { Mission } from "../ui/mission.js";
 import { equation } from "../ui/math.js";
 import { WarehouseScene } from "../ui/scene3d.js";
 import { StateGraph, trueEdges } from "../ui/state-graph.js";
@@ -61,6 +62,18 @@ export function mount(root) {
     emptyTitle: "Learning step",
   });
 
+  const mission = new Mission({
+    title: "Watch the two loops",
+    goal: "Collect some experience, then learn from it, and see what each loop changes.",
+    steps: [
+      { text: "Drive to the slow charger: ↑, then → three times, then ↓. Look at the graph: 5 new edges, but every value is still 0.", done: () => graph.terminal.has(w.near) },
+      { text: "Press Learn once five times. Each press moves value one node closer to the dock.", baseline: () => graph.sweeps, done: (b) => graph.sweeps - b >= 5 && graph.V[env.start] > 0 },
+      { text: "Now drive to the fast charger by the short route (↑, → five times, ↑ ↑), then press Learn until nothing changes.", done: () => graph.V[env.start] >= optimum - 1e-9 },
+    ],
+    conclusion: () =>
+      `Driving (the control loop) added edges but changed no value. Learning (the learning loop) changed values but added no edge: each press moved value one edge back, so the dock, 5 edges from the slow charger, needed 5 presses to reach ${fmt(0.9 ** 4, 3)}. It only reached the best possible value, ${fmt(optimum, 3)}, after you drove the edges to the fast charger. Learning can only use the edges that are in the graph.`,
+  });
+
   function reset() {
     graph = new ExperienceGraph({ nStates: env.nStates, nActions: 4, gamma: GAMMA });
     [state] = env.reset();
@@ -70,6 +83,7 @@ export function mount(root) {
     solvedWith = null;
     ledger.reset();
     scene.place("main", state, UP);
+    mission.reset();
     render();
   }
 
@@ -151,6 +165,7 @@ export function mount(root) {
       ),
     );
 
+    mission.update();
     replace(
       challenge,
       solvedWith !== null
@@ -190,11 +205,12 @@ export function mount(root) {
     ),
     wideStep(
       "Experiment",
-      prose("Drive with the arrows (you are the one choosing actions here), or let the robot drive with its current values and 20% random moves. Press Learn once to run one learning step, and watch value travel one edge back."),
+      prose("The graph on the right is the robot's experience graph: only the nodes and edges it has seen. Dashed nodes are places it has never been; the numbers are its values."),
       loop.el,
       h(
         "div",
         { class: "bench" },
+        mission.el,
         h(
           "div",
           { class: "toolbar" },

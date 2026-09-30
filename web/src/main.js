@@ -41,15 +41,60 @@ function topbar() {
   );
 }
 
-function route() {
-  cleanup();
-  const key = location.hash.replace(/^#/, "");
+let current = null;
+
+function currentKey() {
+  try {
+    return location.hash.replace(/^#/, "");
+  } catch {
+    return current ?? "";
+  }
+}
+
+// Show a lesson. Errors are shown on the page instead of leaving it blank.
+function show(key) {
+  try {
+    cleanup();
+  } catch {}
+  cleanup = () => {};
+  current = key;
   const page = ROUTES[key] ?? home;
   const main = h("main", { class: "page" });
   app.replaceChildren(topbar(), main);
-  cleanup = page.mount(main) ?? (() => {});
+  try {
+    cleanup = page.mount(main) ?? (() => {});
+  } catch (err) {
+    console.error(err);
+    main.append(h("div", { class: "callout error" }, h("p", {}, h("strong", {}, "This page failed to load. "), "Please report this message: ", h("code", {}, String(err?.message ?? err)))));
+  }
   window.scrollTo(0, 0);
 }
 
-window.addEventListener("hashchange", route);
-route();
+// In-page links are handled here, not by the browser: inside a sandboxed srcdoc frame (how the
+// page is hosted as an artifact) a plain "#lesson-01" link resolves against the host's URL and
+// navigates the frame away, leaving it blank.
+document.addEventListener("click", (e) => {
+  const a = e.target.closest?.("a[href^='#']");
+  if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  e.preventDefault();
+  const key = a.getAttribute("href").slice(1);
+  try {
+    if (location.hash.replace(/^#/, "") !== key) {
+      history.replaceState?.(null, "", `#${key}`);
+    }
+  } catch {}
+  show(key);
+});
+
+window.addEventListener("hashchange", () => {
+  if (currentKey() !== current) show(currentKey());
+});
+window.addEventListener("error", (e) => showErrorBanner(e.message));
+window.addEventListener("unhandledrejection", (e) => showErrorBanner(String(e.reason?.message ?? e.reason)));
+
+function showErrorBanner(message) {
+  if (document.querySelector(".error-banner")) return;
+  document.body.append(h("div", { class: "error-banner", role: "alert" }, "Something went wrong on this page: ", h("code", {}, message)));
+}
+
+show(currentKey());

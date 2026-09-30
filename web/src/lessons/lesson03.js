@@ -13,6 +13,7 @@ import { button, h, replace, segmented, slider } from "../ui/dom.js";
 import { fmt } from "../ui/format.js";
 import { LineChart } from "../ui/line-chart.js";
 import { LoopDiagram } from "../ui/loop-diagram.js";
+import { Mission } from "../ui/mission.js";
 import { equation, tex } from "../ui/math.js";
 import { WarehouseScene } from "../ui/scene3d.js";
 import { StateGraph, trueEdges } from "../ui/state-graph.js";
@@ -103,17 +104,30 @@ export function mount(root) {
   let offGraph = null;
   let deployed = [];
   let challengeDone = null;
+  const driven = { pessimistic: null, optimistic: null }; // return of the last plan driven with each assumption
+  const dataOnly = offlineGraph(env, data, PESSIMISTIC, 0); // for drawing the dataset before any plan
   const offScene = new WarehouseScene(env, { robots: [{ id: "main", color: "--series-2" }], goalLabels: w.signs, caption: "Deploying the policy planned from the dataset. Nothing is learned while it drives." });
   const offView = new StateGraph(env, { goalLabels: w.labels });
   const offLoop = new LoopDiagram({ offline: true });
   const offNote = h("div", { class: "callout" });
   const offChallenge = h("div", { class: "callout" });
-  const assumedSlider = slider({ id: "l03-assumed", label: "assumed value of an untried move", min: 0, max: 10, step: 0.01, value: assumed, format: (v) => v.toFixed(2), onInput: (v) => ((assumed = v), planOffline()) });
+  const assumedSlider = slider({ id: "l03-assumed", label: "assumed value of an untried move", min: 0, max: 10, step: 0.01, value: assumed, format: (v) => v.toFixed(2), onInput: (v) => ((assumed = v), offGraph && planOffline()) });
+  const offMission = new Mission({
+    title: "Learn from a fixed dataset",
+    goal: "Plan a route using only episodes A and B, drive it, and compare two assumptions about the moves nobody tried.",
+    steps: [
+      { text: "With “Leave untried moves out” selected, press Plan on this data and drive.", done: () => driven.pessimistic !== null },
+      { text: "Select “Assume a value for untried moves” and press Plan on this data and drive again.", done: () => driven.optimistic !== null },
+    ],
+    conclusion: () =>
+      `Trusting only the data, the plan returned ${fmt(driven.pessimistic ?? 0, 2)}: better than episode A (${fmt(returns.A, 2)}) and episode B (${fmt(returns.B, 2)}), because it joined A's start to B's end where they cross. That is stitching. Assuming untried moves are worth ${fmt(assumed, 2)}, the plan returned ${fmt(driven.optimistic ?? 0, 2)}: it chose a move nobody had tried, and that move goes over the ledge. That is the coverage problem: offline, nothing can check a move the data does not contain.`,
+  });
 
   function planOffline() {
     offGraph = offlineGraph(env, data, offMode === "pessimistic" ? PESSIMISTIC : OPTIMISTIC, assumed);
     deployed = deploy(env, offGraph);
     const got = discounted(deployed);
+    driven[offMode] = got;
     results[offMode === "pessimistic" ? "offPess" : "offOpt"] = got;
     if (offMode === "optimistic" && Math.abs(assumed - 10) < 1e-9) results.offOpt10 = got;
     offScene.playSteps("main", deployed.map((t) => ({ from: t.state, to: t.next_state, action: t.action, fellInto: t.fell_into })), { stepMs: 320 });
@@ -124,6 +138,15 @@ export function mount(root) {
   }
 
   function renderOffline() {
+    if (!offGraph) {
+      const edges = allEdges.filter((e) => inA.has(`${e.from},${e.action}`) || inB.has(`${e.from},${e.action}`)).map((e) => ({ ...e, role: inB.has(`${e.from},${e.action}`) ? "b" : "a" }));
+      const stubs = {};
+      for (const s of dataOnly.visited) if (!dataOnly.terminal.has(s)) stubs[s] = dataOnly.untried(s);
+      offView.render({ edges, stubs, known: new Set([...dataOnly.visited, ...dataOnly.terminal]), robot: env.start });
+      replace(offNote, h("p", {}, h("strong", {}, "These two episodes are all the robot has. "), `Episode A (light blue) reached the slow charger, return ${fmt(returns.A, 2)}. Episode B (dark blue) reached the fast charger by a detour, return ${fmt(returns.B, 2)}. The dashed stubs are moves nobody tried. Press Plan on this data and drive.`));
+      offMission.update();
+      return;
+    }
     const walked = new Set(deployed.map((t) => `${t.state},${t.action}`));
     const edges = [];
     for (const e of allEdges) {
@@ -164,6 +187,7 @@ export function mount(root) {
             ],
       ),
     );
+    offMission.update();
   }
 
   const offPicker = segmented(
@@ -171,7 +195,18 @@ export function mount(root) {
       { value: "pessimistic", label: "Leave untried moves out" },
       { value: "optimistic", label: "Assume a value for untried moves" },
     ],
-    { value: offMode, label: "What to assume about untried moves", onChange: (v) => ((offMode = v), (assumedSlider.hidden = v !== "optimistic"), planOffline()) },
+    {
+      value: offMode,
+      label: "What to assume about untried moves",
+      onChange: (v) => {
+        offMode = v;
+        assumedSlider.hidden = v !== "optimistic";
+        offGraph = null; // a new assumption needs a new plan
+        deployed = [];
+        offScene.place("main", env.start, UP);
+        renderOffline();
+      },
+    },
   );
   assumedSlider.hidden = true;
 
@@ -217,13 +252,28 @@ export function mount(root) {
     return done;
   }
 
+  const onlineResult = { random: null, optimistic: null }; // greedy return after at least 10 episodes
   function runEpisodes(n) {
     const target = onEpisodes + n;
     let guard = 0;
     while (onEpisodes < target && guard++ < 5000) onlineStep(false);
     onScene.place("main", onState, UP);
+    if (onEpisodes >= 10) onlineResult[onMode] = { ret: discounted(deploy(env, onGraph, 30)), steps: onSteps, fast: onGraph.terminal.has(w.far) };
     renderOnline();
   }
+  const onMission = new Mission({
+    title: "Collect your own data",
+    goal: "Start from an empty graph twice, with two ways of exploring, and compare what each robot ends up knowing.",
+    steps: [
+      { text: "With “Trust what is seen, 20% random moves” selected, press Run 10 episodes.", done: () => onlineResult.random !== null },
+      { text: "Select “Optimistic about untried moves” (a fresh robot) and press Run 10 episodes.", done: () => onlineResult.optimistic !== null },
+    ],
+    conclusion: () => {
+      const r = onlineResult.random;
+      const o = onlineResult.optimistic;
+      return `After 10 episodes, the randomly exploring robot's best route returns ${fmt(r?.ret ?? 0, 2)} (${r?.fast ? "it did find the fast charger" : "it never found the fast charger"}); the optimistic robot's returns ${fmt(o?.ret ?? 0, 2)} (${o?.fast ? "it found the fast charger" : "it has not found the fast charger"}), and the best possible is ${fmt(optimum, 2)}. Online, the core problem is exploration: the graph only grows where the robot goes. Optimism, the assumption that failed offline, works here, because every untried move it is lured to gets tried and corrected. The chart below averages 20 robots of each kind.`;
+    },
+  });
 
   function renderOnline() {
     const known = new Set([...onGraph.visited, ...onGraph.terminal]);
@@ -247,6 +297,7 @@ export function mount(root) {
       h("span", { class: "counter" }, "greedy return from the dock", h("b", {}, `${fmt(now, 3)} of ${fmt(optimum, 3)}`)),
     );
     const farKnown = onGraph.terminal.has(w.far);
+    onMission.update();
     replace(
       onNote,
       h(
@@ -351,7 +402,8 @@ export function mount(root) {
       h(
         "div",
         { class: "bench" },
-        h("div", { class: "toolbar" }, offPicker, assumedSlider, h("span", { class: "spacer" }), button("Drive the plan again", { onClick: planOffline })),
+        offMission.el,
+        h("div", { class: "toolbar" }, offPicker, assumedSlider, h("span", { class: "spacer" }), button("Plan on this data and drive", { kind: "learn", onClick: planOffline })),
         h("div", { class: "bench-grid part1-grid" }, offScene.el, h("div", { class: "figure" }, offView.el, h("div", { class: "key" },
           h("span", { class: "key-item" }, h("span", { class: "key-swatch data-a" }), `episode A (return ${fmt(returns.A, 2)})`),
           h("span", { class: "key-item" }, h("span", { class: "key-swatch data-b" }), `episode B (return ${fmt(returns.B, 2)})`),
@@ -371,6 +423,7 @@ export function mount(root) {
       h(
         "div",
         { class: "bench" },
+        onMission.el,
         h("div", { class: "toolbar" }, onPicker, h("span", { class: "spacer" }), button("Step", { kind: "env", onClick: () => (onlineStep(true), renderOnline()) }), button("Run 1 episode", { onClick: () => runEpisodes(1) }), button("Run 10 episodes", { onClick: () => runEpisodes(10) }), button("Start over", { kind: "ghost", onClick: resetOnline })),
         onCounters,
         h("div", { class: "bench-grid part1-grid" }, onScene.el, h("div", { class: "figure" }, onView.el, h("div", { class: "key" },
@@ -401,7 +454,8 @@ export function mount(root) {
     lessonFooter("03"),
   );
 
-  planOffline();
+  offScene.place("main", env.start, UP);
+  renderOffline();
   resetOnline();
   renderSummary();
   const comparison = setTimeout(runComparison, 50); // fills the Online row of the summary

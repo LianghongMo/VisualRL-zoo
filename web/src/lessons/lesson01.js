@@ -8,6 +8,7 @@ import { codeBlock } from "../ui/code.js";
 import { button, h, replace, shortcuts, slider } from "../ui/dom.js";
 import { ARROWS, fmt, fmtShort } from "../ui/format.js";
 import { LineChart } from "../ui/line-chart.js";
+import { Mission } from "../ui/mission.js";
 import { equation, tex } from "../ui/math.js";
 import { WarehouseScene } from "../ui/scene3d.js";
 import { StateGraph, trueEdges } from "../ui/state-graph.js";
@@ -59,6 +60,7 @@ export function mount(root) {
   let walk = [];
   let [state] = env.reset();
   let solved = false;
+  const finished = []; // completed walks: { goal, G, gamma }
 
   const scene = new WarehouseScene(env, { robots: [{ id: "main", color: "--series-2" }], goalLabels: w.signs, caption: "Drive with the buttons or the arrow keys · drag to look around" });
   const graph = new StateGraph(env, { goalLabels: w.labels });
@@ -82,6 +84,7 @@ export function mount(root) {
     if (walk.length && walk[walk.length - 1].terminated) return;
     const [next, reward, terminated, , info] = env.step(a);
     walk.push({ from: state, action: a, to: next, reward, terminated, fell: info.fell_into });
+    if (terminated) finished.push({ goal: next, G: walk.reduce((sum, e, t) => sum + gamma ** t * e.reward, 0), gamma });
     scene.move("main", { from: state, to: next, fellInto: info.fell_into, action: a }, { duration: 260 });
     state = next;
     render();
@@ -93,6 +96,23 @@ export function mount(root) {
     scene.place("main", state, UP);
     render();
   }
+
+  const reached = (goal) => finished.find((f) => f.goal === goal);
+  const mission = new Mission({
+    title: "Compare the two chargers",
+    goal: "Drive both walks, then let the page show you the best edge out of every node.",
+    steps: [
+      { text: "Drive to the slow charger (+1): press ↑, then → three times, then ↓.", done: () => !!reached(w.near) },
+      { text: "Press Back to the dock. Drive to the fast charger (+10): ↑, → five times, then ↑ twice.", done: () => !!reached(w.far) },
+      { text: "Tick “show the optimal policy and its values”.", done: () => showOptimal },
+      { text: "Drag γ below 0.46 and watch the dark arrows change direction.", done: () => showOptimal && gamma < 0.4642 },
+    ],
+    conclusion: () => {
+      const slow = reached(w.near);
+      const fast = reached(w.far);
+      return `Your walk to the slow charger returned ${fmt(slow?.G ?? 0, 3)}; the walk to the fast charger ${fmt(fast?.G ?? 0, 3)} (at γ = ${(fast?.gamma ?? 0.9).toFixed(2)}). The far charger wins at γ = 0.9 despite 3 extra edges. The dark arrows are the optimal policy: one best edge per node, together a tree that leads to the best charger. Below γ ≈ 0.464 the whole tree turns towards the slow charger: the discount alone decides which walk is best.`;
+    },
+  });
 
   function render() {
     const { V, Q } = optimalValues(env.model(), gamma);
@@ -147,6 +167,7 @@ export function mount(root) {
           : [h("strong", {}, `The robot is at ${cellName(env, state, w)}. `), "Every button is one edge out of this node. Moving costs nothing, the chargers end the walk, and the ledge costs −10 and sends the robot back to the dock."],
       ),
     );
+    mission.update();
 
     const cross = crossing(nearWalk, farWalk);
     const grid = Array.from({ length: 101 }, (_, i) => i / 100);
@@ -215,10 +236,11 @@ export function mount(root) {
     ),
     wideStep(
       "Experiment",
-      prose("Drive the robot. Each move follows one edge of the graph on the right, and the table adds up the walk's return. Then show the optimal policy: for every node, the best edge out of it."),
+      prose("The 3D view and the graph on the right show the same room: every button press follows one edge of the graph, and the table adds up the walk's return."),
       h(
         "div",
         { class: "bench" },
+        mission.el,
         h("div", { class: "toolbar" }, pad, button("Back to the dock", { kind: "ghost", onClick: backToDock }), h("span", { class: "spacer" }), h("label", { class: "toggle", for: "l01-opt" }, optimalToggle, "show the optimal policy and its values"), h("div", { style: { minWidth: "220px" } }, gammaSlider)),
         h("div", { class: "bench-grid part1-grid" }, scene.el, h("div", { class: "figure" }, graph.el, h("div", { class: "key" }, h("span", { class: "key-item" }, h("span", { class: "key-swatch next" }), "the walk so far"), h("span", { class: "key-item" }, h("span", { class: "key-swatch best-edge" }), "best edge out of each node (optimal policy)"), h("span", { class: "key-item" }, h("span", { class: "key-swatch fall-edge" }), "over the ledge, back to the dock")))),
         status,

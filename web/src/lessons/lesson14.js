@@ -9,6 +9,7 @@ import { ARROWS, fmt, fmtSigned } from "../ui/format.js";
 import { greedyPath, valueLegend } from "../ui/grid-view.js";
 import { Ledger } from "../ui/ledger.js";
 import { LineChart } from "../ui/line-chart.js";
+import { Mission } from "../ui/mission.js";
 import { equation, tex } from "../ui/math.js";
 import { PolicyGrid } from "../ui/policy-grid.js";
 import { RatioScatter } from "../ui/ratio-scatter.js";
@@ -404,6 +405,7 @@ export function mount(root) {
       yDomain: [-1000, 0],
     });
 
+    mission.update();
     replace(
       challenge,
       caughtClipped
@@ -419,9 +421,24 @@ export function mount(root) {
 
   const unbind = shortcuts({ c: actions.collect, g: actions.step });
 
+  const mission = new Mission({
+    title: "One PPO iteration, step by step",
+    goal: "Collect a batch with the current policy, then learn from it one minibatch at a time, and watch which samples PPO stops pushing.",
+    steps: [
+      { text: "Press Collect rollout. The robot acts for 1024 steps; nothing is learned.", done: () => run.envSteps >= 1024 },
+      { text: "Press Gradient step once. Before it, every dot in the scatter plot sat at ratio 1.", baseline: () => run.agent.learnSteps, done: (b) => run.agent.learnSteps > b },
+      { text: "Press Gradient step five more times. The dots spread out; hollow ones are clipped.", baseline: () => run.agent.learnSteps, done: (b) => run.agent.learnSteps - b >= 5 },
+      { text: "Click a hollow dot in a shaded corner to see why its gradient is zero.", done: () => caughtClipped !== null },
+      { text: "Press Train 10 iterations and watch the robot's route in the 3D view.", baseline: () => run.version, done: (b) => run.version - b >= 10 },
+    ],
+    conclusion: () =>
+      `PPO acts first and learns afterwards, reusing one batch for several epochs. As soon as the policy moves, the ratio r = π_θ/π_old says how far it has moved for each sample; once r leaves [1 − ε, 1 + ε] in the direction the sample pushes, that sample's gradient is zero. After ${run.version} iterations the robot ${run.history.length && run.history[run.history.length - 1].reached ? "reaches the charger in its rollouts" : "is still learning to reach the charger"}.`,
+  });
+
   const bench = h(
     "div",
     { class: "bench" },
+    mission.el,
     h(
       "div",
       { class: "toolbar" },
