@@ -1664,3 +1664,146 @@ input[type="range"] {
   max-width: 100%;
   margin-inline: auto;
 }
+
+.cell-wall {
+  fill: color-mix(in oklab, var(--ink) 22%, var(--paper));
+}
+
+/* ---------- experience graph ---------- */
+
+.g-wall {
+  fill: color-mix(in oklab, var(--ink) 6%, var(--sheet));
+}
+
+.g-hazard {
+  fill: color-mix(in oklab, var(--neg) 12%, var(--sheet));
+}
+
+.g-node {
+  stroke: var(--ink);
+  stroke-width: 1.2;
+}
+
+.g-node.unvisited {
+  fill: var(--rule-strong);
+  stroke: none;
+}
+
+.g-edge line,
+.g-edge path,
+circle.g-edge {
+  stroke: color-mix(in oklab, var(--ink-3) 75%, transparent);
+}
+
+.g-edge polygon {
+  fill: var(--ink-3);
+}
+
+.g-edge.fall,
+path.g-edge.fall {
+  stroke: var(--neg);
+  stroke-dasharray: 4 3;
+  opacity: 0.55;
+}
+
+.g-edge.hl line,
+.g-edge.hl path,
+circle.g-edge.hl,
+path.g-edge.hl {
+  stroke: var(--learn);
+  opacity: 1;
+}
+
+.g-edge.hl polygon {
+  fill: var(--learn);
+}
+
+.g-hl-from {
+  fill: none;
+  stroke: var(--learn);
+  stroke-width: 2.5;
+}
+
+.g-hl-to {
+  fill: none;
+  stroke: var(--learn);
+  stroke-width: 2;
+  stroke-dasharray: 3 2.5;
+}
+
+.g-mark {
+  fill: var(--ink);
+  font-family: var(--font-display);
+  font-variation-settings: "CASL" 1;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.key-swatch.node {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1.2px solid var(--ink);
+  background: var(--zero);
+}
+
+.key-swatch.edge {
+  height: 0;
+  border-top: 2px solid var(--ink-3);
+  border-radius: 0;
+}
+
+.key-swatch.fall {
+  height: 0;
+  border-top: 2px dashed var(--neg);
+  border-radius: 0;
+}
+
+/* ---------- 3D scene ---------- */
+
+.scene3d {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 20%, var(--sheet), var(--paper));
+  border: 1px solid var(--rule);
+  min-height: 120px;
+}
+
+.scene3d canvas {
+  display: block;
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.scene3d canvas:active {
+  cursor: grabbing;
+}
+
+.scene3d-caption {
+  position: absolute;
+  left: 12px;
+  bottom: 8px;
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+
+.scene3d-fallback {
+  padding: 24px 16px;
+  font-size: var(--step--1);
+  color: var(--ink-2);
+}
+
+.view-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.step-body > *,
+.bench > *,
+.figure > * {
+  min-width: 0;
+}

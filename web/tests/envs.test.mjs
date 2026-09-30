@@ -71,3 +71,16 @@ test("on the cliff, Q-learning walks the edge and SARSA keeps a margin", () => {
   const safe = greedyReturn(env, sarsa.Q);
   assert.ok(safe < -13 && safe > -30, `SARSA greedy return ${safe}`);
 });
+
+test("the warehouse has exactly the cliff dynamics", async () => {
+  const { optimalValues } = await import("../src/rl/tabular/dp.js");
+  const cliff = GridWorld.cliff();
+  const warehouse = GridWorld.warehouse();
+  const toW = (s) => warehouse.toState(...cliff.toCell(s).map((x) => x + 1));
+  const Pc = cliff.model().P;
+  const Pw = warehouse.model().P;
+  for (let s = 0; s < cliff.nStates; s++) {
+    for (let a = 0; a < 4; a++) assert.deepEqual(Pw[toW(s)][a], Pc[s][a].map(([p, s2, r, d]) => [p, toW(s2), r, d]));
+  }
+  assert.equal(optimalValues(warehouse.model(), 1).V[warehouse.start], -13);
+});

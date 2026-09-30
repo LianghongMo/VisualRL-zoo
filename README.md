@@ -38,6 +38,8 @@ Phase 1 (core tabular system) is in progress.
 | `visualrl/reference.py`: exact $V^\pi$, $V^*$, $Q^*$ from the model (for the visualizer only) | done |
 | `web/src/rl`: the same tabular algorithms in JavaScript for the browser, checked against Python traces | done |
 | Lessons 02 (return and discounting), 08 (Monte Carlo vs TD), 09 (SARSA vs Q-learning) | done |
+| `visualrl/envs/maze_maps.json`: maps in Gymnasium-Robotics PointMaze format, shared by Python and the web; `GridWorld.from_maze_map`, `GridWorld.warehouse()` | done |
+| One robot world: 3D warehouse view (Three.js) and an experience graph (visited states, observed transitions, stitched routes), piloted in lesson 09 | in progress |
 | Lessons 01, 03–07, 10–16 | planned |
 
 ```bash
@@ -51,6 +53,8 @@ npm test                                 # JavaScript engine + parity with Pytho
 npm run dev                              # lessons on http://localhost:8000, rebuilt on change
 npm run build                            # writes docs/index.html
 ```
+
+**One world for every lesson.** The lessons are staged in a warehouse where a delivery robot drives between a dock and a charger. The maps use the PointMaze `maze_map` format, so the discrete lessons (one state per cell, exact $V^*$ and $Q^*$) and later continuous-control lessons (PointMaze, AntMaze, and their D4RL/Minari datasets for offline RL) share the same layouts. The 3D view only shows behavior: a robot gliding between two cells is one discrete environment step, and all numbers stay in the 2D views. The experience graph treats the MDP as a graph (states as nodes, observed transitions as edges), which is how Part I will introduce trajectories, coverage, and trajectory stitching.
 
 The Python package lives in `visualrl/` (so `envs/`, `core/`, `algorithms/` in the structure below are `visualrl/envs/`, `visualrl/core/`, ...). The lessons live in `web/src/lessons/`, the shared visual components in `web/src/ui/`.
 

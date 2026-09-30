@@ -4,7 +4,19 @@
 //   C cliff: pays cliffReward and sends the agent back to the start
 //
 // Cell (r, c) is state r * width + c. Actions: 0 up, 1 right, 2 down, 3 left.
+import MAZE_FILE from "../../../../visualrl/envs/maze_maps.json" with { type: "json" };
 import { Rng } from "../rng.js";
+
+// Maps shared with Python (visualrl/envs/maze_maps.json), in Gymnasium-Robotics PointMaze format.
+export const MAZE_MAPS = Object.fromEntries(Object.entries(MAZE_FILE).filter(([k]) => !k.startsWith("_")));
+const MAZE_CELLS = { 1: "#", 0: ".", r: "S", g: "G", h: "C", c: "." };
+
+export function mazeLayout(mazeMap, { start = null, goal = null } = {}) {
+  const rows = mazeMap.map((row) => row.map((cell) => MAZE_CELLS[cell]));
+  if (start) rows[start[0]][start[1]] = "S";
+  if (goal) rows[goal[0]][goal[1]] = "G";
+  return rows.map((row) => row.join(""));
+}
 
 export class GridWorld {
   static ACTION_NAMES = ["up", "right", "down", "left"];
@@ -47,6 +59,15 @@ export class GridWorld {
   static cliff(options = {}) {
     const layout = ["............", "............", "............", "SCCCCCCCCCCG"];
     return new GridWorld(layout, { stepReward: -1, goalReward: -1, cliffReward: -100, ...options });
+  }
+
+  static fromMazeMap(mazeMap, { start = null, goal = null, ...options } = {}) {
+    return new GridWorld(mazeLayout(mazeMap, { start, goal }), options);
+  }
+
+  // The cliff as a warehouse: dock S, charger G, a loading ledge in between. Same dynamics as cliff().
+  static warehouse(options = {}) {
+    return GridWorld.fromMazeMap(MAZE_MAPS.warehouse_ledge, { stepReward: -1, goalReward: -1, cliffReward: -100, ...options });
   }
 
   toState(row, col) {

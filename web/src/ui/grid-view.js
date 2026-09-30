@@ -53,8 +53,9 @@ function arrow(cx, cy, dir, { length = C * 0.3, start = 0, color = "var(--ink)",
 }
 
 export class QGrid {
-  constructor(env, { domain = 100, plain = false } = {}) {
+  constructor(env, { domain = 100, plain = false, hazardLabel = null } = {}) {
     this.env = env;
+    this.hazardLabel = hazardLabel;
     this.domain = domain;
     this.plain = plain;
     this.width = env.width * C + 2 * PAD;
@@ -104,6 +105,10 @@ export class QGrid {
       const [r, c] = env.toCell(st);
       const x = PAD + c * C;
       const y = PAD + r * C;
+      if (env.walls.includes(st)) {
+        cells.push(s("rect", { x, y, width: C, height: C, class: "cell-wall" }));
+        continue;
+      }
       if (env.cliffs.includes(st)) {
         cells.push(s("rect", { x, y, width: C, height: C, class: "cell-cliff" }));
         continue;
@@ -149,7 +154,7 @@ export class QGrid {
             class: "cliff-label",
             "text-anchor": "middle",
           },
-          `The cliff · ${fmt(env.cliffReward, 0)} and back to S`,
+          this.hazardLabel ?? `The cliff · ${fmt(env.cliffReward, 0)} and back to S`,
         )
       : null;
 
@@ -198,7 +203,7 @@ export class QGrid {
 
     const hits = [];
     for (let st = 0; st < env.nStates; st++) {
-      if (env.cliffs.includes(st) || env.goals.includes(st)) continue;
+      if (env.cliffs.includes(st) || env.goals.includes(st) || env.walls.includes(st)) continue;
       const [r, c] = env.toCell(st);
       const hit = s("rect", { x: PAD + c * C, y: PAD + r * C, width: C, height: C, class: "hit", tabindex: this.plain ? null : "-1" });
       if (Q && !this.plain) {

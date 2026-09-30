@@ -4,10 +4,10 @@ export const PARTS = [
     part: "Part I",
     title: "What is reinforcement learning?",
     lessons: [
-      { id: "01", title: "Agent and Environment", about: "State, action, reward, transition, episode, trajectory." },
+      { id: "01", title: "The Control Loop", about: "A robot, a warehouse, a controller: state, action, reward, and the loop that connects them." },
       { id: "02", title: "Reward, Return, and Discounting", about: "Drag γ and watch a near small reward beat a far large one.", ready: true },
-      { id: "03", title: "Policies and Trajectories", about: "One policy, many trajectories, a visitation heatmap." },
-      { id: "04", title: "Exploration and Exploitation", about: "Greedy vs ε-greedy on a multi-armed bandit." },
+      { id: "03", title: "Policies, Trajectories, and the State Graph", about: "An MDP is a graph: a trajectory is a walk, a policy picks out-edges, experience covers part of it." },
+      { id: "04", title: "Where the Data Comes From", about: "Behavior vs target policy: on-policy, off-policy, online, offline, and exploration." },
     ],
   },
   {
@@ -24,7 +24,7 @@ export const PARTS = [
     part: "Part III",
     title: "Control",
     lessons: [
-      { id: "09", title: "SARSA vs Q-learning", about: "Behavior action vs target action on the cliff.", ready: true },
+      { id: "09", title: "SARSA vs Q-learning", about: "A warehouse robot at a loading ledge: behavior action vs target action, and an experience graph.", ready: true },
       { id: "10", title: "On-policy, Off-policy, and Replay", about: "A visible replay buffer and the minibatches drawn from it." },
     ],
   },

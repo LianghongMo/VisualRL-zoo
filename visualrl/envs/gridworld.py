@@ -1,12 +1,31 @@
 from __future__ import annotations
 
+import json
 from collections import defaultdict
+from importlib.resources import files
 
 import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 
 from visualrl.envs.model import TabularModel
+
+# Maps shared with the web lessons, in Gymnasium-Robotics PointMaze format (see the file's "_format").
+MAZE_MAPS = {k: v for k, v in json.loads(files("visualrl.envs").joinpath("maze_maps.json").read_text()).items() if not k.startswith("_")}
+_MAZE_CELLS = {1: "#", 0: ".", "r": "S", "g": "G", "h": "C", "c": "."}
+
+
+def maze_layout(maze_map, start: tuple[int, int] | None = None, goal: tuple[int, int] | None = None) -> list[str]:
+    """Turn a PointMaze `maze_map` into a GridWorld text layout.
+
+    `start` and `goal` (row, col) place S and G on maps that do not mark them.
+    """
+    rows = [[_MAZE_CELLS[cell] for cell in row] for row in maze_map]
+    if start is not None:
+        rows[start[0]][start[1]] = "S"
+    if goal is not None:
+        rows[goal[0]][goal[1]] = "G"
+    return ["".join(row) for row in rows]
 
 
 class GridWorld(gym.Env):
@@ -79,6 +98,20 @@ class GridWorld(gym.Env):
         ]
         kwargs = {"step_reward": -1.0, "goal_reward": -1.0, "cliff_reward": -100.0, **kwargs}
         return cls(layout, **kwargs)
+
+    @classmethod
+    def from_maze_map(cls, maze_map, start=None, goal=None, **kwargs) -> "GridWorld":
+        """A GridWorld on a PointMaze map: one state per maze cell, so the discrete
+        lessons and the continuous PointMaze/AntMaze tasks share the same layout."""
+        return cls(maze_layout(maze_map, start, goal), **kwargs)
+
+    @classmethod
+    def warehouse(cls, **kwargs) -> "GridWorld":
+        """The cliff task as a warehouse: a robot drives from the dock S to the charger G
+        along the edge of a loading ledge. Same dynamics and rewards as `cliff()`, with
+        walls around the floor instead of the grid boundary."""
+        kwargs = {"step_reward": -1.0, "goal_reward": -1.0, "cliff_reward": -100.0, **kwargs}
+        return cls.from_maze_map(MAZE_MAPS["warehouse_ledge"], **kwargs)
 
     @classmethod
     def simple(cls, **kwargs) -> "GridWorld":

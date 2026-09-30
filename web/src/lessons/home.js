@@ -86,6 +86,11 @@ export function mount(root) {
           {},
           "Values drawn with a dashed line are reference quantities computed from the environment's model. The learning agent never sees them.",
         ),
+        h(
+          "p",
+          {},
+          "The lessons share one world: a delivery robot in a warehouse. Its maps use the same format as the PointMaze and AntMaze tasks of Gymnasium-Robotics, so the discrete lessons and the later continuous-control ones run on the same layouts. In the 3D view the robot glides between cells, but each glide is one discrete environment step.",
+        ),
       ),
     ),
   );
