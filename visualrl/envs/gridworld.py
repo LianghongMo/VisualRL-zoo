@@ -40,8 +40,9 @@ class GridWorld(gym.Env):
     agent where it is. With probability `slip` a uniformly random action is
     executed instead of the chosen one.
 
-    Every move pays `step_reward`, except a move into a goal (`goal_reward`)
-    or into a cliff (`cliff_reward`).
+    Every move pays `step_reward`, except a move into a goal (`goal_reward`,
+    or `goal_rewards[(row, col)]` for goals that pay differently) or into a
+    cliff (`cliff_reward`).
     """
 
     ACTION_NAMES = ("up", "right", "down", "left")
@@ -56,6 +57,7 @@ class GridWorld(gym.Env):
         cliff_reward: float = -100.0,
         slip: float = 0.0,
         max_steps: int | None = None,
+        goal_rewards: dict[tuple[int, int], float] | None = None,
     ) -> None:
         self.layout = [row for row in layout]
         self.height = len(self.layout)
@@ -75,6 +77,7 @@ class GridWorld(gym.Env):
         self.cliffs = sorted(self.to_state(*rc) for rc, ch in cells.items() if ch == "C")
         self.step_reward = float(step_reward)
         self.goal_reward = float(goal_reward)
+        self.goal_rewards = {self.to_state(*rc): float(r) for rc, r in (goal_rewards or {}).items()}
         self.cliff_reward = float(cliff_reward)
         self.slip = float(slip)
         self.max_steps = max_steps
@@ -114,6 +117,14 @@ class GridWorld(gym.Env):
         return cls.from_maze_map(MAZE_MAPS["warehouse_ledge"], **kwargs)
 
     @classmethod
+    def charging_room(cls, **kwargs) -> "GridWorld":
+        """The world of Part I. A slow charger next to the dock pays +1 after 5 moves, a fast
+        charger at the far end +10 after 8 moves; the ledge in between costs −10 and sends the
+        robot back to the dock. Moving costs nothing, so only the discount decides."""
+        kwargs = {"step_reward": 0.0, "cliff_reward": -10.0, "goal_rewards": {(1, 6): 10.0, (4, 4): 1.0}, **kwargs}
+        return cls.from_maze_map(MAZE_MAPS["charging_room"], **kwargs)
+
+    @classmethod
     def simple(cls, **kwargs) -> "GridWorld":
         """A 5x5 room with two walls and a +1 goal in the corner."""
         layout = [
@@ -139,7 +150,7 @@ class GridWorld(gym.Env):
             r, c = row, col
         next_state = self.to_state(r, c)
         if next_state in self.goals:
-            return next_state, self.goal_reward, True
+            return next_state, self.goal_rewards.get(next_state, self.goal_reward), True
         if next_state in self.cliffs:
             return self.start, self.cliff_reward, False
         return next_state, self.step_reward, False

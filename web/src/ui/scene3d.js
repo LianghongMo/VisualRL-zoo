@@ -162,8 +162,9 @@ class Robot {
 
 export class WarehouseScene {
   // robots: [{ id, color: "--series-2", offset: [dx, dz] }]; offsets keep robots on the same cell apart
-  constructor(env, { robots = [{ id: "main", color: "--series-2" }], caption } = {}) {
+  constructor(env, { robots = [{ id: "main", color: "--series-2" }], caption, goalLabels = {} } = {}) {
     this.env = env;
+    this.goalLabels = goalLabels;
     this.el = h("div", { class: "scene3d" });
     this.tweens = [];
     this.trails = new Map();
@@ -304,16 +305,17 @@ export class WarehouseScene {
       world.add(pad);
       const label = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.4), new THREE.MeshBasicMaterial({ transparent: true }));
       label.rotation.x = -Math.PI / 2;
-      // A sign on top of the wall in front of the pad, where no robot drives.
+      // A sign on top of a wall next to the pad (in front if possible), where no robot drives.
       const [r, c] = env.toCell(s);
-      const front = r + 1 < env.height && env.walls.includes(env.toState(r + 1, c));
-      label.position.set(p.x, front ? WALL_HEIGHT - 0.04 + 0.004 : 0.05, p.z + (front ? 1 : -0.62));
+      const wallAt = (dr) => r + dr >= 0 && r + dr < env.height && env.walls.includes(env.toState(r + dr, c));
+      const side = wallAt(1) ? 1 : wallAt(-1) ? -1 : 0;
+      label.position.set(p.x, side ? WALL_HEIGHT - 0.04 + 0.004 : 0.05, p.z + (side ? side : -0.62));
       label.userData.text = text;
       this.labels.push(label);
       world.add(label);
     };
     addPad(env.start, "DOCK", false);
-    for (const g of env.goals) addPad(g, "CHARGER", true);
+    for (const g of env.goals) addPad(g, this.goalLabels[g] ?? "CHARGER", true);
 
     this.hemi = new THREE.HemisphereLight(0xffffff, 0x5c6f8f, 1.7);
     this.sun = new THREE.DirectionalLight(0xffffff, 1.3);

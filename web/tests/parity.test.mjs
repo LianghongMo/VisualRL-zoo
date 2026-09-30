@@ -141,3 +141,21 @@ test("PPO learns to reach the charger in the warehouse", async () => {
   }
   assert.ok(done && total <= -13 && total > -30, `greedy return ${total}`);
 });
+
+test("experience-graph planning and online exploration match Python", async () => {
+  const { ExperienceGraph, exploreEpisode } = await import("../src/rl/tabular/experience-graph.js");
+  const g = golden.experience_graph;
+  const room = GridWorld.chargingRoom();
+  for (const unseen of ["pessimistic", "optimistic"]) {
+    const graph = new ExperienceGraph({ nStates: room.nStates, nActions: 4, gamma: 0.9, unseen });
+    for (const t of g.transitions) graph.add(makeTransition(t));
+    assertClose(JSON.parse(JSON.stringify(graph.sweep())), g[unseen].first_sweep, `${unseen}.first_sweep`);
+    graph.plan();
+    assertClose(graph.V, g[unseen].V, `${unseen}.V`);
+    assert.deepEqual(Array.from({ length: room.nStates }, (_, s) => graph.act(s)), g[unseen].act);
+  }
+  const online = new ExperienceGraph({ nStates: room.nStates, nActions: 4, gamma: 0.9, unseen: "optimistic" });
+  const lengths = Array.from({ length: 8 }, () => exploreEpisode(room, online, { maxSteps: 40 }).length);
+  assert.deepEqual(lengths, g.online_episode_lengths);
+  assertClose(online.V, g.online_V, "online.V");
+});

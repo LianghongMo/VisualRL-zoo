@@ -16,8 +16,9 @@ from pathlib import Path
 
 import numpy as np
 
-from visualrl import rollout
+from visualrl import Transition, rollout
 from visualrl.algorithms.tabular import TD0, MonteCarlo, NStepTD, QLearning, Sarsa, run_episode
+from visualrl.algorithms.tabular.experience_graph import OPTIMISTIC, PESSIMISTIC, ExperienceGraph, explore_episode
 from visualrl.algorithms.tabular.ppo import TabularPPO
 from visualrl.envs import Chain, GridWorld
 from visualrl.policies import uniform_policy
@@ -105,6 +106,29 @@ def build() -> dict:
         "updates": updates,
         "final": {"logits": learner.logits.tolist(), "V": learner.V.tolist()},
     }
+
+    # Part I: planning on an experience graph built from two recorded episodes, then online exploration.
+    room = GridWorld.charging_room()
+    up, right, down, left = range(4)
+    data = []
+    for moves in ([up, right, right, right, down], [up, up, up, right, right, right, down, down, right, right, up, up]):
+        s, _ = room.reset()
+        for a in moves:
+            s2, r, term, trunc, _ = room.step(a)
+            data.append(Transition(s, a, float(r), s2, term, trunc))
+            s = s2
+    part1 = {"transitions": [asdict(t) for t in data]}
+    for unseen in (PESSIMISTIC, OPTIMISTIC):
+        graph = ExperienceGraph(room.observation_space.n, 4, gamma=0.9, unseen=unseen)
+        for t in data:
+            graph.add(t)
+        first = graph.sweep().to_dict()
+        graph.plan()
+        part1[unseen] = {"first_sweep": first, "V": graph.V, "act": [graph.act(s) for s in range(room.observation_space.n)]}
+    online = ExperienceGraph(room.observation_space.n, 4, gamma=0.9, unseen=OPTIMISTIC)
+    part1["online_episode_lengths"] = [len(explore_episode(room, online, max_steps=40)) for _ in range(8)]
+    part1["online_V"] = online.V
+    golden["experience_graph"] = part1
 
     V_star, Q_star = optimal_values(GridWorld.cliff().model(), gamma=1.0)
     golden["cliff_optimal"] = {"gamma": 1.0, "V": V_star.tolist(), "Q": Q_star.tolist()}

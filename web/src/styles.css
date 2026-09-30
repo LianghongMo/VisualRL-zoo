@@ -1959,3 +1959,501 @@ path.g-edge.hl {
   fill: #ffffff;
   stroke: var(--neg);
 }
+
+/* ---------- state graph (Part I) ---------- */
+
+.state-graph svg {
+  display: block;
+  width: 100%;
+  min-width: 420px;
+  height: auto;
+}
+
+.sg-wall {
+  fill: color-mix(in oklab, var(--ink) 7%, var(--paper));
+}
+
+.sg-ledge {
+  fill: color-mix(in oklab, var(--neg) 14%, var(--paper));
+}
+
+.sg-ledge-label {
+  fill: var(--neg);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.sg-node {
+  stroke: var(--ink);
+  stroke-width: 1.4;
+}
+
+.sg-node.unknown {
+  fill: var(--paper) !important;
+  stroke: var(--rule-strong);
+  stroke-dasharray: 2.5 2;
+}
+
+.sg-goal {
+  fill: var(--env-wash);
+  stroke: var(--env);
+  stroke-width: 1.6;
+}
+
+.sg-goal.unknown {
+  fill: var(--paper);
+  stroke: var(--rule-strong);
+  stroke-dasharray: 3 2;
+}
+
+.sg-goal-text {
+  fill: var(--env-ink);
+  font-family: var(--font-mono);
+  font-variation-settings: "MONO" 1;
+  font-weight: 700;
+  font-size: 11.5px;
+}
+
+.sg-value {
+  font-family: var(--font-mono);
+  font-variation-settings: "MONO" 1;
+  font-size: 8.5px;
+  pointer-events: none;
+}
+
+.sg-label {
+  fill: var(--ink-2);
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.sg-ring {
+  fill: none;
+  stroke: var(--env);
+  stroke-width: 2;
+  stroke-dasharray: 3 2.5;
+}
+
+.sg-robot {
+  fill: var(--ink);
+  stroke: var(--paper);
+  stroke-width: 2;
+}
+
+.sg-stub {
+  stroke: var(--env);
+  stroke-width: 1.8;
+  stroke-dasharray: 2 2;
+  stroke-linecap: round;
+}
+
+.sg-edge line,
+.sg-edge path,
+.sg-edge.loop,
+path.sg-edge {
+  fill: none;
+  stroke: var(--rule-strong);
+  stroke-width: 1.3;
+}
+
+.sg-edge polygon {
+  fill: var(--rule-strong);
+}
+
+.sg-edge.plain line,
+path.sg-edge.plain {
+  stroke: var(--ink-3);
+}
+
+.sg-edge.plain polygon {
+  fill: var(--ink-3);
+}
+
+.sg-edge.faint line,
+.sg-edge.faint.loop,
+path.sg-edge.faint {
+  stroke: var(--rule);
+}
+
+.sg-edge.faint polygon {
+  fill: var(--rule-strong);
+}
+
+path.sg-edge.fall {
+  stroke-dasharray: 4 3;
+}
+
+.sg-edge.best line,
+path.sg-edge.best,
+.sg-edge.best.loop {
+  stroke: var(--learn);
+  stroke-width: 3;
+}
+
+.sg-edge.best polygon {
+  fill: var(--learn);
+}
+
+.sg-edge.walk line,
+path.sg-edge.walk,
+.sg-edge.walk.loop {
+  stroke: var(--env);
+  stroke-width: 3.4;
+}
+
+.sg-edge.walk polygon {
+  fill: var(--env);
+}
+
+.sg-edge.a line,
+path.sg-edge.a {
+  stroke: var(--series-1);
+  stroke-width: 2.6;
+}
+
+.sg-edge.a polygon {
+  fill: var(--series-1);
+}
+
+.sg-edge.b line,
+path.sg-edge.b {
+  stroke: var(--series-2);
+  stroke-width: 2.6;
+}
+
+.sg-edge.b polygon {
+  fill: var(--series-2);
+}
+
+.sg-edge.hl line,
+path.sg-edge.hl,
+.sg-edge.hl.loop {
+  stroke: var(--learn);
+  stroke-width: 3.6;
+}
+
+.sg-edge.hl polygon {
+  fill: var(--learn);
+}
+
+/* ---------- loop diagram ---------- */
+
+.loop-diagram svg {
+  display: block;
+  width: 100%;
+  max-width: 720px;
+  height: auto;
+}
+
+.ld-node rect {
+  fill: var(--paper);
+  stroke: var(--rule-strong);
+  stroke-width: 1.2;
+}
+
+.ld-label {
+  fill: var(--ink);
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 650;
+}
+
+.ld-sub {
+  fill: var(--ink-3);
+  font-family: var(--font-body);
+  font-size: 10px;
+}
+
+.ld-title {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.ld-title.control {
+  fill: var(--env-ink);
+}
+
+.ld-title.learning {
+  fill: var(--learn);
+}
+
+.ld-edge-label,
+.ld-cut-label {
+  fill: var(--ink-3);
+  font-family: var(--font-body);
+  font-size: 10px;
+}
+
+.ld-arrow {
+  fill: none;
+  stroke-width: 2;
+}
+
+.ld-arrow.control {
+  stroke: var(--env);
+}
+
+.ld-arrow.learning {
+  stroke: var(--learn);
+}
+
+.ld-arrow.cut {
+  stroke: var(--rule-strong);
+  stroke-dasharray: 3 4;
+}
+
+.ld-head.control {
+  fill: var(--env);
+}
+
+.ld-head.learning {
+  fill: var(--learn);
+}
+
+.ld-head.cut {
+  fill: var(--rule-strong);
+}
+
+.ld-policy rect,
+.ld-backup rect {
+  stroke: var(--learn);
+}
+
+.ld-world rect,
+.ld-outcome rect {
+  stroke: var(--env);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pulse-control .ld-arrow.control,
+  .pulse-control .ld-world rect,
+  .pulse-control .ld-outcome rect {
+    animation: ld-pulse 600ms ease-out;
+  }
+  .pulse-learning .ld-arrow.learning,
+  .pulse-learning .ld-backup rect,
+  .pulse-learning .ld-graph rect {
+    animation: ld-pulse 600ms ease-out;
+  }
+  @keyframes ld-pulse {
+    30% {
+      stroke-width: 4;
+    }
+  }
+}
+
+.pulse-control .ld-world rect,
+.pulse-control .ld-outcome rect {
+  fill: var(--env-wash);
+}
+
+.pulse-learning .ld-backup rect,
+.pulse-learning .ld-graph rect {
+  fill: var(--learn-wash);
+}
+
+.drive-pad {
+  display: inline-grid;
+  grid-template-columns: repeat(3, 38px);
+  grid-template-rows: repeat(2, 34px);
+  gap: 4px;
+}
+
+.drive-pad .btn {
+  justify-content: center;
+  padding: 0;
+  font-size: 1rem;
+}
+
+.drive-pad .up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.drive-pad .left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.drive-pad .down {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.drive-pad .right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.walk-table {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--sheet);
+  overflow-x: auto;
+}
+
+.walk-table table {
+  border-collapse: collapse;
+  font-size: var(--step--1);
+  width: 100%;
+}
+
+.walk-table th,
+.walk-table td {
+  padding: 4px 10px;
+  text-align: right;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-variation-settings: "MONO" 1;
+  font-variant-numeric: tabular-nums;
+  border-bottom: 1px solid var(--rule);
+}
+
+.walk-table th {
+  font-family: var(--font-body);
+  font-variation-settings: "MONO" 0;
+  font-weight: 600;
+  color: var(--ink-3);
+  font-size: 0.78rem;
+}
+
+.walk-table tfoot td {
+  font-weight: 650;
+  color: var(--ink);
+  border-bottom: 0;
+}
+
+.elements {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px 20px;
+  font-size: var(--step--1);
+}
+
+.element {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 8px;
+  padding-block: 6px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.element b {
+  font-weight: 650;
+}
+
+.element span {
+  color: var(--ink-2);
+}
+
+.grid-2x2 {
+  display: grid;
+  grid-template-columns: 140px repeat(2, minmax(0, 1fr));
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+  font-size: var(--step--1);
+}
+
+.grid-2x2 > div {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rule);
+  border-right: 1px solid var(--rule);
+  background: var(--paper);
+  display: grid;
+  gap: 4px;
+  align-content: start;
+}
+
+.grid-2x2 .head {
+  background: var(--sheet);
+  font-weight: 650;
+}
+
+.grid-2x2 .cell b {
+  font-family: var(--font-mono);
+  font-variation-settings: "MONO" 1;
+}
+
+.grid-2x2 .cell.good {
+  background: var(--env-wash);
+}
+
+.grid-2x2 .cell.bad {
+  background: var(--learn-wash);
+}
+
+@media (max-width: 640px) {
+  .grid-2x2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .grid-2x2 .corner {
+    display: none;
+  }
+}
+
+.part1-grid {
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  align-items: center;
+}
+
+@media (max-width: 960px) {
+  .part1-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.key-swatch.best-edge {
+  height: 0;
+  border-top: 3px solid var(--learn);
+  border-radius: 0;
+}
+
+.key-swatch.fall-edge {
+  height: 0;
+  border-top: 2px dashed var(--ink-3);
+  border-radius: 0;
+}
+
+.key-swatch.data-a {
+  height: 0;
+  border-top: 3px solid var(--series-1);
+  border-radius: 0;
+}
+
+.key-swatch.data-b {
+  height: 0;
+  border-top: 3px solid var(--series-2);
+  border-radius: 0;
+}
+
+.key-swatch.stub {
+  height: 0;
+  border-top: 2px dashed var(--env);
+  border-radius: 0;
+}
+
+.key-swatch.ring {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px dashed var(--env);
+}
+
+.sg-route {
+  stroke: var(--env);
+  stroke-width: 16;
+  stroke-linecap: round;
+  opacity: 0.28;
+}
+
+.key-swatch.route-band {
+  height: 8px;
+  background: var(--env);
+  opacity: 0.35;
+  border-radius: 4px;
+}

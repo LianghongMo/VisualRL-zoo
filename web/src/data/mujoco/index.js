@@ -1,4 +1,5 @@
 // Episodes and training logs recorded by scripts/train_mujoco_ppo.py. Add a task here after training it.
+import ant from "./ant.json";
 import halfCheetah from "./half_cheetah.json";
 import hopper from "./hopper.json";
 import invertedPendulum from "./inverted_pendulum.json";
@@ -22,6 +23,12 @@ export const MUJOCO_TASKS = [
     title: "HalfCheetah",
     robot: "a two-legged robot in a vertical plane that must run forward. Reward: forward speed minus a small cost for large torques. The replay shows the first 400 of the 1000 steps of an episode",
     data: halfCheetah,
+  },
+  {
+    id: "ant",
+    title: "Ant",
+    robot: "a four-legged robot that must walk forward. Reward: forward speed plus +1 for every step it stays upright, minus a cost for large torques; the episode ends if it flips over. Standing still already earns about +1 per step, which is why the untrained policy scores well. Trained for 2M steps without the 78 contact-force numbers in the observation: with them, PPO did not learn to walk in 3M steps. The replay shows the first 400 steps",
+    data: ant,
   },
   {
     id: "point_maze",

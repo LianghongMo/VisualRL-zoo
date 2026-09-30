@@ -1,4 +1,4 @@
-// Lesson 15: PPO in the warehouse. The policy is a table of logits and the critic a table of
+// Lesson 14: PPO in the warehouse. The policy is a table of logits and the critic a table of
 // values, so every probability ratio and every clipped sample can be inspected.
 import ppoSource from "../../../visualrl/algorithms/tabular/ppo.py";
 import { GridWorld } from "../rl/envs/gridworld.js";
@@ -473,9 +473,9 @@ export function mount(root) {
     h(
       "div",
       { class: "controls-row" },
-      slider({ id: "l15-clip", label: "clip range ε", min: 0.05, max: 0.5, step: 0.05, value: settings.clip, format: (v) => v.toFixed(2), onInput: (v) => ((settings.clip = v), (run.agent.clip = v), render()) }),
-      slider({ id: "l15-epochs", label: "epochs per rollout K", min: 1, max: 20, step: 1, value: settings.epochs, format: (v) => String(v), onInput: (v) => ((settings.epochs = v), render()) }),
-      slider({ id: "l15-lr", label: "policy learning rate", min: 0.5, max: 30, step: 0.5, value: settings.lr, format: (v) => v.toFixed(1), onInput: (v) => ((settings.lr = v), (run.agent.policyLr = v)) }),
+      slider({ id: "l14-clip", label: "clip range ε", min: 0.05, max: 0.5, step: 0.05, value: settings.clip, format: (v) => v.toFixed(2), onInput: (v) => ((settings.clip = v), (run.agent.clip = v), render()) }),
+      slider({ id: "l14-epochs", label: "epochs per rollout K", min: 1, max: 20, step: 1, value: settings.epochs, format: (v) => String(v), onInput: (v) => ((settings.epochs = v), render()) }),
+      slider({ id: "l14-lr", label: "policy learning rate", min: 0.5, max: 30, step: 0.5, value: settings.lr, format: (v) => v.toFixed(1), onInput: (v) => ((settings.lr = v), (run.agent.policyLr = v)) }),
     ),
     curve.el,
   );
@@ -563,7 +563,7 @@ export function mount(root) {
   const updateCode = extractDef(ppoSource, "update_minibatch", { cutAt: "probs_before =", replacement: "...  # apply the accumulated gradients to the two tables" });
 
   root.append(
-    lessonHeader("15", {
+    lessonHeader("14", {
       lead: [
         "PPO collects a batch of experience with its current policy and then squeezes several epochs of gradient steps out of it. The probability ratio measures how far the policy has moved since the data was collected, and clipping stops the push once it has moved far enough. Here the policy is a table of logits and the critic a table of values, so every parameter is visible. A deep PPO replaces both tables by neural networks and changes nothing else.",
       ],
@@ -595,13 +595,13 @@ export function mount(root) {
       h(
         "div",
         { class: "controls-row" },
-        slider({ id: "l15-a", label: "advantage Â", min: -2, max: 2, step: 0.1, value: explorer.A, format: (v) => fmtSigned(v, 1), onInput: (v) => ((explorer.A = v), drawObjective()) }),
-        slider({ id: "l15-eps", label: "clip range ε", min: 0.05, max: 0.6, step: 0.05, value: explorer.eps, format: (v) => v.toFixed(2), onInput: (v) => ((explorer.eps = v), drawObjective()) }),
+        slider({ id: "l14-a", label: "advantage Â", min: -2, max: 2, step: 0.1, value: explorer.A, format: (v) => fmtSigned(v, 1), onInput: (v) => ((explorer.A = v), drawObjective()) }),
+        slider({ id: "l14-eps", label: "clip range ε", min: 0.05, max: 0.6, step: 0.05, value: explorer.eps, format: (v) => v.toFixed(2), onInput: (v) => ((explorer.eps = v), drawObjective()) }),
       ),
       objChart.el,
       objNote,
       prose(
-        "Why bother? In a table, a big step only changes the states that were sampled, so PPO learns this warehouse even without clipping at gentle settings. Clipping matters when updates are aggressive, and even more when a neural network makes every update move the policy in states that were never sampled (lesson 11). Try aggressive settings with and without clipping:",
+        "Why bother? In a table, a big step only changes the states that were sampled, so PPO learns this warehouse even without clipping at gentle settings. Clipping matters when updates are aggressive, and even more when a neural network makes every update move the policy in states that were never sampled (lesson 10). Try aggressive settings with and without clipping:",
       ),
       h("div", { class: "toolbar" }, cmpBtn),
       cmpChart.el,
@@ -624,7 +624,7 @@ export function mount(root) {
       equation("L^{\\text{clip}}(\\theta) = \\frac1M\\sum_t \\min\\!\\big[\\, r_t(\\theta)\\hat A_t,\\; \\text{clip}(r_t(\\theta), 1-\\epsilon, 1+\\epsilon)\\,\\hat A_t \\,\\big]", "The clipped surrogate objective, averaged over a minibatch. PPO ascends it, plus a small entropy bonus, and descends the critic's squared error."),
       equation(
         "\\hat A_t = \\delta_t + \\gamma\\lambda\\,\\hat A_{t+1},\\qquad \\delta_t = r_t + \\gamma V(s_{t+1}) - V(s_t)",
-        h("span", {}, "Generalized advantage estimation: TD errors of the critic, summed with weight ", tex("(\\gamma\\lambda)^k"), ". λ = 0 is the one-step TD error of lesson 08, λ = 1 the Monte Carlo return minus the baseline."),
+        h("span", {}, "Generalized advantage estimation: TD errors of the critic, summed with weight ", tex("(\\gamma\\lambda)^k"), ". λ = 0 is the one-step TD error of lesson 07, λ = 1 the Monte Carlo return minus the baseline."),
       ),
     ),
     step(
@@ -634,7 +634,7 @@ export function mount(root) {
       codeBlock(updateCode, { title: "TabularPPO.update_minibatch", highlight: [lineOf(updateCode, "surrogate = 0.0 if clipped")] }),
     ),
     step("Challenge", prose("Find a sample PPO has stopped pushing: after a few gradient steps, click a hollow dot in one of the shaded corners of the scatter plot."), challenge),
-    lessonFooter("15"),
+    lessonFooter("14"),
   );
 
   scene.place("main", run.state, 1);

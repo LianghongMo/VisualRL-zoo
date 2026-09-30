@@ -37,14 +37,15 @@ Phase 1 (core tabular system) is in progress.
 | `visualrl/algorithms/tabular`: TD(0), Monte Carlo, n-step TD, SARSA, Q-learning, Bellman backup, policy iteration, value iteration, ε-greedy bandit | done |
 | `visualrl/reference.py`: exact $V^\pi$, $V^*$, $Q^*$ from the model (for the visualizer only) | done |
 | `web/src/rl`: the same tabular algorithms in JavaScript for the browser, checked against Python traces | done |
-| Lessons 02 (return and discounting), 08 (Monte Carlo vs TD), 09 (SARSA vs Q-learning) | done |
+| Part I, lessons 01–03: the world as a graph, the learning loop, online and offline (`visualrl/algorithms/tabular/experience_graph.py`, `GridWorld.charging_room()`) | done |
+| Lessons 07 (Monte Carlo vs TD) and 08 (SARSA vs Q-learning) | done |
 | `visualrl/envs/maze_maps.json`: maps in Gymnasium-Robotics PointMaze format, shared by Python and the web; `GridWorld.from_maze_map`, `GridWorld.warehouse()` | done |
 | One robot world: 3D warehouse view (Three.js) and an experience graph (visited states, observed transitions, stitched routes), piloted in lesson 09 | in progress |
 | `visualrl/algorithms/tabular/ppo.py`: PPO with a table of logits and a table of values (GAE, clipped surrogate, entropy bonus, minibatch epochs), mirrored in JS with parity tests | done |
-| Lesson 15 (PPO) in the warehouse: rollout replay, probability-ratio scatter with clipped samples, per-sample objective, clip vs no-clip experiment | done |
+| Lesson 14 (PPO) in the warehouse: rollout replay, probability-ratio scatter with clipped samples, per-sample objective, clip vs no-clip experiment | done |
 | `visualrl/algorithms/deep/ppo.py` + `scripts/train_mujoco_ppo.py`: deep PPO (CleanRL defaults) on MuJoCo robots, exporting training logs and recorded episodes at several points in training | done |
-| MuJoCo replays in the browser (Three.js, every frame is recorded MuJoCo geometry): InvertedPendulum, Hopper, Ant, HalfCheetah, PointMaze in lesson 15 | done |
-| Lessons 01, 03–07, 10–14, 16 | planned |
+| MuJoCo replays in the browser (Three.js, every frame is recorded MuJoCo geometry): InvertedPendulum, Hopper, Ant, HalfCheetah, PointMaze in lesson 14 | done |
+| Lessons 04–06, 09–13, 15 | planned |
 
 ```bash
 pip install -e ".[dev]"
@@ -293,102 +294,61 @@ The same small environments are reused whenever possible so that changes in beha
 
 ---
 
-### Part I — What is reinforcement learning?
+### Part I — The problem and the loop
 
-#### 01. Agent and Environment
+Part I uses one small world, a charging room, and one picture: a graph. Less is more: three lessons, one idea each.
 
-Concepts:
+#### 01. The World as a Graph
 
-- state,
-- observation,
-- action,
-- reward,
-- transition,
-- episode,
-- trajectory.
-
-Visualization:
+Every element of reinforcement learning is part of a graph:
 
 ```text
-state
- ↓
-action
- ↓
-environment transition
- ↓
-reward + next state
+state            a node
+action           an edge out of that node
+reward           the weight on the edge
+episode          a walk from the start to a terminal node
+return           the walk's weights, discounted by γ once per edge
+policy           a choice of out-edge at every node
+optimal policy   the tree of best edges; optimal control is a best-path problem
 ```
 
-Each interaction appends one transition to a visible trajectory timeline.
-
-#### 02. Reward, Return, and Discounting
-
-Concepts:
+The Bellman equation
 
 $$
-G_t
-=
-\sum_{k=0}^{\infty}
-\gamma^k r_{t+k}.
+V^*(s) = \max_a \left[ r(s,a) + \gamma V^*(s') \right]
 $$
 
-Visualization:
+is the recursion of shortest-path algorithms. A slow charger (+1) near the dock and a fast one (+10) further away make the discount visible: dragging $\gamma$ re-roots the tree of best edges.
 
-- reward at every timestep,
-- discounted contribution of every reward,
-- total return.
+#### 02. The Learning Loop
 
-Interactive experiment:
+The agent is not given the graph. It knows only its **experience graph**: the edges it has driven.
 
 ```text
-near small reward
-vs.
-far large reward
+control loop    (every environment step)   policy → action → world → reward, next state → a new edge
+learning loop   (every learning step)      experience graph → Bellman backups → values → policy
 ```
 
-Drag $\gamma$ and observe how the preferred trajectory changes.
+One learning step moves value one edge back along known edges. Learning is free and can only redistribute what the graph contains; acting is costly and is the only way to add edges.
 
-#### 03. Policies and Trajectories
+#### 03. Online and Offline
 
-Concepts:
+The two regimes differ in where the experience graph comes from.
 
-$$
-\pi(a\mid s).
-$$
+```text
+                  untried moves left out (pessimism)     untried moves assumed good (optimism)
+offline (fixed)   stitching: the best route inside the   hallucinated shortcut: an unchecked
+                  data, better than any single episode   move leads over the ledge
+online (grows)    stuck on the first charger found       directed exploration of the frontier
+```
 
-Visualization:
-
-- action probabilities at every state,
-- sampled actions,
-- many trajectories generated from the same policy,
-- state visitation heatmap.
-
-The goal is to make clear that a policy is not the same thing as a trajectory.
-
-#### 04. Exploration and Exploitation
-
-Environment:
-
-multi-armed bandit.
-
-Visualize:
-
-- estimated action value,
-- number of samples per action,
-- observed reward samples,
-- cumulative reward.
-
-Compare:
-
-- greedy,
-- $\epsilon$-greedy,
-- optionally UCB and Thompson sampling later.
+Offline RL has one ability and one limit, both about the graph: **stitching** (values flow through nodes that episodes share) and **coverage** (moves outside the data can be neither used nor tested). Online RL's core is **exploration**: the graph grows only where the agent goes. The same optimism that is a failure offline is the solution online, because an untried move can simply be tried. On-policy versus off-policy is a separate question: whose moves built the graph.
 
 ---
 
 ### Part II — Learning values
 
-#### 05. State Value and Action Value
+#### 04. State Value and Action Value
 
 Introduce
 
@@ -408,7 +368,7 @@ Each action direction inside the cell can display $Q(s,a)$.
 
 Clicking a state repeatedly generates rollouts from that state and shows the empirical return distribution.
 
-#### 06. Bellman Backup
+#### 05. Bellman Backup
 
 For a selected state, explicitly expand
 
@@ -444,7 +404,7 @@ Every branch shows
 
 The learner can perform **one Bellman backup** manually.
 
-#### 07. Policy Evaluation and Policy Improvement
+#### 06. Policy Evaluation and Policy Improvement
 
 Separate two operations.
 
@@ -466,7 +426,7 @@ This chapter introduces
 - policy iteration,
 - value iteration.
 
-#### 08. Monte Carlo vs TD
+#### 07. Monte Carlo vs TD
 
 Use exactly the same trajectory for both algorithms.
 
@@ -498,7 +458,7 @@ A particularly useful interaction is allowing the user to replay the same transi
 
 ### Part III — Control
 
-#### 09. SARSA vs Q-learning
+#### 08. SARSA vs Q-learning
 
 For SARSA:
 
@@ -528,7 +488,7 @@ target action
 
 do not necessarily mean the same thing.
 
-#### 10. On-policy, Off-policy, and Replay
+#### 09. On-policy, Off-policy, and Replay
 
 Display two policies when necessary:
 
@@ -562,7 +522,7 @@ Sampling a minibatch visibly moves selected transitions into the learning panel.
 
 ### Part IV — Function Approximation
 
-#### 11. From Tables to Functions
+#### 10. From Tables to Functions
 
 Compare:
 
@@ -584,7 +544,7 @@ The same mechanism can help learning or create interference.
 
 ### Part V — Deep Reinforcement Learning
 
-#### 12. DQN
+#### 11. DQN
 
 Visualize the entire pipeline:
 
@@ -618,7 +578,7 @@ target network
 
 The learner should see exactly which network generates which quantity.
 
-#### 13. REINFORCE
+#### 12. REINFORCE
 
 Start with a two-action softmax policy.
 
@@ -640,7 +600,7 @@ new action probabilities
 
 This makes policy gradient concrete before introducing larger neural policies.
 
-#### 14. Actor-Critic and Advantage
+#### 13. Actor-Critic and Advantage
 
 Show
 
@@ -666,7 +626,7 @@ UPDATE ACTOR
 
 so the user can see that the two networks solve different learning problems.
 
-#### 15. PPO
+#### 14. PPO
 
 Visualize
 
@@ -701,7 +661,7 @@ The page should include an interactive graph where the user changes
 
 The user should immediately see how the optimization objective changes.
 
-#### 16. Evaluation and Debugging
+#### 15. Evaluation and Debugging
 
 Visualize:
 

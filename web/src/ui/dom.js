@@ -82,9 +82,10 @@ export function shortcuts(map) {
   const handler = (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     const tag = e.target?.tagName;
-    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
-      if (e.target.type !== "range") return;
-    }
+    const type = e.target?.type;
+    // Leave typing alone, and leave arrow keys to a focused slider.
+    if (tag === "TEXTAREA" || tag === "SELECT" || (tag === "INPUT" && !["range", "checkbox", "radio", "button"].includes(type))) return;
+    if (type === "range" && e.key.startsWith("Arrow")) return;
     const fn = map[e.key.toLowerCase()];
     if (fn) {
       e.preventDefault();

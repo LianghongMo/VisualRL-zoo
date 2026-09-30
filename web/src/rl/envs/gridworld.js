@@ -27,7 +27,7 @@ export class GridWorld {
     [0, -1],
   ];
 
-  constructor(layout, { stepReward = 0, goalReward = 1, cliffReward = -100, slip = 0, maxSteps = null, seed = 0 } = {}) {
+  constructor(layout, { stepReward = 0, goalReward = 1, cliffReward = -100, slip = 0, maxSteps = null, seed = 0, goalRewards = null } = {}) {
     this.layout = [...layout];
     this.height = layout.length;
     this.width = layout[0].length;
@@ -45,6 +45,8 @@ export class GridWorld {
     this.cliffs = find("C");
     this.stepReward = stepReward;
     this.goalReward = goalReward;
+    // goalRewards: [[row, col, reward], ...] for goals that pay differently from goalReward
+    this.goalRewards = new Map((goalRewards ?? []).map(([r, c, v]) => [r * this.width + c, v]));
     this.cliffReward = cliffReward;
     this.slip = slip;
     this.maxSteps = maxSteps;
@@ -70,6 +72,20 @@ export class GridWorld {
     return GridWorld.fromMazeMap(MAZE_MAPS.warehouse_ledge, { stepReward: -1, goalReward: -1, cliffReward: -100, ...options });
   }
 
+  // The world of Part I: a slow charger (+1) five moves from the dock, a fast one (+10) eight moves away,
+  // a ledge (−10, back to the dock) in between, and no cost for moving.
+  static chargingRoom(options = {}) {
+    return GridWorld.fromMazeMap(MAZE_MAPS.charging_room, {
+      stepReward: 0,
+      cliffReward: -10,
+      goalRewards: [
+        [1, 6, 10],
+        [4, 4, 1],
+      ],
+      ...options,
+    });
+  }
+
   toState(row, col) {
     return row * this.width + col;
   }
@@ -85,7 +101,7 @@ export class GridWorld {
     let c = col + dc;
     if (r < 0 || r >= this.height || c < 0 || c >= this.width || this.layout[r][c] === "#") [r, c] = [row, col];
     const next = this.toState(r, c);
-    if (this.goals.includes(next)) return [next, this.goalReward, true];
+    if (this.goals.includes(next)) return [next, this.goalRewards.get(next) ?? this.goalReward, true];
     if (this.cliffs.includes(next)) return [this.start, this.cliffReward, false];
     return [next, this.stepReward, false];
   }

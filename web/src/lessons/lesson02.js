@@ -1,288 +1,241 @@
-// Lesson 02: reward, return, and discounting. A near small reward vs a far large one.
-import trajectorySource from "../../../visualrl/core/trajectory.py";
-import { rollout } from "../rl/core.js";
-import { Chain } from "../rl/envs/chain.js";
+// Lesson 02: the learning loop. The robot does not know the graph. Acting adds the edges it
+// drives to its experience graph (control loop); learning backs values up along those edges
+// (learning loop). Learning can never know more than the graph it has.
+import graphSource from "../../../visualrl/algorithms/tabular/experience_graph.py";
+import { makeTransition } from "../rl/core.js";
+import { optimalValues } from "../rl/tabular/dp.js";
+import { ExperienceGraph } from "../rl/tabular/experience-graph.js";
+import { Rng } from "../rl/rng.js";
 import { codeBlock } from "../ui/code.js";
-import { button, h, replace, s, slider } from "../ui/dom.js";
-import { fmt, fmtShort } from "../ui/format.js";
-import { LineChart } from "../ui/line-chart.js";
-import { equation, tex } from "../ui/math.js";
+import { button, h, replace, shortcuts } from "../ui/dom.js";
+import { ARROWS, fmt } from "../ui/format.js";
+import { Ledger } from "../ui/ledger.js";
+import { LoopDiagram } from "../ui/loop-diagram.js";
+import { equation } from "../ui/math.js";
+import { WarehouseScene } from "../ui/scene3d.js";
+import { StateGraph, trueEdges } from "../ui/state-graph.js";
 import { lessonFooter, lessonHeader, predict, prose, step, wideStep } from "../ui/shell.js";
 import { extractDef } from "../ui/source.js";
+import { world } from "./lesson01.js";
 
-const NEAR = { reward: 1, distance: 2 };
-const ROUTES = {
-  near: { label: "Left route", color: "var(--series-1)" },
-  far: { label: "Right route", color: "var(--series-2)" },
-};
-
-// Build the chain for the current settings and roll out "always left" and "always right".
-function simulate({ farReward, farDistance, stepReward }) {
-  const env = new Chain({
-    nStates: NEAR.distance + farDistance - 1,
-    start: NEAR.distance,
-    leftReward: NEAR.reward,
-    rightReward: farReward,
-    stepReward,
-  });
-  return {
-    env,
-    near: rollout(env, () => Chain.LEFT),
-    far: rollout(env, () => Chain.RIGHT),
-  };
-}
-
-// γ values in [0, 1] where the two returns are equal, by linear interpolation on a fine grid.
-function crossings(sim) {
-  const out = [];
-  let prev = null;
-  for (let i = 0; i <= 1000; i++) {
-    const g = i / 1000;
-    const d = sim.near.returns(g)[0] - sim.far.returns(g)[0];
-    if (prev && prev.d !== 0 && d !== 0 && Math.sign(d) !== Math.sign(prev.d)) {
-      out.push(prev.g + ((g - prev.g) * Math.abs(prev.d)) / (Math.abs(prev.d) + Math.abs(d)));
-    }
-    prev = { g, d };
-  }
-  return out;
-}
-
-function chainStrip(sim, gamma) {
-  const { env } = sim;
-  const n = env.nStates;
-  const W = 46;
-  const width = n * W + 12;
-  const top = 38;
-  const cellH = 40;
-  const height = top + cellH + 40;
-  const Gn = sim.near.returns(gamma)[0];
-  const Gf = sim.far.returns(gamma)[0];
-  const winner = Gn > Gf + 1e-12 ? "near" : Gf > Gn + 1e-12 ? "far" : null;
-  const x = (st) => 6 + st * W;
-  const cells = [];
-  for (let st = 0; st < n; st++) {
-    const terminal = st === 0 || st === n - 1;
-    cells.push(s("rect", { x: x(st) + 1, y: top, width: W - 2, height: cellH, rx: 5, class: terminal ? "chain-terminal" : "chain-cell" }));
-    const label = st === env.start ? "S" : st === 0 ? `+${fmtShort(env.leftReward)}` : st === n - 1 ? `+${fmtShort(env.rightReward)}` : "";
-    if (label) cells.push(s("text", { x: x(st) + W / 2, y: top + cellH / 2 + 5, "text-anchor": "middle", class: st === env.start ? "cell-mark" : "chain-reward" }, label));
-  }
-  const cx = (st) => x(st) + W / 2;
-  const routeLine = (key, from, to, y, above) => {
-    const strong = winner === key;
-    const color = ROUTES[key].color;
-    const dir = Math.sign(to - from);
-    const tipX = cx(to) - dir * 8;
-    return s(
-      "g",
-      { opacity: winner && !strong ? 0.45 : 1 },
-      s("line", { x1: cx(from), y1: y, x2: tipX, y2: y, stroke: color, "stroke-width": strong ? 3.5 : 2, "stroke-linecap": "round" }),
-      s("polygon", { points: `${tipX + dir * 8},${y} ${tipX},${y - 5} ${tipX},${y + 5}`, fill: color }),
-      s(
-        "text",
-        { x: (cx(from) + cx(to)) / 2, y: above ? y - 9 : y + 19, "text-anchor": "middle", class: "chain-route-label" },
-        `G₀ = ${fmt(key === "near" ? Gn : Gf)}${strong ? "  preferred" : ""}`,
-      ),
-    );
-  };
-  return s(
-    "svg",
-    { viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": "Chain with a near and a far reward", class: "chain-strip", style: { width: `${Math.round(width * 1.25)}px` } },
-    cells,
-    routeLine("near", env.start, 0, top - 10, true),
-    routeLine("far", env.start, n - 1, top + cellH + 12, false),
-  );
-}
-
-// A row per quantity and a column per timestep: the whole return, written out.
-function returnTable(key, trajectory, gamma, maxAbs) {
-  const T = trajectory.length;
-  const terms = trajectory.discountedRewards(gamma);
-  const G = trajectory.returns(gamma)[0];
-  const col = (t) => [
-    h("td", {}, t),
-    h("td", {}, fmtShort(trajectory.at(t).reward)),
-    h("td", {}, fmt(gamma ** t, 3)),
-    h(
-      "td",
-      {},
-      h(
-        "span",
-        { class: "term" },
-        h("span", { class: "term-bar" }, h("span", { class: "term-ghost", style: { width: `${(100 * Math.abs(trajectory.at(t).reward)) / maxAbs}%` } }), h("span", { class: "term-fill", style: { width: `${(100 * Math.abs(terms[t])) / maxAbs}%`, background: ROUTES[key].color } })),
-        fmt(terms[t], 3),
-      ),
-    ),
-  ];
-  const columns = Array.from({ length: T }, (_, t) => col(t));
-  const row = (label, i) => h("tr", {}, h("th", { scope: "row" }, label), columns.map((c) => c[i]));
-  return h(
-    "div",
-    { class: "return-table" },
-    h(
-      "div",
-      { class: "return-head" },
-      h("span", { class: "legend-line", style: { color: ROUTES[key].color } }),
-      h("strong", {}, ROUTES[key].label),
-      h("span", { class: "note" }, `${T} steps`),
-      h("span", { class: "grow" }),
-      h("span", { class: "num" }, `G₀ = ${fmt(G, 3)}`),
-    ),
-    h(
-      "div",
-      { class: "experience-scroll" },
-      h(
-        "table",
-        {},
-        h("tbody", {}, row(tex("t"), 0), row(tex("r_t"), 1), row(tex("\\gamma^t"), 2), row(tex("\\gamma^t r_t"), 3)),
-      ),
-    ),
-  );
-}
+const [UP, RIGHT, DOWN, LEFT] = [0, 1, 2, 3];
+const GAMMA = 0.9;
 
 export function mount(root) {
-  const settings = { gamma: 0.9, farReward: 10, farDistance: 6, stepReward: 0 };
-  const strip = h("div", { class: "figure-scroll chain-figure" });
-  const tables = h("div", { class: "two-col" });
-  const verdict = h("div", { class: "callout" });
-  const challenge = h("div", { class: "callout" });
-  const chart = new LineChart({
-    height: 250,
-    xLabel: "discount γ",
-    yLabel: "return from S",
-    xDomain: [0, 1],
-    xFormat: (v) => v.toFixed(1),
-    yFormat: (v) => fmtShort(v, 1),
-    caption: "Each point is the return of the same two trajectories, recomputed with a different γ.",
-  });
-  let solved = false;
+  const w = world();
+  const { env } = w;
+  const allEdges = trueEdges(env);
+  const optimum = optimalValues(env.model(), GAMMA).V[env.start];
+  const rng = new Rng(4);
+  let graph;
+  let state;
+  let envSteps;
+  let episodes;
+  let showTrue = false;
+  let lastSweep = null;
+  let solvedWith = null;
+  const name = (st) => (st === env.start ? "dock" : st === w.far ? "fast charger" : st === w.near ? "slow charger" : `(${env.toCell(st).join(",")})`);
 
-  const gammaSlider = slider({ id: "l02-gamma", label: "discount γ", min: 0, max: 1, step: 0.005, value: settings.gamma, format: (v) => v.toFixed(3), onInput: (v) => ((settings.gamma = v), render()) });
-  const farRewardSlider = slider({ id: "l02-far", label: "far reward", min: 1, max: 20, step: 0.5, value: settings.farReward, format: (v) => `+${fmtShort(v)}`, onInput: (v) => ((settings.farReward = v), render()) });
-  const farDistanceSlider = slider({ id: "l02-dist", label: "far reward is this many steps away", min: 3, max: 12, step: 1, value: settings.farDistance, format: (v) => String(v), onInput: (v) => ((settings.farDistance = v), render()) });
-  const stepSlider = slider({ id: "l02-step", label: "reward for every other step", min: -1, max: 0.5, step: 0.05, value: settings.stepReward, format: (v) => fmtShort(v, 2), onInput: (v) => ((settings.stepReward = v), render()) });
+  const scene = new WarehouseScene(env, { robots: [{ id: "main", color: "--series-2" }], goalLabels: w.signs, caption: "The robot only knows the edges it has driven" });
+  const view = new StateGraph(env, { goalLabels: w.labels });
+  const loop = new LoopDiagram();
+  const counters = h("div", { class: "counters" });
+  const note = h("div", { class: "callout" });
+  const challenge = h("div", { class: "callout" });
+  const ledger = new Ledger({
+    titleFor: (t) => `Learning step ${t.sweep} · one backup of every visited node`,
+    groupsFor: (t) => [
+      {
+        label: t.changed.length ? "Values that changed" : "Nothing changed",
+        tone: "learn",
+        rows: t.changed.length
+          ? t.changed.map((c) => ({
+              label: `${name(c.state)}, via ${ARROWS[c.action]} to ${c.next_state === null ? "?" : name(c.next_state)}`,
+              formula: "V(s)",
+              value: `${fmt(c.before)} → ${fmt(c.after)}`,
+            }))
+          : [{ label: "Value has reached every node that a known edge connects to a charger.", formula: "", value: "" }],
+      },
+    ],
+    empty: "No learning step yet. Drive a few edges, then press Learn once.",
+    emptyTitle: "Learning step",
+  });
+
+  function reset() {
+    graph = new ExperienceGraph({ nStates: env.nStates, nActions: 4, gamma: GAMMA });
+    [state] = env.reset();
+    envSteps = 0;
+    episodes = 0;
+    lastSweep = null;
+    solvedWith = null;
+    ledger.reset();
+    scene.place("main", state, UP);
+    render();
+  }
+
+  function drive(a) {
+    if (env.goals.includes(state)) return; // the episode just ended; the robot is being carried back to the dock
+    const [next, reward, terminated, , info] = env.step(a);
+    graph.add(makeTransition({ state, action: a, reward, next_state: next, terminated }));
+    scene.move("main", { from: state, to: next, fellInto: info.fell_into, action: a }, { duration: 260 });
+    envSteps += 1;
+    loop.pulse("control");
+    lastSweep = null;
+    if (terminated) {
+      episodes += 1;
+      setTimeout(() => {
+        [state] = env.reset();
+        scene.place("main", state, UP);
+        render();
+      }, 420);
+    }
+    state = next;
+    render();
+  }
+
+  function robotDrives() {
+    drive(rng.random() < 0.2 ? rng.integers(4) : graph.act(state));
+  }
+
+  function learn(times = 1) {
+    let t;
+    for (let i = 0; i < times; i++) {
+      t = graph.sweep();
+      ledger.push(t);
+      if (!t.changed.length) break;
+    }
+    lastSweep = t;
+    loop.pulse("learning");
+    if (solvedWith === null && graph.V[env.start] >= optimum - 1e-9) solvedWith = envSteps;
+    render();
+  }
 
   function render() {
-    const sim = simulate(settings);
-    const { gamma } = settings;
-    const Gn = sim.near.returns(gamma)[0];
-    const Gf = sim.far.returns(gamma)[0];
-    replace(strip, chainStrip(sim, gamma));
-    const maxAbs = Math.max(1e-9, ...sim.near.rewards.map(Math.abs), ...sim.far.rewards.map(Math.abs));
-    replace(tables, returnTable("near", sim.near, gamma, maxAbs), returnTable("far", sim.far, gamma, maxAbs));
+    const known = new Set([...graph.visited, ...graph.terminal]);
+    const hl = new Set((lastSweep?.changed ?? []).map((c) => `${c.state},${c.action}`));
+    const edges = [];
+    for (const e of allEdges) {
+      const k = `${e.from},${e.action}`;
+      const seen = graph.edges.has(k);
+      if (!seen && !showTrue) continue;
+      const best = seen && graph.V[e.from] !== 0 && graph.act(e.from) === e.action;
+      edges.push({ ...e, role: hl.has(k) ? "hl" : !seen ? "faint" : best ? "best" : e.from === e.to ? "faint" : "plain" });
+    }
+    const stubs = {};
+    for (const s of graph.visited) if (!graph.terminal.has(s)) stubs[s] = graph.untried(s);
+    view.render({ edges, values: graph.V, showValues: true, stubs, known, robot: state });
 
-    const cross = crossings(sim);
-    const grid = Array.from({ length: 101 }, (_, i) => i / 100);
-    chart.update({
-      series: [
-        { id: "near", label: `${ROUTES.near.label}: +${fmtShort(NEAR.reward)} in ${NEAR.distance} steps`, color: ROUTES.near.color, points: grid.map((g) => [g, sim.near.returns(g)[0]]) },
-        { id: "far", label: `${ROUTES.far.label}: +${fmtShort(settings.farReward)} in ${settings.farDistance} steps`, color: ROUTES.far.color, points: grid.map((g) => [g, sim.far.returns(g)[0]]) },
-      ],
-      markers: [{ x: gamma, label: `γ = ${gamma.toFixed(3)}` }],
-      points: cross.map((g) => ({ x: g, y: sim.near.returns(g)[0], label: `equal at γ ≈ ${g.toFixed(3)}`, color: "var(--ink)" })),
-    });
-
-    const diff = Gn - Gf;
     replace(
-      verdict,
+      counters,
+      h("span", { class: "counter" }, h("span", { class: "dot env" }), "environment steps", h("b", {}, envSteps)),
+      h("span", { class: "counter" }, h("span", { class: "dot learn" }), "learning steps", h("b", {}, graph.sweeps)),
+      h("span", { class: "counter" }, h("span", { class: "dot muted" }), "episodes", h("b", {}, episodes)),
+      h("span", { class: "counter" }, "known edges", h("b", {}, `${graph.edges.size} of ${allEdges.length}`)),
+      h("span", { class: "counter" }, "value of the dock", h("b", {}, fmt(graph.V[env.start], 3))),
+    );
+
+    const reached = [...graph.terminal].map(name);
+    replace(
+      note,
       h(
         "p",
         {},
-        Math.abs(diff) < 1e-9
-          ? h("strong", {}, "Both routes are worth exactly the same. ")
-          : h("strong", {}, `The ${diff > 0 ? "left" : "right"} route is worth more: ${fmt(Math.max(Gn, Gf))} vs ${fmt(Math.min(Gn, Gf))}. `),
-        `A reward k steps in the future is multiplied by γ^k = ${gamma.toFixed(3)}^k before it is added up.`,
+        graph.edges.size === 0
+          ? [h("strong", {}, "The robot knows nothing yet. "), "Every node except the dock is drawn dashed: it has never been there. Drive, and watch the graph grow."]
+          : !reached.length
+            ? [h("strong", {}, "No charger in the graph yet. "), "However much the robot learns, every value stays 0: there is no reward on any edge it knows."]
+            : [
+                h("strong", {}, `Known chargers: ${reached.join(" and ")}. `),
+                `The dock is worth ${fmt(graph.V[env.start], 3)} to the robot. The best possible is ${fmt(optimum, 3)}. ${graph.V[env.start] < optimum - 1e-9 ? "Learning more will not close that gap if the missing edges are not in the graph; only driving them will." : "Its graph already contains a best route."}`,
+              ],
       ),
     );
 
-    if (Math.abs(diff) <= 0.015 && cross.length) solved = true;
-    const gap = settings.farDistance - NEAR.distance;
-    const gammaStar = (NEAR.reward / settings.farReward) ** (1 / gap);
     replace(
       challenge,
-      solved
-        ? h(
-            "p",
-            {},
-            h("span", { class: "verdict good" }, "Solved. "),
-            cross.length ? `With the current rewards the routes are worth the same at γ ≈ ${cross.map((g) => g.toFixed(3)).join(" and ")}. ` : "",
-            settings.stepReward
-              ? "With a reward on every step there is no short formula; the crossing is found numerically."
-              : [
-                  "Setting ",
-                  tex(`\\gamma^{${NEAR.distance - 1}}\\cdot ${fmtShort(NEAR.reward)} = \\gamma^{${settings.farDistance - 1}}\\cdot ${fmtShort(settings.farReward)}`),
-                  " gives ",
-                  tex(`\\gamma = (${fmtShort(NEAR.reward)}/${fmtShort(settings.farReward)})^{1/${gap}} = ${gammaStar.toFixed(3)}`),
-                  ".",
-                ],
-          )
-        : h(
-            "p",
-            {},
-            h("span", { class: "status-line" }, h("span", { class: "dot muted" }), cross.length ? `Current gap: ${fmt(Math.abs(diff))}. Get it below 0.015.` : "With these settings no γ between 0 and 1 makes the routes equal. Change the far reward or its distance."),
-          ),
+      solvedWith !== null
+        ? h("p", {}, h("span", { class: "verdict good" }, "Done. "), `The dock's value reached the optimum ${fmt(optimum, 3)} after ${solvedWith} environment steps. The fewest possible is 8: drive the best route once, then learn until nothing changes. Learning is free; information is not.`)
+        : h("p", {}, h("span", { class: "status-line" }, h("span", { class: "dot muted" }), `Not yet: the dock is worth ${fmt(graph.V[env.start], 3)} of ${fmt(optimum, 3)} after ${envSteps} environment steps.`)),
     );
   }
 
-  const returnsCode = extractDef(trajectorySource, "returns");
+  const pad = h(
+    "div",
+    { class: "drive-pad", role: "group", "aria-label": "Drive the robot" },
+    button("↑", { kind: "env", onClick: () => drive(UP), title: "up" }),
+    button("←", { kind: "env", onClick: () => drive(LEFT), title: "left" }),
+    button("↓", { kind: "env", onClick: () => drive(DOWN), title: "down" }),
+    button("→", { kind: "env", onClick: () => drive(RIGHT), title: "right" }),
+  );
+  [...pad.children].forEach((b, i) => b.classList.add(["up", "left", "down", "right"][i]));
+  const trueToggle = h("input", { type: "checkbox", id: "l02-true" });
+  trueToggle.addEventListener("change", () => ((showTrue = trueToggle.checked), render()));
+  const unbind = shortcuts({ arrowup: () => drive(UP), arrowright: () => drive(RIGHT), arrowdown: () => drive(DOWN), arrowleft: () => drive(LEFT), l: () => learn(1) });
 
   root.append(
     lessonHeader("02", {
-      lead: "An agent does not maximize the next reward. It maximizes the return: the sum of all future rewards, each shrunk by the discount factor γ once per step of delay.",
-      concepts: ["reward", "return", "discount factor γ", "episode"],
+      lead: "The robot is not given the graph. It only knows the edges it has driven: its experience graph. Reinforcement learning is two loops around that graph. Acting adds edges to it; learning computes values on it.",
+      concepts: ["control loop", "learning loop", "experience", "Bellman backup", "model unknown"],
     }),
-    step("Question", h("p", { class: "question" }, "Is a small reward close by worth more than a big reward far away?")),
+    step("Question", h("p", { class: "question" }, "The robot does not know the graph. How can it still learn where to go?")),
     step(
       "Predict",
       predict({
-        question: "From S, the left end pays +1 after 2 steps and the right end pays +10 after 6 steps. With γ = 0.5, which route has the larger return?",
-        choices: [
-          { label: "The left route", detail: "+1, two steps away" },
-          { label: "The right route", detail: "+10, six steps away" },
-        ],
-        answer: (() => {
-          const sim = simulate({ farReward: 10, farDistance: 6, stepReward: 0 });
-          return sim.near.returns(0.5)[0] > sim.far.returns(0.5)[0] ? 0 : 1;
-        })(),
-        explain: () => {
-          const sim = simulate({ farReward: 10, farDistance: 6, stepReward: 0 });
-          return `With γ = 0.5 the +1 arrives on the second step and counts 0.5 × 1 = ${fmt(sim.near.returns(0.5)[0])}. The +10 arrives on the sixth step and counts 0.5⁵ × 10 = ${fmt(sim.far.returns(0.5)[0])}. Ten times the reward does not make up for four extra halvings.`;
-        },
+        question: "You drive once from the dock to the slow charger: 5 edges. Then the robot learns, one Bellman backup of every node per learning step. After how many learning steps does the dock's value first change?",
+        choices: [{ label: "After 1" }, { label: "After 5" }, { label: "Never: the robot did not learn while driving" }],
+        answer: 1,
+        explain: () =>
+          "Each backup moves value one edge back along the known edges: first to the node next to the charger, then the one before it, and so on. The dock is 5 edges from the charger, so it changes on the fifth learning step, to 0.9⁴ × 1 = 0.656. Try it below.",
       }),
-      h("div", {}, button("Set γ = 0.5 in the experiment", { onClick: () => (gammaSlider.set(0.5), (settings.gamma = 0.5), render()) })),
     ),
     wideStep(
       "Experiment",
-      prose("Both trajectories below are real rollouts in a Chain environment. Change γ and the rewards: the rollouts stay the same, only how their rewards are added up changes."),
+      prose("Drive with the arrows (you are the one choosing actions here), or let the robot drive with its current values and 20% random moves. Press Learn once to run one learning step, and watch value travel one edge back."),
+      loop.el,
       h(
         "div",
         { class: "bench" },
-        h("div", { class: "controls-row" }, gammaSlider, farRewardSlider, farDistanceSlider, stepSlider),
-        strip,
-        verdict,
-        tables,
+        h(
+          "div",
+          { class: "toolbar" },
+          pad,
+          button("Robot drives one step", { onClick: robotDrives }),
+          h("span", { class: "spacer" }),
+          button("Learn once", { kind: "learn", kbd: "L", onClick: () => learn(1) }),
+          button("Learn until nothing changes", { onClick: () => learn(100) }),
+          button("Start over", { kind: "ghost", onClick: reset }),
+        ),
+        counters,
+        h("div", { class: "bench-grid part1-grid" }, scene.el, h("div", { class: "figure" }, view.el, h("div", { class: "key" },
+          h("span", { class: "key-item" }, h("span", { class: "key-swatch stub" }), "a move never tried"),
+          h("span", { class: "key-item" }, h("span", { class: "key-swatch best-edge" }), "edge the last learning step used, and the robot's best known edge"),
+          h("label", { class: "toggle", for: "l02-true" }, trueToggle, "show the rest of the true graph (the robot cannot see it)"),
+        ))),
+        note,
+        ledger.el,
       ),
     ),
     step(
       "Inspect",
-      prose("The preferred route can flip as γ changes. A small γ makes the agent short-sighted; γ close to 1 makes it patient."),
-      chart.el,
+      prose(
+        "The two loops run at different speeds and cost different things. An environment step costs time, battery, and sometimes a fall off the ledge; a learning step only costs computation. But learning can only redistribute what the graph already contains: if no known edge leads to the fast charger, no amount of learning will find it.",
+        "Notice also who chose the actions. When you drive, the data comes from your policy, while the values the robot learns are for its own greedy policy. That mismatch is what off-policy means, and it returns in lessons 03 and 08.",
+      ),
     ),
     step(
       "Equation",
-      equation("G_t \\;=\\; r_t + \\gamma r_{t+1} + \\gamma^2 r_{t+2} + \\dots \\;=\\; \\sum_{k=0}^{\\infty} \\gamma^k r_{t+k}"),
       equation(
-        "G_t \\;=\\; r_t + \\gamma\\, G_{t+1}",
-        "The same sum, written recursively. This one line is what the code computes, walking backwards from the end of the episode.",
+        "V(s) \\leftarrow \\max_{a \\,:\\, (s,a)\\ \\text{seen}} \\big[\\, r(s,a) + \\gamma\\, V(s') \\,\\big]",
+        "The Bellman equation of lesson 01, restricted to the edges the robot has seen. One learning step applies it to every visited node; after k steps a node's value is the best return of any known walk of at most k edges.",
       ),
     ),
-    step("Code", codeBlock(returnsCode, { title: "visualrl/core/trajectory.py", highlight: [returnsCode.split("\n").findIndex((l) => l.includes("G = self.transitions[t].reward")) + 1] })),
-    step(
-      "Challenge",
-      prose("Find the discount factor at which the agent cannot decide: move γ until both routes are worth the same, within 0.015. Try it for a few different far rewards and distances."),
-      challenge,
-    ),
+    step("Code", codeBlock(extractDef(graphSource, "sweep"), { title: "visualrl/algorithms/tabular/experience_graph.py" })),
+    step("Challenge", prose("Get the dock's value to the true optimum with as few environment steps as possible. Learning steps are free."), challenge),
     lessonFooter("02"),
   );
-  render();
-  return () => {};
+  reset();
+  return () => {
+    unbind();
+    scene.dispose();
+  };
 }
