@@ -1807,3 +1807,116 @@ path.g-edge.hl {
 .figure > * {
   min-width: 0;
 }
+
+/* ---------- PPO ---------- */
+
+.hl-touched {
+  fill: none;
+  stroke: var(--learn);
+  stroke-width: 1.6;
+  stroke-dasharray: 3 2;
+}
+
+.hl-selected {
+  fill: none;
+  stroke: var(--env);
+  stroke-width: 3;
+}
+
+.scatter svg {
+  display: block;
+  cursor: crosshair;
+}
+
+.clip-region {
+  fill: var(--learn-wash);
+  opacity: 0.75;
+}
+
+.clip-line {
+  stroke: var(--learn);
+  stroke-width: 1.4;
+  stroke-dasharray: 4 3;
+}
+
+.dot-other {
+  fill: var(--ink-3);
+  opacity: 0.35;
+}
+
+.dot-active {
+  fill: var(--ink);
+  stroke: var(--sheet);
+  stroke-width: 1.2;
+}
+
+.dot-clipped {
+  fill: var(--sheet);
+  stroke: var(--learn);
+  stroke-width: 2;
+}
+
+.dot-selected {
+  fill: none;
+  stroke: var(--env);
+  stroke-width: 2.5;
+}
+
+.key-swatch.dot-a,
+.key-swatch.dot-c,
+.key-swatch.dot-o {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.key-swatch.dot-a {
+  background: var(--ink);
+}
+
+.key-swatch.dot-c {
+  border: 2px solid var(--learn);
+  background: var(--sheet);
+}
+
+.key-swatch.dot-o {
+  background: var(--ink-3);
+  opacity: 0.5;
+  width: 6px;
+  height: 6px;
+}
+
+.key-swatch.region {
+  background: var(--learn-wash);
+}
+
+.phases {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--step--1);
+}
+
+.phase {
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  padding: 3px 11px;
+  color: var(--ink-3);
+  background: var(--sheet);
+  white-space: nowrap;
+}
+
+.phase.active.env {
+  border-color: var(--env);
+  background: var(--env-wash);
+  color: var(--env-ink);
+  font-weight: 600;
+}
+
+.phase.active.learn {
+  border-color: var(--learn);
+  background: var(--learn-wash);
+  color: var(--learn-ink);
+  font-weight: 600;
+}

@@ -40,7 +40,9 @@ Phase 1 (core tabular system) is in progress.
 | Lessons 02 (return and discounting), 08 (Monte Carlo vs TD), 09 (SARSA vs Q-learning) | done |
 | `visualrl/envs/maze_maps.json`: maps in Gymnasium-Robotics PointMaze format, shared by Python and the web; `GridWorld.from_maze_map`, `GridWorld.warehouse()` | done |
 | One robot world: 3D warehouse view (Three.js) and an experience graph (visited states, observed transitions, stitched routes), piloted in lesson 09 | in progress |
-| Lessons 01, 03–07, 10–16 | planned |
+| `visualrl/algorithms/tabular/ppo.py`: PPO with a table of logits and a table of values (GAE, clipped surrogate, entropy bonus, minibatch epochs), mirrored in JS with parity tests | done |
+| Lesson 15 (PPO) in the warehouse: rollout replay, probability-ratio scatter with clipped samples, per-sample objective, clip vs no-clip experiment | done |
+| Lessons 01, 03–07, 10–14, 16 | planned |
 
 ```bash
 pip install -e ".[dev]"

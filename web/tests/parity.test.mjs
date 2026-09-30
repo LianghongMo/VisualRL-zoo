@@ -88,3 +88,56 @@ test("reference values match Python", () => {
   const walk = exactPolicyValue(new Chain().model(), uniformPolicy(7, 2), 1);
   walk.forEach((v, s) => assert.ok(Math.abs(v - golden.random_walk_exact.V[s]) < 1e-12));
 });
+
+test("PPO advantages and minibatch updates match Python", async () => {
+  const { Rollout, TabularPPO } = await import("../src/rl/tabular/ppo.js");
+  const g = golden.ppo;
+  const c = g.config;
+  const agent = new TabularPPO({
+    nStates: c.n_states,
+    nActions: c.n_actions,
+    gamma: c.gamma,
+    lam: c.lam,
+    clip: c.clip,
+    policyLr: c.policy_lr,
+    valueLr: c.value_lr,
+    entropyCoef: c.entropy_coef,
+  });
+  agent.logits = g.initial.logits.map((row) => [...row]);
+  agent.V = [...g.initial.V];
+  const rollout = new Rollout(g.transitions.map(makeTransition), [...g.old_probs]);
+  assertClose(agent.computeAdvantages(rollout), g.gae, "ppo.gae");
+  let k = 0;
+  g.minibatches.forEach((batches, epoch) => {
+    for (const indices of batches) {
+      const actual = agent.updateMinibatch(rollout, indices, epoch);
+      assertClose(JSON.parse(JSON.stringify(actual)), g.updates[k], `ppo.update[${k}]`);
+      k += 1;
+    }
+  });
+  assertClose(agent.logits, g.final.logits, "ppo.logits");
+  assertClose(agent.V, g.final.V, "ppo.V");
+});
+
+test("PPO learns to reach the charger in the warehouse", async () => {
+  const { TabularPPO } = await import("../src/rl/tabular/ppo.js");
+  const env = GridWorld.warehouse({ maxSteps: 1000 });
+  const agent = new TabularPPO({ nStates: env.nStates, nActions: 4, policyLr: 3, valueLr: 2, entropyCoef: 0.01, seed: 1 });
+  let [state] = env.reset();
+  for (let it = 0; it < 45; it++) {
+    const out = agent.collect(env, 1024, state);
+    state = out.state;
+    agent.update(out.rollout, { epochs: 4, minibatchSize: 256 });
+  }
+  let s = env.start;
+  let total = 0;
+  let done = false;
+  for (let i = 0; i < 60 && !done; i++) {
+    const row = agent.logits[s];
+    const [next, r, d] = env.move(s, row.indexOf(Math.max(...row)));
+    total += r;
+    s = next;
+    done = d;
+  }
+  assert.ok(done && total <= -13 && total > -30, `greedy return ${total}`);
+});

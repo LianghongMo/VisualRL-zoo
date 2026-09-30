@@ -40,7 +40,7 @@ export const PARTS = [
       { id: "12", title: "DQN", about: "Replay, online network, target network, Bellman target, loss." },
       { id: "13", title: "REINFORCE", about: "Logits to probabilities to a policy gradient." },
       { id: "14", title: "Actor-Critic and Advantage", about: "Update the critic, then update the actor." },
-      { id: "15", title: "PPO", about: "Probability ratio, advantage, and the clipped objective." },
+      { id: "15", title: "PPO", about: "The same warehouse robot: rollouts, GAE, probability ratios, and which samples get clipped.", ready: true },
       { id: "16", title: "Evaluation and Debugging", about: "Seeds, uncertainty, and why a falling loss is not a better policy." },
     ],
   },

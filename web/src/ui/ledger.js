@@ -8,7 +8,8 @@ const HISTORY = 400;
 
 export class Ledger {
   // groupsFor(trace) -> [{ label, tone: "env" | "learn" | undefined, rows: [{ label, formula, value, emph, result }] }]
-  constructor({ groupsFor, titleFor, empty, onSelect = () => {} }) {
+  constructor({ groupsFor, titleFor, empty, emptyTitle = "Learning trace", onSelect = () => {} }) {
+    this.emptyTitle = emptyTitle;
     this.groupsFor = groupsFor;
     this.titleFor = titleFor;
     this.emptyText = empty;
@@ -81,7 +82,7 @@ export class Ledger {
     this.nextBtn.disabled = this.index >= this.history.length - 1;
     this.posEl.textContent = this.history.length ? `${this.index + 1} / ${this.history.length}` : "";
     if (!trace) {
-      this.titleEl.textContent = "Learning trace";
+      this.titleEl.textContent = this.emptyTitle;
       replace(this.body, h("p", { class: "ledger-empty" }, this.emptyText));
       return;
     }

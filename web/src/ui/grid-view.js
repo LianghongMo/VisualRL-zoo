@@ -20,12 +20,12 @@ export function valueFill(q, domain) {
   return `color-mix(in oklab, ${q < 0 ? "var(--neg)" : "var(--pos)"} ${Math.round(t * 88)}%, var(--zero))`;
 }
 
-export function valueLegend(domain) {
+export function valueLegend(domain, label = "Q(s,a)") {
   const stops = [-domain, -10, -1, 0];
   return h(
     "div",
     { class: "legend" },
-    h("span", {}, "Q(s,a)"),
+    h("span", {}, label),
     h(
       "span",
       { class: "value-scale" },

@@ -584,6 +584,27 @@ export class WarehouseScene {
     this.routeTimer = setInterval(tick, stepMs);
   }
 
+  // Replay recorded environment steps [{ from, to, fellInto, action }] one after another.
+  playSteps(id, steps, { stepMs = 60, onDone } = {}) {
+    if (!this.ok) return onDone?.();
+    this.stopRoutes();
+    let i = 0;
+    let at = null;
+    const tick = () => {
+      if (i >= steps.length) {
+        this.stopRoutes();
+        onDone?.();
+        return;
+      }
+      const st = steps[i++];
+      if (at !== st.from) this.place(id, st.from, st.action); // an episode ended and the robot restarted at the dock
+      this.move(id, st, { duration: stepMs * 0.9 });
+      at = st.to;
+    };
+    tick();
+    this.routeTimer = setInterval(tick, stepMs);
+  }
+
   stopRoutes() {
     clearInterval(this.routeTimer);
     this.routeTimer = null;

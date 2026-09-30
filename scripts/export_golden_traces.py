@@ -18,6 +18,7 @@ import numpy as np
 
 from visualrl import rollout
 from visualrl.algorithms.tabular import TD0, MonteCarlo, NStepTD, QLearning, Sarsa, run_episode
+from visualrl.algorithms.tabular.ppo import TabularPPO
 from visualrl.envs import Chain, GridWorld
 from visualrl.policies import uniform_policy
 from visualrl.reference import exact_policy_value, optimal_values
@@ -77,6 +78,33 @@ def build() -> dict:
             "traces": [replay.learn_step(t).to_dict() for t in transitions],
             "final": replay.Q.tolist(),
         }
+
+    # PPO: one rollout from the warehouse, then two epochs of minibatches with the indices recorded.
+    env = GridWorld.warehouse(max_steps=1000)
+    state = env.reset(seed=5)[0]
+    config = {"n_states": int(env.observation_space.n), "n_actions": 4, "gamma": 0.99, "lam": 0.95, "clip": 0.2, "policy_lr": 3.0, "value_lr": 2.0, "entropy_coef": 0.01}
+    collector = TabularPPO(config["n_states"], 4, **{k: v for k, v in config.items() if k not in ("n_states", "n_actions")}, seed=5)
+    for _ in range(3):  # move the policy away from uniform so ratios and clipping are exercised
+        warm, state = collector.collect(env, 256, state)
+        collector.update(warm, epochs=4, minibatch_size=64)
+    rollout, state = collector.collect(env, 128, state)
+    learner = TabularPPO(config["n_states"], 4, **{k: v for k, v in config.items() if k not in ("n_states", "n_actions")}, seed=6)
+    learner.logits = collector.logits.copy()
+    learner.V = collector.V.copy()
+    initial = {"logits": learner.logits.tolist(), "V": learner.V.tolist()}
+    gae = learner.compute_advantages(rollout).to_dict()
+    minibatches = [learner.minibatches(len(rollout), 32) for _ in range(3)]
+    updates = [learner.update_minibatch(rollout, idx, epoch).to_dict() for epoch, batches in enumerate(minibatches) for idx in batches]
+    golden["ppo"] = {
+        "config": config,
+        "initial": initial,
+        "transitions": [asdict(t) for t in rollout.transitions],
+        "old_probs": rollout.old_probs,
+        "gae": gae,
+        "minibatches": minibatches,
+        "updates": updates,
+        "final": {"logits": learner.logits.tolist(), "V": learner.V.tolist()},
+    }
 
     V_star, Q_star = optimal_values(GridWorld.cliff().model(), gamma=1.0)
     golden["cliff_optimal"] = {"gamma": 1.0, "V": V_star.tolist(), "Q": Q_star.tolist()}
