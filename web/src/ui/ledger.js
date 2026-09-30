@@ -17,7 +17,7 @@ export class Ledger {
     this.index = -1;
 
     this.titleEl = h("span", { class: "title" });
-    this.posEl = h("span", { class: "note num" });
+    this.posEl = h("span", { class: "note num ledger-pos" });
     this.prevBtn = h("button", { type: "button", "aria-label": "Previous update", onclick: () => this.go(-1) }, "‹");
     this.nextBtn = h("button", { type: "button", "aria-label": "Next update", onclick: () => this.go(1) }, "›");
     this.body = h("div", { class: "ledger-body" });
@@ -49,6 +49,14 @@ export class Ledger {
   push(trace) {
     this.history.push(trace);
     if (this.history.length > HISTORY) this.history.shift();
+    this.index = this.history.length - 1;
+    this.render(true);
+  }
+
+  pushMany(traces) {
+    if (!traces.length) return;
+    this.history.push(...traces.slice(-HISTORY));
+    if (this.history.length > HISTORY) this.history.splice(0, this.history.length - HISTORY);
     this.index = this.history.length - 1;
     this.render(true);
   }

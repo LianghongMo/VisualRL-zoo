@@ -26,6 +26,8 @@ Visual RL makes these internal learning processes visible.
 
 ## Status and quick start
 
+**Open the lessons:** download [`docs/index.html`](docs/index.html) and double-click it. It is one self-contained page (no install, no server). With GitHub Pages enabled (Settings → Pages → Deploy from branch → `main` / `docs`) it is also served at `https://lianghongmo.github.io/VisualRL-zoo/`.
+
 Phase 1 (core tabular system) is in progress.
 
 | Part | State |
@@ -35,7 +37,8 @@ Phase 1 (core tabular system) is in progress.
 | `visualrl/algorithms/tabular`: TD(0), Monte Carlo, n-step TD, SARSA, Q-learning, Bellman backup, policy iteration, value iteration, ε-greedy bandit | done |
 | `visualrl/reference.py`: exact $V^\pi$, $V^*$, $Q^*$ from the model (for the visualizer only) | done |
 | `web/src/rl`: the same tabular algorithms in JavaScript for the browser, checked against Python traces | done |
-| `web`: interactive lessons 02, 08, 09 | in progress |
+| Lessons 02 (return and discounting), 08 (Monte Carlo vs TD), 09 (SARSA vs Q-learning) | done |
+| Lessons 01, 03–07, 10–16 | planned |
 
 ```bash
 pip install -e ".[dev]"
@@ -43,12 +46,15 @@ pytest                                   # Python tests
 python examples/td_update.py             # the worked TD example below, computed by TD0
 python examples/cliff_sarsa_vs_qlearning.py
 
-cd web && npm install && npm test        # JavaScript engine + parity with Python
+cd web && npm install
+npm test                                 # JavaScript engine + parity with Python
+npm run dev                              # lessons on http://localhost:8000, rebuilt on change
+npm run build                            # writes docs/index.html
 ```
 
-The Python package lives in `visualrl/` (so `envs/`, `core/`, `algorithms/` in the structure below are `visualrl/envs/`, `visualrl/core/`, ...).
+The Python package lives in `visualrl/` (so `envs/`, `core/`, `algorithms/` in the structure below are `visualrl/envs/`, `visualrl/core/`, ...). The lessons live in `web/src/lessons/`, the shared visual components in `web/src/ui/`.
 
-The web lessons run a JavaScript copy of the tabular algorithms so they work in any browser without a server. To keep "the algorithm produces the truth" honest, `scripts/export_golden_traces.py` records transitions and the Python traces for them in `tests/golden/traces.json`, and `web/tests/parity.test.mjs` replays those transitions and requires every JavaScript trace to match.
+The web lessons run a JavaScript copy of the tabular algorithms so they work in any browser without a server. To keep "the algorithm produces the truth" honest, `scripts/export_golden_traces.py` records transitions and the Python traces for them in `tests/golden/traces.json`, and `web/tests/parity.test.mjs` replays those transitions and requires every JavaScript trace to match. The "Code" step of each lesson shows the real Python source, bundled from `visualrl/` at build time.
 
 ---
 

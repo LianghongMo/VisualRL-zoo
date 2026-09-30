@@ -170,8 +170,12 @@ kbd,
 }
 
 math {
-  font-family: "STIX Two Math", "Cambria Math", "Latin Modern Math", math;
-  font-size: 1.08em;
+  font-family: "Noto Sans Math", "STIX Two Math", "Cambria Math", math;
+  font-size: 1.05em;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 .num {
@@ -1244,4 +1248,419 @@ input[type="range"] {
   .page {
     padding-block: 24px 72px;
   }
+}
+
+/* ---------- grid world ---------- */
+
+.grid-figure svg {
+  display: block;
+  width: 100%;
+  min-width: 560px;
+  height: auto;
+}
+
+.tri {
+  stroke: var(--sheet);
+  stroke-width: 1;
+}
+
+.cell-plain {
+  fill: var(--paper);
+  stroke: var(--sheet);
+}
+
+.cell-cliff {
+  fill: color-mix(in oklab, var(--neg) 16%, var(--sheet));
+}
+
+.cell-goal {
+  fill: var(--env-wash);
+}
+
+.grid-line {
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+
+.grid-frame {
+  fill: none;
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+
+.cell-mark {
+  fill: var(--ink);
+  font-family: var(--font-display);
+  font-variation-settings: "CASL" 1;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.cell-mark.small {
+  font-size: 11px;
+  fill: var(--ink-2);
+}
+
+.cliff-label {
+  fill: var(--neg);
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.tri-value {
+  fill: var(--ink);
+  font-family: var(--font-mono);
+  font-variation-settings: "MONO" 1;
+  font-size: 8.5px;
+  paint-order: stroke;
+  stroke: var(--sheet);
+  stroke-width: 2.4px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.hl-updated {
+  fill: none;
+  stroke: var(--learn);
+  stroke-width: 3.2;
+  stroke-linejoin: round;
+}
+
+.hl-target {
+  fill: none;
+  stroke: var(--learn);
+  stroke-width: 2.4;
+  stroke-dasharray: 4 3;
+  stroke-linejoin: round;
+}
+
+.move-line {
+  stroke: var(--env);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  fill: none;
+  opacity: 0.75;
+}
+
+.move-line.fall {
+  stroke-dasharray: 5 4;
+}
+
+.agent {
+  fill: var(--ink);
+  stroke: var(--sheet);
+  stroke-width: 2.5;
+}
+
+.hit {
+  fill: transparent;
+}
+
+.value-scale {
+  display: inline-flex;
+  gap: 10px;
+}
+
+.value-stop {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-variation-settings: "MONO" 1;
+}
+
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: var(--step--1);
+  color: var(--ink-2);
+}
+
+.key-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.key-swatch {
+  width: 18px;
+  height: 12px;
+  display: inline-block;
+  border-radius: 2px;
+}
+
+.key-swatch.updated {
+  border: 3px solid var(--learn);
+}
+
+.key-swatch.target {
+  border: 2px dashed var(--learn);
+}
+
+.key-swatch.next {
+  height: 0;
+  border-top: 3px solid var(--env);
+  border-radius: 0;
+}
+
+.key-swatch.ref {
+  height: 0;
+  border-top: 3px dashed var(--ink-2);
+  border-radius: 0;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--step--1);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.toggle input {
+  accent-color: var(--ink);
+}
+
+/* ---------- misc ---------- */
+
+.lesson-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 28px;
+  font-size: var(--step--1);
+}
+
+.about {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 20px;
+  border-top: 1px solid var(--rule);
+  padding-top: 18px;
+  margin-top: 34px;
+}
+
+@media (max-width: 760px) {
+  .about {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.two-col > * {
+  min-width: 0;
+}
+
+.status-line {
+  font-size: var(--step--1);
+  color: var(--ink-2);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ---------- chains ---------- */
+
+.chain-figure svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 460px;
+}
+
+.chain-cell {
+  fill: var(--paper);
+  stroke: var(--rule-strong);
+}
+
+.chain-terminal {
+  fill: var(--env-wash);
+  stroke: color-mix(in srgb, var(--env) 50%, transparent);
+}
+
+.chain-reward {
+  fill: var(--env-ink);
+  font-family: var(--font-mono);
+  font-variation-settings: "MONO" 1;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.chain-route-label {
+  fill: var(--ink-2);
+  font-family: var(--font-mono);
+  font-variation-settings: "MONO" 1;
+  font-size: 12px;
+}
+
+.hl-bar {
+  fill: none;
+  stroke: var(--learn);
+  stroke-width: 2.5;
+}
+
+.bench.inset {
+  background: var(--paper);
+  padding: 14px;
+  gap: 12px;
+}
+
+.inspector {
+  display: grid;
+  gap: 8px;
+}
+
+.chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rchip {
+  display: inline-grid;
+  justify-items: center;
+  gap: 1px;
+  min-width: 46px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--rule);
+  background: var(--sheet);
+  color: var(--ink-3);
+}
+
+.rchip small {
+  font-size: 0.75rem;
+}
+
+.rchip b {
+  font-weight: 600;
+}
+
+.rchip.used {
+  border-color: var(--learn);
+  background: var(--learn-wash);
+  color: var(--ink);
+}
+
+.rchip.bootstrap {
+  border: 1.5px dashed var(--learn);
+  background: var(--sheet);
+  color: var(--ink);
+}
+
+.rchip.missing {
+  border-style: dashed;
+  color: var(--ink-3);
+}
+
+/* ---------- return tables (lesson 02) ---------- */
+
+.return-table {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--sheet);
+  min-width: 0;
+}
+
+.return-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--rule);
+  font-size: var(--step--1);
+}
+
+.return-head .grow {
+  flex: 1;
+}
+
+.return-table table {
+  border-collapse: collapse;
+  font-size: var(--step--1);
+}
+
+.return-table th,
+.return-table td {
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--rule);
+  text-align: right;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-variation-settings: "MONO" 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.return-table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--ink-2);
+  position: sticky;
+  left: 0;
+  background: var(--sheet);
+}
+
+.return-table tr:last-child th,
+.return-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.term {
+  display: inline-grid;
+  gap: 3px;
+  justify-items: end;
+}
+
+.term-bar {
+  position: relative;
+  display: block;
+  width: 46px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.term-ghost,
+.term-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 3px;
+}
+
+.term-ghost {
+  background: var(--rule-strong);
+}
+
+.chain-svg.values {
+  min-width: 520px;
+}
+
+.routes-map {
+  max-width: 720px;
+}
+
+.step.wide {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.ledger-pos {
+  white-space: nowrap;
+}
+
+.chain-figure svg.chain-strip {
+  min-width: 0;
+  max-width: 100%;
+  margin-inline: auto;
 }
