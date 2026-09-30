@@ -1,0 +1,90 @@
+// The web lessons run a JavaScript copy of the tabular algorithms. This test
+// replays the transitions recorded by scripts/export_golden_traces.py and
+// checks that every JavaScript trace equals the Python one.
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { test } from "node:test";
+
+import { Trajectory, makeTransition } from "../src/rl/core.js";
+import { Chain } from "../src/rl/envs/chain.js";
+import { GridWorld } from "../src/rl/envs/gridworld.js";
+import { uniformPolicy } from "../src/rl/policies.js";
+import { exactPolicyValue, optimalValues } from "../src/rl/tabular/dp.js";
+import { MonteCarlo } from "../src/rl/tabular/monte-carlo.js";
+import { NStepTD } from "../src/rl/tabular/n-step-td.js";
+import { QLearning, Sarsa } from "../src/rl/tabular/q-agents.js";
+import { TD0 } from "../src/rl/tabular/td0.js";
+
+const golden = JSON.parse(readFileSync(new URL("../../tests/golden/traces.json", import.meta.url)));
+
+function assertClose(actual, expected, path = "trace") {
+  if (typeof expected === "number") {
+    assert.equal(typeof actual, "number", `${path}: expected a number, got ${actual}`);
+    assert.ok(Math.abs(actual - expected) <= 1e-12 * Math.max(1, Math.abs(expected)), `${path}: ${actual} != ${expected}`);
+  } else if (Array.isArray(expected)) {
+    assert.ok(Array.isArray(actual), `${path}: expected an array`);
+    assert.equal(actual.length, expected.length, `${path}: length`);
+    expected.forEach((e, i) => assertClose(actual[i], e, `${path}[${i}]`));
+  } else if (expected !== null && typeof expected === "object") {
+    assert.deepEqual(Object.keys(actual).sort(), Object.keys(expected).sort(), `${path}: fields`);
+    for (const key of Object.keys(expected)) assertClose(actual[key], expected[key], `${path}.${key}`);
+  } else {
+    assert.equal(actual, expected, path);
+  }
+}
+
+const toTrajectory = (episode) => new Trajectory(episode.map(makeTransition));
+const config = ({ n_states, n_actions, alpha, gamma, initial_value, n }) => ({
+  nStates: n_states,
+  nActions: n_actions,
+  alpha,
+  gamma,
+  initialValue: initial_value ?? 0,
+  n,
+});
+
+test("TD(0) traces match Python", () => {
+  const g = golden.td0;
+  const agent = new TD0(config(g.config));
+  g.transitions.forEach((t, i) => assertClose(agent.learnStep(makeTransition(t)), g.traces[i], `td0[${i}]`));
+  assertClose(agent.V, g.final, "td0.V");
+});
+
+test("Monte Carlo traces match Python", () => {
+  const g = golden.monte_carlo;
+  const agent = new MonteCarlo(config(g.config));
+  const traces = g.episodes.flatMap((ep) => agent.learnEpisode(toTrajectory(ep)));
+  assertClose(traces, g.traces, "monte_carlo");
+  assertClose(agent.V, g.final, "monte_carlo.V");
+});
+
+test("n-step TD traces match Python", () => {
+  const g = golden.n_step_td;
+  const agent = new NStepTD(config(g.config));
+  const traces = g.episodes.flatMap((ep) => {
+    const trajectory = toTrajectory(ep);
+    return ep.map((_, t) => agent.learnStep(trajectory, t));
+  });
+  assertClose(traces, g.traces, "n_step_td");
+  assertClose(agent.V, g.final, "n_step_td.V");
+});
+
+for (const [name, Agent] of [
+  ["sarsa", Sarsa],
+  ["q_learning", QLearning],
+]) {
+  test(`${name} traces match Python`, () => {
+    const g = golden[name];
+    const agent = new Agent(config(g.config));
+    g.transitions.forEach((t, i) => assertClose(agent.learnStep(makeTransition(t)), g.traces[i], `${name}[${i}]`));
+    assertClose(agent.Q, g.final, `${name}.Q`);
+  });
+}
+
+test("reference values match Python", () => {
+  const cliff = optimalValues(GridWorld.cliff().model(), 1);
+  assertClose(cliff.V, golden.cliff_optimal.V, "cliff V*");
+  assertClose(cliff.Q, golden.cliff_optimal.Q, "cliff Q*");
+  const walk = exactPolicyValue(new Chain().model(), uniformPolicy(7, 2), 1);
+  walk.forEach((v, s) => assert.ok(Math.abs(v - golden.random_walk_exact.V[s]) < 1e-12));
+});
