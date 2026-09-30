@@ -124,7 +124,7 @@ export class MujocoReplay {
     this.world.rotation.x = -Math.PI / 2;
     this.scene.add(this.world);
     const robot = new THREE.MeshStandardMaterial({ color: token("--series-2"), roughness: 0.45, metalness: 0.1 });
-    const joint = new THREE.MeshStandardMaterial({ color: token("--ink"), roughness: 0.5 });
+    const joint = new THREE.MeshStandardMaterial({ color: token("--series-1"), roughness: 0.5 });
     const wall = new THREE.MeshStandardMaterial({ color: new THREE.Color(token("--paper")).lerp(new THREE.Color(token("--ink")), 0.25), roughness: 0.85 });
     const floor = new THREE.MeshStandardMaterial({ map: gridTexture(token("--rule-strong"), token("--sheet")), roughness: 1 });
     this.meshes = new Map();
@@ -153,7 +153,7 @@ export class MujocoReplay {
     this.goal.visible = false;
     this.world.add(this.goal);
 
-    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x666666, 1.6));
+    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x5c6f8f, 1.6));
     this.sun = new THREE.DirectionalLight(0xffffff, 1.4);
     this.sun.castShadow = true;
     this.sun.shadow.mapSize.set(1024, 1024);

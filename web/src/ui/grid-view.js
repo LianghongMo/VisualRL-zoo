@@ -14,6 +14,14 @@ const DIRS = [
 ];
 
 // Diverging fill on a log scale, so −1 and −13 are as distinguishable as −13 and −100.
+// How deep the fill of a value is, 0..1. Marks drawn on fills deeper than ~0.45 switch to white.
+export function valueStrength(q, domain) {
+  if (!Number.isFinite(q) || q === 0) return 0;
+  return Math.min(1, Math.log1p(Math.abs(q)) / Math.log1p(domain)) * 0.88;
+}
+
+export const inkOn = (q, domain) => (valueStrength(q, domain) > 0.45 ? "#ffffff" : "var(--ink)");
+
 export function valueFill(q, domain) {
   if (!Number.isFinite(q) || q === 0) return "var(--zero)";
   const t = Math.min(1, Math.log1p(Math.abs(q)) / Math.log1p(domain));
@@ -127,11 +135,12 @@ export class QGrid {
         const best = Math.max(...Q[st]);
         const greedy = Q[st].map((q, a) => (q >= best - 1e-9 ? a : -1)).filter((a) => a >= 0);
         const [cx, cy] = this.center(st);
-        if (greedy.length < 4) for (const a of greedy) cells.push(arrow(cx, cy, a, { length: C * 0.2, start: 3, width: 1.6, head: 4, color: "var(--ink-2)" }));
+        if (greedy.length < 4) for (const a of greedy) cells.push(arrow(cx, cy, a, { length: C * 0.2, start: 3, width: 1.6, head: 4, color: inkOn(Math.min(...Q[st]), this.domain) }));
         if (showValues || valueCells.has(st)) {
           for (let a = 0; a < 4; a++) {
             const [lx, ly] = this.labelPos(st, a);
-            labels.push(s("text", { x: lx, y: ly, class: "tri-value", "text-anchor": "middle" }, fmt(Q[st][a], Math.abs(Q[st][a]) >= 9.95 ? 0 : 1)));
+            const dark = valueStrength(Q[st][a], this.domain) > 0.45;
+            labels.push(s("text", { x: lx, y: ly, class: `tri-value${dark ? " on-dark" : ""}`, "text-anchor": "middle" }, fmt(Q[st][a], Math.abs(Q[st][a]) >= 9.95 ? 0 : 1)));
           }
         }
       }

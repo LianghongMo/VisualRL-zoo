@@ -2,7 +2,7 @@
 // length is π(a|s), on a background colored by the value estimate V(s).
 import { h, replace, s } from "./dom.js";
 import { ARROWS, fmt } from "./format.js";
-import { valueFill } from "./grid-view.js";
+import { inkOn, valueFill } from "./grid-view.js";
 
 const C = 54;
 const PAD = 6;
@@ -57,6 +57,7 @@ export class PolicyGrid {
       }
       cells.push(s("rect", { x: x + 0.5, y: y + 0.5, width: C - 1, height: C - 1, style: { fill: valueFill(V[st], this.domain) } }));
       const [cx, cy] = this.center(st);
+      const ink = inkOn(V[st], this.domain);
       probs(st).forEach((p, a) => {
         if (p < 0.02) return;
         const [dx, dy] = DIRS[a];
@@ -66,11 +67,11 @@ export class PolicyGrid {
         const ty = cy + dy * len;
         const head = 3 + 3 * p;
         cells.push(
-          s("line", { x1: cx, y1: cy, x2: tx - dx * head, y2: ty - dy * head, stroke: "var(--ink)", "stroke-width": w, "stroke-linecap": "round", opacity: 0.35 + 0.65 * p }),
-          s("polygon", { points: `${tx},${ty} ${tx - dx * head - dy * head * 0.8},${ty - dy * head + dx * head * 0.8} ${tx - dx * head + dy * head * 0.8},${ty - dy * head - dx * head * 0.8}`, fill: "var(--ink)", opacity: 0.35 + 0.65 * p }),
+          s("line", { x1: cx, y1: cy, x2: tx - dx * head, y2: ty - dy * head, stroke: ink, "stroke-width": w, "stroke-linecap": "round", opacity: 0.45 + 0.55 * p }),
+          s("polygon", { points: `${tx},${ty} ${tx - dx * head - dy * head * 0.8},${ty - dy * head + dx * head * 0.8} ${tx - dx * head + dy * head * 0.8},${ty - dy * head - dx * head * 0.8}`, fill: ink, opacity: 0.45 + 0.55 * p }),
         );
       });
-      cells.push(s("circle", { cx, cy, r: 2, fill: "var(--ink)" }));
+      cells.push(s("circle", { cx, cy, r: 2, fill: ink }));
       if (st === env.start) marks.push(s("text", { x: x + 5, y: y + 13, class: "cell-mark small" }, "S"));
       if (touched.has(st)) marks.push(s("rect", { x: x + 2, y: y + 2, width: C - 4, height: C - 4, class: "hl-touched" }));
       if (st === selected) marks.push(s("rect", { x: x + 1.5, y: y + 1.5, width: C - 3, height: C - 3, class: "hl-selected" }));

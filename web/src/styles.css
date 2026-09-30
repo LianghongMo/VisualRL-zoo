@@ -10,27 +10,31 @@
    (updates and the values they change). */
 :root {
   --paper: #ffffff;
-  --sheet: #f8f9f7;
-  --ink: #17212b;
-  --ink-2: #4a5663;
-  --ink-3: #737f8b;
-  --rule: #dce1db;
-  --rule-strong: #c2c9c2;
+  --sheet: #f5f8fc;
+  --ink: #0e2344;
+  --ink-2: #3d5578;
+  --ink-3: #7289a8;
+  --rule: #e1e8f2;
+  --rule-strong: #c5d3e6;
 
-  --env: #1f7a69;
-  --env-wash: #d9eee7;
-  --env-ink: #125446;
-  --learn: #dca100;
-  --learn-wash: #fbeec0;
-  --learn-ink: #6e5000;
+  /* Only blues on white. Acting is a light sky blue, learning a deep blue;
+     washes are the same hues at low strength. */
+  --env: #3a8ee6;
+  --env-wash: #e8f2fd;
+  --env-ink: #1f5fae;
+  --learn: #173f8a;
+  --learn-wash: #e2e8f5;
+  --learn-ink: #173f8a;
 
-  --pos: #2a78d6;
-  --neg: #e34948;
-  --zero: #ebe9e3;
-  --series-1: #2a78d6;
-  --series-2: #eb6834;
-  --good: #0a7d36;
-  --bad: #c0392f;
+  /* Values: white at 0, deeper blue for larger magnitudes. */
+  --pos: #5aa9f0;
+  --neg: #16397a;
+  --zero: #f2f5fa;
+  /* Two methods side by side: light blue and deep blue, always with a legend. */
+  --series-1: #62aef2;
+  --series-2: #173f8a;
+  --good: #1f5fae;
+  --bad: #3d5578;
 
   --font-display: "Recursive", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-body: "Recursive", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -534,7 +538,7 @@ a.lesson-row:hover {
 .btn.learn {
   background: var(--learn);
   border-color: var(--learn);
-  color: #221800;
+  color: #fff;
 }
 
 .btn.ghost {
@@ -1037,7 +1041,7 @@ input[type="range"] {
   border-radius: 8px;
   padding: 7px 10px;
   font-size: var(--step--1);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 20px rgba(14, 35, 68, 0.12);
   display: grid;
   gap: 2px;
   min-width: 120px;
@@ -1949,4 +1953,9 @@ path.g-edge.hl {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+.tri-value.on-dark {
+  fill: #ffffff;
+  stroke: var(--neg);
 }

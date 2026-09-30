@@ -315,7 +315,7 @@ export class WarehouseScene {
     addPad(env.start, "DOCK", false);
     for (const g of env.goals) addPad(g, "CHARGER", true);
 
-    this.hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.7);
+    this.hemi = new THREE.HemisphereLight(0xffffff, 0x5c6f8f, 1.7);
     this.sun = new THREE.DirectionalLight(0xffffff, 1.3);
     this.sun.position.set(-3, 9, 5);
     this.sun.castShadow = true;
