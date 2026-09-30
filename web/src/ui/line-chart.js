@@ -135,7 +135,9 @@ export class LineChart {
         "g",
         {},
         s("circle", { cx: X(p.x), cy: Y(p.y), r: 5, fill: p.color ?? "var(--ink)", stroke: "var(--sheet)", "stroke-width": 2 }),
-        p.label ? s("text", { class: "chart-label", x: X(p.x) + 9, y: Y(p.y) - 8, style: { fill: "var(--ink-2)" } }, p.label) : null,
+        p.label
+          ? s("text", { class: "chart-label", x: X(p.x) > width - 110 ? X(p.x) - 9 : X(p.x) + 9, y: Y(p.y) - 8, "text-anchor": X(p.x) > width - 110 ? "end" : "start", style: { fill: "var(--ink-2)" } }, p.label)
+          : null,
       ),
     );
     this.hoverLayer = s("g");

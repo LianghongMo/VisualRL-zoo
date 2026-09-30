@@ -89,7 +89,12 @@ export function mount(root) {
         h(
           "p",
           {},
-          "The lessons share one world: a delivery robot in a warehouse. Its maps use the same format as the PointMaze and AntMaze tasks of Gymnasium-Robotics, so the discrete lessons and the later continuous-control ones run on the same layouts. In the 3D view the robot glides between cells, but each glide is one discrete environment step.",
+          "The early lessons share one world: a delivery robot in a warehouse. Its maps use the same format as the PointMaze and AntMaze tasks of Gymnasium-Robotics, so the discrete lessons and the continuous-control ones run on the same layouts. In the 3D view the robot glides between cells, but each glide is one discrete environment step.",
+        ),
+        h(
+          "p",
+          {},
+          "The deep-RL lessons use MuJoCo robots (InvertedPendulum, Hopper, HalfCheetah, Ant, PointMaze). The browser cannot run MuJoCo, so these robots are trained in Python and their episodes recorded; the page replays the recorded position of every body, frame by frame, next to the real training log.",
         ),
       ),
     ),

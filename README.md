@@ -42,6 +42,8 @@ Phase 1 (core tabular system) is in progress.
 | One robot world: 3D warehouse view (Three.js) and an experience graph (visited states, observed transitions, stitched routes), piloted in lesson 09 | in progress |
 | `visualrl/algorithms/tabular/ppo.py`: PPO with a table of logits and a table of values (GAE, clipped surrogate, entropy bonus, minibatch epochs), mirrored in JS with parity tests | done |
 | Lesson 15 (PPO) in the warehouse: rollout replay, probability-ratio scatter with clipped samples, per-sample objective, clip vs no-clip experiment | done |
+| `visualrl/algorithms/deep/ppo.py` + `scripts/train_mujoco_ppo.py`: deep PPO (CleanRL defaults) on MuJoCo robots, exporting training logs and recorded episodes at several points in training | done |
+| MuJoCo replays in the browser (Three.js, every frame is recorded MuJoCo geometry): InvertedPendulum, Hopper, Ant, HalfCheetah, PointMaze in lesson 15 | done |
 | Lessons 01, 03–07, 10–14, 16 | planned |
 
 ```bash
@@ -49,6 +51,9 @@ pip install -e ".[dev]"
 pytest                                   # Python tests
 python examples/td_update.py             # the worked TD example below, computed by TD0
 python examples/cliff_sarsa_vs_qlearning.py
+
+pip install -e ".[deep]"                  # torch + MuJoCo + gymnasium-robotics, only for the robot lessons
+python scripts/train_mujoco_ppo.py Hopper-v5 --steps 1000000 --out web/src/data/mujoco/hopper.json
 
 cd web && npm install
 npm test                                 # JavaScript engine + parity with Python

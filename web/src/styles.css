@@ -1,4 +1,6 @@
-/* Layout: lessons read top to bottom like a lab notebook. Each step of a lesson
+/* One light theme on a white page, on purpose: diagrams and 3D scenes read best on white.
+
+   Layout: lessons read top to bottom like a lab notebook. Each step of a lesson
    (Question, Predict, Experiment, ...) is a row with its label in a narrow left
    column; experiments sit on a raised "bench" that holds the instrument, the
    controls and the ledger of the last update.
@@ -7,8 +9,8 @@
    --env marks acting (environment steps, experience), --learn marks learning
    (updates and the values they change). */
 :root {
-  --paper: #f1f3ef;
-  --sheet: #fbfcfa;
+  --paper: #ffffff;
+  --sheet: #f8f9f7;
   --ink: #17212b;
   --ink-2: #4a5663;
   --ink-3: #737f8b;
@@ -44,56 +46,7 @@
   --radius: 10px;
   --gutter: 20px;
   --measure: 66ch;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #0f1417;
-    --sheet: #161c20;
-    --ink: #e4e9ec;
-    --ink-2: #a8b2ba;
-    --ink-3: #7d8891;
-    --rule: #252e35;
-    --rule-strong: #35414a;
-    --env: #4db8a1;
-    --env-wash: #13302a;
-    --env-ink: #8fdcca;
-    --learn: #f0bf2e;
-    --learn-wash: #382d0b;
-    --learn-ink: #f6d97c;
-    --pos: #3987e5;
-    --neg: #e66767;
-    --zero: #2a3035;
-    --series-1: #3987e5;
-    --series-2: #d95926;
-    --good: #3cc46e;
-    --bad: #f07a6f;
-    color-scheme: dark;
-  }
-}
-
-:root[data-theme="dark"] {
-  --paper: #0f1417;
-  --sheet: #161c20;
-  --ink: #e4e9ec;
-  --ink-2: #a8b2ba;
-  --ink-3: #7d8891;
-  --rule: #252e35;
-  --rule-strong: #35414a;
-  --env: #4db8a1;
-  --env-wash: #13302a;
-  --env-ink: #8fdcca;
-  --learn: #f0bf2e;
-  --learn-wash: #382d0b;
-  --learn-ink: #f6d97c;
-  --pos: #3987e5;
-  --neg: #e66767;
-  --zero: #2a3035;
-  --series-1: #3987e5;
-  --series-2: #d95926;
-  --good: #3cc46e;
-  --bad: #f07a6f;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 *,
@@ -603,6 +556,8 @@ a.lesson-row:hover {
 
 .segmented {
   display: inline-flex;
+  flex-wrap: wrap;
+  max-width: 100%;
   border: 1px solid var(--rule-strong);
   border-radius: 9px;
   padding: 2px;
@@ -1919,4 +1874,79 @@ path.g-edge.hl {
   background: var(--learn-wash);
   color: var(--learn-ink);
   font-weight: 600;
+}
+
+/* ---------- MuJoCo replay ---------- */
+
+.mujoco {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.mujoco-controls .scrub {
+  flex: 1 1 200px;
+  min-width: 140px;
+  display: flex;
+}
+
+.mujoco-controls .scrub input {
+  width: 100%;
+}
+
+.action-bars {
+  display: grid;
+  gap: 5px;
+}
+
+.action-bar {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 56px;
+  gap: 8px;
+  align-items: center;
+  font-size: var(--step--1);
+}
+
+.action-bar .num {
+  text-align: right;
+}
+
+.action-track {
+  position: relative;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+}
+
+.action-track::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  bottom: -2px;
+  width: 1px;
+  background: var(--rule-strong);
+}
+
+.action-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 4px;
+  background: var(--series-2);
+}
+
+.episode-strip {
+  display: block;
+  width: 100%;
+  height: auto;
+  cursor: pointer;
+}
+
+.task-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }

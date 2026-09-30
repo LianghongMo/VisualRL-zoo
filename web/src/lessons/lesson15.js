@@ -15,6 +15,7 @@ import { RatioScatter } from "../ui/ratio-scatter.js";
 import { WarehouseScene } from "../ui/scene3d.js";
 import { lessonFooter, lessonHeader, predict, prose, step, wideStep } from "../ui/shell.js";
 import { extractDef, lineOf } from "../ui/source.js";
+import { mujocoSection } from "./mujoco-section.js";
 
 const HAZARD = "Loading ledge · −100, back to the dock";
 const MAX_STEPS = 1000;
@@ -557,6 +558,7 @@ export function mount(root) {
     tick();
   }
 
+  const mujoco = mujocoSection();
   const evalCode = extractDef(ppoSource, "_evaluate");
   const updateCode = extractDef(ppoSource, "update_minibatch", { cutAt: "probs_before =", replacement: "...  # apply the accumulated gradients to the two tables" });
 
@@ -608,6 +610,14 @@ export function mount(root) {
         "Without clipping, one rollout can drive a probability close to zero or one in a single iteration (the KL jumps to hundreds). Many robots then lock into a policy that avoids the ledge but never reaches the charger, and with a near-deterministic policy they stop exploring. With clipping, each iteration can only move the policy a bounded amount, so most robots keep learning.",
       ),
     ),
+    wideStep(
+      "Scale up",
+      prose(
+        "The same algorithm on MuJoCo robots. The logits table becomes a neural network that outputs the mean of a Gaussian over joint torques, the value table becomes a second network, and plain gradient steps become Adam steps. The rollout, GAE, the ratio and the clipping are the lines you just stepped through.",
+        "These robots were trained in Python with MuJoCo; the browser cannot run the physics, so what you see is a replay of recorded states: every frame is the position and orientation of every MuJoCo body. Compare the policy before training, part-way, and at the end.",
+      ),
+      mujoco.el,
+    ),
     step(
       "Equation",
       equation("r_t(\\theta) = \\frac{\\pi_\\theta(a_t\\mid s_t)}{\\pi_{\\theta_{\\text{old}}}(a_t\\mid s_t)}", "The probability ratio: 1 when nothing has changed since the data was collected."),
@@ -643,5 +653,6 @@ export function mount(root) {
     unbind();
     clearTimeout(cmpTimer);
     scene.dispose();
+    mujoco.dispose();
   };
 }

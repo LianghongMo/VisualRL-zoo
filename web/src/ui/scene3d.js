@@ -217,9 +217,6 @@ export class WarehouseScene {
     this.scene.add(this.marker);
 
     this.recolor();
-    const media = window.matchMedia?.("(prefers-color-scheme: dark)");
-    media?.addEventListener?.("change", () => this.recolor());
-    new MutationObserver(() => this.recolor()).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     new ResizeObserver(() => this.resize()).observe(this.el);
   }
 

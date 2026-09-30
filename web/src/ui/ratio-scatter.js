@@ -33,7 +33,8 @@ export class RatioScatter {
   render(view) {
     this.view = view;
     const { samples, inBatch = new Set(), clip, selected = null } = view;
-    const { width, height } = this;
+    const height = this.height;
+    const width = Math.max(this.width, 200); // never draw into a collapsed container
     const m = { top: 26, right: 14, bottom: 40, left: 46 };
     const xMax = Math.max(1 + 2.5 * clip, 1.6);
     const xMin = Math.max(0, Math.min(1 - 2.5 * clip, 0.4));
@@ -48,8 +49,8 @@ export class RatioScatter {
     const lo = 1 - clip;
     const hi = 1 + clip;
     const regions = [
-      s("rect", { x: X(hi), y: Y(yMax), width: X(xMax) - X(hi), height: Y(0) - Y(yMax), class: "clip-region" }),
-      s("rect", { x: X(xMin), y: Y(0), width: X(lo) - X(xMin), height: Y(-yMax) - Y(0), class: "clip-region" }),
+      s("rect", { x: X(hi), y: Y(yMax), width: Math.max(0, X(xMax) - X(hi)), height: Math.max(0, Y(0) - Y(yMax)), class: "clip-region" }),
+      s("rect", { x: X(xMin), y: Y(0), width: Math.max(0, X(lo) - X(xMin)), height: Math.max(0, Y(-yMax) - Y(0)), class: "clip-region" }),
       s("text", { x: X(xMax) - 6, y: Y(yMax) + 14, "text-anchor": "end", class: "chart-label" }, "clipped: no gradient"),
       s("text", { x: X(xMin) + 6, y: Y(-yMax) - 6, class: "chart-label" }, "clipped: no gradient"),
     ];
