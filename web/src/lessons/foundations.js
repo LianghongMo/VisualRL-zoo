@@ -1,4 +1,4 @@
-import { h, slider } from "../ui/dom.js";
+import { h } from "../ui/dom.js";
 import { step, prose, predict } from "../ui/shell.js";
 import { equation } from "../ui/math.js";
 
@@ -25,21 +25,6 @@ export function foundations(id) {
       eq("Q^\\pi(s,a)=\\mathbb{E}_\\pi[G_t\\mid S_t=s,A_t=a],\\qquad V^\\pi(s)=\\sum_a\\pi(a\\mid s)Q^\\pi(s,a)", "Qπ：第一步固定做 a，后续仍按 π 走。V 是位置的价值，Q 是位置与动作组合的价值。"),
       prose("图中固定路线且环境确定，所以对应位置的 Vπ 就等于该路线剩余回报。随机时，单次 G 只是一个样本：同一位置可能这次成功、下次跌落，Vπ 要概括这些结果的平均。指定了后续策略，价值的含义才完整。")),
   ];
-  if (id === "05") {
-    const result = h("div", { class: "arithmetic", role: "status" });
-    function calc(p) { const value = p * (1 + 0.9 * 4) + (1 - p) * (-2 + 0.9 * 0); result.textContent = `这个动作的期望 = ${p.toFixed(2)} × (1 + 0.9 × 4) + ${(1 - p).toFixed(2)} × (−2 + 0.9 × 0) = ${value.toFixed(3)}`; }
-    const probability = slider({ id: "bellman-success", label: "成功到达下一格的概率 p", min: 0, max: 1, step: 0.05, value: 0.8, format: v => v.toFixed(2), onInput: calc }); calc(0.8);
-    return [
-      step("Bellman 方程：固定策略与最优策略", prose("从 Gₜ = rₜ + γGₜ₊₁ 出发，把后半段的期望写成下一状态的价值，就得到 Bellman 方程。它是一条自洽关系：当前位置的真实价值，应当等于一步反馈加上后续价值的平均。"),
-        eq("V^\\pi(s)=\\sum_a\\pi(a\\mid s)\\sum_{s',r}p(s',r\\mid s,a)[r+\\gamma V^\\pi(s')]", "Bellman 期望方程：固定 π。外层按策略平均动作；内层按环境概率平均后果。终点后续 Vπ = 0。"),
-        eq("V^*(s)=\\max_a\\sum_{s',r}p(s',r\\mid s,a)[r+\\gamma V^*(s')]", "Bellman 最优方程：V* = maxπ Vπ。对动作选最好，对随机后果仍取平均；不能选择环境恰好给出最好结果。"),
-        eq("Q^*(s,a)=\\sum_{s',r}p(s',r\\mid s,a)[r+\\gamma\\max_{a'}Q^*(s',a')]", "最优动作价值版本：当前动作 a 已指定，下一状态再选最好的动作。这是后面 Q-learning 目标的来源。"),
-        eq("V_{k+1}(s)=\\max_a\\sum_{s',r}p(s',r\\mid s,a)[r+\\gamma V_k(s')]", "价值迭代：把未知的真实 V* 换成当前估计 Vₖ，反复更新。这里同步更新，所有位置都读同一份旧 Vₖ。"),
-        prose("在本地图，每个动作只有一个确定结果，p 为 1，内层求和就缩成 r + γVₖ(s′)。例如紧邻 +1 的格子，进入充电站：r = 1，V(终点) = 0，结果是 1。再前一格的结果是 0 + 0.9×1 = 0.9。奖励沿边反向影响估计，机器人不需要真的移动。")),
-      step("随机时先平均，再比较动作", prose("下面是独立的随机动作算例，地图实验仍然是确定性的。成功时收到 +1 并到达 V = 4 的格子；失败时收到 −2 并立即终止。成功概率默认 0.8，所以该动作的期望目标是 0.8×4.6 + 0.2×(−2) = 3.28。改变概率，观察这个动作的价值。"), probability, result,
-        prose("有多个动作时，先为每个动作算这种期望，再取 max。进入真正终点的那条转移已经给出了奖励，后续项为 0；不能又把充电站的 +1 或 +10 当作终点价值重复加一次。γ < 1 的有限 MDP 中，反复最优备份会收敛到 V*；贪心选择其最佳动作得到最优策略。")),
-    ];
-  }
   if (id === "02") return [
     step("已有连接怎样支持更新？", eq("V_{k+1}(s)=\\max_{a\\in\\mathcal{A}_D(s)}[r(s,a)+\\gamma V_k(s')],\\qquad V_k(\\text{terminal})=0", "A_D(s) 是数据里实际观察过的动作。本实验每个 (s,a) 的后果确定且固定，所以可把观测当成一个小型已知模型。没有已知动作的位置显示 0 作为初始化，不表示它的真实价值就是 0。"),
       prose("行动按钮调用环境 step，保存一条新经验，保持 V 不变。学习按钮读取已有经验，备份 V，保持机器人位置和数据不变。真实算法也常把行动、存储、更新交错执行；分开按钮是为了辨认这三件事。", "这是一种基于已观测模型的规划。下一章的 TD 则直接用一个采样转移更新，不需要列出所有后果。对随机环境，同一个 (s,a) 的少量样本不能被当成完整模型，必须考虑概率和估计误差。")),

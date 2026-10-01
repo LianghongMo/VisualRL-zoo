@@ -7,7 +7,7 @@ export function courseNav(id = "") {
   }, h("span", { class: "nav-number" }, l.number), h("span", {}, l.short)));
   const nav = h("nav", { "aria-label": "课程目录" }, links, h("a", { href: "#", class: "nav-home" }, "← 回到课程首页"));
   return h("aside", { class: "course-sidebar" },
-    h("details", { class: "course-menu", open: true }, h("summary", {}, `学习路线 · ${LESSONS.length} 章`), nav),
+    h("details", { class: "course-menu", open: !window.matchMedia?.("(max-width: 760px)")?.matches }, h("summary", {}, `学习路线 · ${LESSONS.length} 章`), nav),
     h("p", { class: "sidebar-note" }, "图像 → 公式 → 实验 → 自检。用具体经验解释每一个符号。"));
 }
 export function lessonHeader(id) {

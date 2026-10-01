@@ -14,7 +14,7 @@
 |---|---|---|
 | 1 | MDP 与环境 | `lesson-01` |
 | 2 | 回报与价值 | `lesson-04` |
-| 3 | Bellman 更新 | `lesson-05` |
+| 3 | 最优策略与 Bellman | `lesson-05` |
 | 4 | 行动与学习 | `lesson-02` |
 | 5 | Monte Carlo 与 TD | `lesson-07` |
 | 6 | SARSA 与 Q-learning | `lesson-08` |

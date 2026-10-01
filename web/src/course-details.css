@@ -14,6 +14,37 @@
 .mastery-row label span span { display: block; margin-top: 3px; } .mastery-row strong { color: var(--ink); }
 .evidence-link { justify-self: start; text-align: left; color: var(--learn); font-size: 12px; border: none; background: transparent; padding: 4px 0; }
 .source-note { font-size: 11px; color: var(--ink-3); margin-bottom: 20px; }
+.bellman-opening { padding-top: 10px; border-top: 0; }
+.bellman-policy-scene .experiment-grid { grid-template-columns: minmax(0,1.15fr) minmax(0,1fr); }
+.bellman-policy-scene .segmented { display: grid; grid-template-columns: 1fr; }
+.bellman-policy-scene .segmented button { text-align: left; }
+.bellman-walk-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.bellman-local-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.25fr); gap: 22px; align-items: center; }
+.bellman-local-grid .bellman-branches { grid-template-columns: 1fr; }
+.bellman-local-grid .bellman-branch-origin { justify-self: start; padding: 10px 16px; }
+.bellman-local-grid .bellman-branch { grid-template-columns: 1fr; }
+.bellman-local-grid .bellman-branch-total { justify-self: start; }
+.bellman-branches { display: grid; grid-template-columns: minmax(90px,.65fr) minmax(0,3fr); gap: 14px 22px; align-items: center; }
+.bellman-branch-origin { padding: 20px 14px; border: 2px solid var(--act); border-radius: 10px; background: var(--env-wash); text-align: center; font-weight: 650; }
+.bellman-branch-list { display: grid; gap: 18px; border-left: 2px solid var(--act); padding-left: 18px; }
+.bellman-branch { display: grid; grid-template-columns: minmax(0,.75fr) minmax(0,1.7fr); gap: 10px 16px; align-items: center; }
+.bellman-branch-edge, .bellman-branch-state { display: grid; gap: 5px; font-size: 13px; }
+.bellman-branch-edge strong { color: var(--act); }
+.bellman-branch-state { padding: 13px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); }
+.bellman-branch-state span { font-size: 12px; color: var(--ink-2); }
+.bellman-branch-total { grid-column: 1 / -1; justify-self: end; font-family: var(--font-mono); font-size: 13px; color: var(--learn); }
+.bellman-branches figcaption { grid-column: 1 / -1; }
+@media (max-width: 1100px) {
+  .bellman-policy-scene .experiment-grid { grid-template-columns: 1fr; }
+  .bellman-policy-scene .segmented { display: flex; }
+  .bellman-local-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .bellman-branches { grid-template-columns: 1fr; gap: 14px; }
+  .bellman-branch-origin { justify-self: start; padding: 10px 16px; }
+  .bellman-branch { grid-template-columns: 1fr; }
+  .bellman-branch-total { justify-self: start; }
+}
 .equation { padding: 18px 12px; background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; }
 .equation math { margin: 0; }
 .equation-caption { font-size: 13px; color: var(--ink-2); margin-top: 9px; }
