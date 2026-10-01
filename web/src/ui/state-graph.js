@@ -5,6 +5,15 @@ import { h, replace, s } from "./dom.js";
 import { fmt, fmtShort } from "./format.js";
 import { inkOn, valueFill } from "./grid-view.js";
 
+// Three characters at most: 10, 4.8, .66, −.53 (small values keep two decimals so a small γ stays readable).
+function nodeLabel(v) {
+  const a = Math.abs(v);
+  if (a >= 9.995) return fmt(v, 0);
+  if (a >= 0.995) return fmt(v, 1);
+  if (a === 0) return "0";
+  return fmt(v, 2).replace(/^(−?)0\./, "$1.");
+}
+
 const C = 64;
 const PAD = 8;
 const R = 11;
@@ -97,7 +106,7 @@ export class StateGraph {
         nodes.push(s("text", { x: cx, y: cy + 4, "text-anchor": "middle", class: "sg-goal-text" }, this.goalLabels[st] ?? "G"));
       } else {
         nodes.push(s("circle", { cx, cy, r: R, class: `sg-node${isKnown ? "" : " unknown"}`, style: { fill } }));
-        if (showValues && values && isKnown) nodes.push(s("text", { x: cx, y: cy + 3.5, "text-anchor": "middle", class: "sg-value", style: { fill: inkOn(v, this.domain) } }, fmt(v, v >= 9.995 || v <= -9.995 ? 0 : 1)));
+        if (showValues && values && isKnown) nodes.push(s("text", { x: cx, y: cy + 3.5, "text-anchor": "middle", class: "sg-value", style: { fill: inkOn(v, this.domain) } }, nodeLabel(v)));
       }
       if (st === env.start) nodes.push(s("text", { x: cx, y: cy - R - 5, "text-anchor": "middle", class: "sg-label" }, "dock"));
       if (rings.has(st)) nodes.push(s("circle", { cx, cy, r: R + 5, class: "sg-ring" }));

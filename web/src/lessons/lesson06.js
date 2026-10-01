@@ -6,14 +6,13 @@ import { BackupPanel } from "../ui/backup-panel.js";
 import { codeBlock } from "../ui/code.js";
 import { button, h, replace } from "../ui/dom.js";
 import { fmt } from "../ui/format.js";
+import { gammaControl } from "../ui/gamma.js";
 import { equation } from "../ui/math.js";
 import { Mission } from "../ui/mission.js";
 import { StateGraph, trueEdges } from "../ui/state-graph.js";
 import { lessonFooter, lessonHeader, predict, prose, step, wideStep } from "../ui/shell.js";
 import { extractDef } from "../ui/source.js";
 import { world } from "./lesson01.js";
-
-const GAMMA = 0.9;
 
 export function mount(root) {
   const w = world();
@@ -26,15 +25,17 @@ export function mount(root) {
   let selected = null;
   let evaluatedSinceImprove;
   let lastImprove;
+  let gamma = 0.9;
   let finished; // { changes, dock } at the first Improve that changed nothing
 
   const graph = new StateGraph(env, { goalLabels: w.labels, onNode: (st) => ((selected = model.terminal[st] ? null : st), render()) });
   const panel = new BackupPanel({ name, title: "Evaluation backup" });
   const logEl = h("div", { class: "sweep-log" });
   const note = h("div", { class: "callout" });
+  const gammaEl = gammaControl({ id: "l06-gamma", value: gamma, onInput: (g) => ((gamma = g), reset()) });
 
   function reset() {
-    pi = new PolicyIteration(model, GAMMA); // starts from the random policy: every move equally likely
+    pi = new PolicyIteration(model, gamma); // starts from the random policy: every move equally likely
     log = [];
     evaluatedSinceImprove = false;
     lastImprove = null;
@@ -43,7 +44,7 @@ export function mount(root) {
   }
 
   function evaluate(full) {
-    const t = full ? pi.evaluate({ theta: 1e-10 }) : pi.evaluateStep();
+    const t = full ? pi.evaluate({ theta: 1e-10, maxSweeps: 100000 }) : pi.evaluateStep();
     const settled = t.max_change < 1e-10;
     if (settled) evaluatedSinceImprove = true;
     log.push({ kind: full || settled ? "evaluate (settled)" : "evaluate: 1 sweep", dock: pi.V[env.start], detail: `${pi.sweeps} sweeps so far` });
@@ -68,7 +69,7 @@ export function mount(root) {
       { text: "Press Evaluate until nothing changes again, then Improve again. Repeat until Improve changes no node.", done: () => finished !== null },
     ],
     conclusion: () =>
-      `Improve changed the policy ${finished?.changes} times, and the next one changed nothing. The random policy's values were mostly negative (the dock was worth ${fmt(log.find((x) => x.kind !== "improve")?.dock ?? 0, 3)}): a coin-flip walk next to the ledge falls off it again and again. Each improvement made the policy greedy on the latest values, and each evaluation computed what that policy is really worth. When an improvement changed nothing, the policy was greedy on its own values: that is the Bellman optimality equation, so this is the optimal policy, and V(dock) = ${fmt(finished?.dock ?? pi.V[env.start], 3)} is the same V* as value iteration found in lesson 05.`,
+      `Improve changed the policy ${finished?.changes} times, and the next one changed nothing. Under the random policy the dock was worth ${fmt(log.find((x) => x.kind !== "improve")?.dock ?? 0, 3)} at γ = ${gamma.toFixed(2)}: a coin-flip walk next to the ledge falls off it again and again. Each improvement made the policy greedy on the latest values, and each evaluation computed what that policy is really worth. When an improvement changed nothing, the policy was greedy on its own values: that is the Bellman optimality equation, so this is the optimal policy, and V(dock) = ${fmt(finished?.dock ?? pi.V[env.start], 3)} is the same V* as value iteration found in lesson 05.`,
   });
 
   function render() {
@@ -82,7 +83,7 @@ export function mount(root) {
       showValues: true,
       selected,
     });
-    panel.show(selected === null ? null : bellmanBackup(model, pi.V, P, selected, GAMMA), { gamma: GAMMA });
+    panel.show(selected === null ? null : bellmanBackup(model, pi.V, P, selected, gamma));
     replace(
       logEl,
       h(
@@ -103,8 +104,8 @@ export function mount(root) {
       h(
         "p",
         {},
-        h("strong", {}, `${pi.improvements === 0 ? "The random policy" : `Policy after ${pi.improvements} improvement${pi.improvements === 1 ? "" : "s"}`}. `),
-        "Thin arrows are moves the policy takes with some probability, dark ones moves it always takes. Evaluate changes the numbers and never the arrows; Improve changes the arrows and never the numbers. Click a node to see its evaluation backup: the average of its moves, weighted by the policy.",
+        h("strong", {}, `${pi.improvements === 0 ? "The random policy" : `Policy after ${pi.improvements} improvement${pi.improvements === 1 ? "" : "s"}`}, γ = ${gamma.toFixed(2)}. `),
+        "Thin arrows are moves the policy takes with some probability, dark ones moves it always takes. Evaluate changes the numbers and never the arrows; Improve changes the arrows and never the numbers. Click a node to see its evaluation backup: the average of its moves, weighted by the policy. Changing γ starts over; a larger γ needs more evaluation sweeps, because rewards further away still matter.",
       ),
     );
     mission.update();
@@ -119,7 +120,7 @@ export function mount(root) {
     step(
       "Predict",
       predict({
-        question: "You start from the random policy and alternate a full evaluation with an improvement. How many times will Improve change the policy before it stops changing?",
+        question: "With γ = 0.9, you start from the random policy and alternate a full evaluation with an improvement. How many times will Improve change the policy before it stops changing?",
         choices: [{ label: "Once: one improvement is enough" }, { label: "A handful of times" }, { label: "Hundreds of times" }],
         answer: 1,
         explain: () =>
@@ -140,6 +141,7 @@ export function mount(root) {
           button("Improve the policy", { kind: "env", onClick: improve }),
           h("span", { class: "spacer" }),
           button("Start over from the random policy", { kind: "ghost", onClick: reset }),
+          gammaEl,
         ),
         h("div", { class: "bench-grid part1-grid even" }, h("div", { class: "figure" }, graph.el), h("div", { class: "figure" }, logEl, panel.el)),
         note,

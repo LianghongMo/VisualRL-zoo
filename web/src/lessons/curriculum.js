@@ -13,7 +13,7 @@ export const PARTS = [
     part: "Part II",
     title: "Learning values",
     lessons: [
-      { id: "04", title: "State Value and Action Value", about: "Fix a policy: V(s) on every node, Q(s,a) on every edge, and where Q beats V.", ready: true },
+      { id: "04", title: "Return, Discount and Value", about: "A value is the return of a whole walk; γ sets how far ahead it looks. Q on every edge, and where Q beats V.", ready: true },
       { id: "05", title: "Bellman Backup and the Optimal Policy", about: "One backup by hand, then repeated everywhere until the optimal policy appears.", ready: true },
       { id: "06", title: "Policy Iteration", about: "Evaluate and improve: two buttons that change two different things.", ready: true },
       { id: "07", title: "Monte Carlo vs TD", about: "The same trajectory, two targets, and n-step TD in between.", ready: true },

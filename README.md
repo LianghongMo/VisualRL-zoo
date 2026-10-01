@@ -45,7 +45,7 @@ Phase 1 (core tabular system) is in progress.
 | Lesson 14 (PPO) in the warehouse: rollout replay, probability-ratio scatter with clipped samples, per-sample objective, clip vs no-clip experiment | done |
 | `visualrl/algorithms/deep/ppo.py` + `scripts/train_mujoco_ppo.py`: deep PPO (CleanRL defaults) on MuJoCo robots, exporting training logs and recorded episodes at several points in training | done |
 | MuJoCo replays in the browser (Three.js, every frame is recorded MuJoCo geometry): InvertedPendulum, Hopper, Ant, HalfCheetah, PointMaze in lesson 14 | done |
-| Part II, lessons 04–06: V and Q under a fixed policy, Bellman optimality backups and value iteration (deterministic and slippery), policy iteration (`optimal_backup`, `ValueIteration`, `PolicyIteration`, mirrored in JS with parity tests) | done |
+| Part II, lessons 04–06: return and discount (multi-step return tables, γ sliders everywhere), V and Q under a fixed policy, Bellman optimality backups and value iteration (deterministic and slippery), policy iteration (`optimal_backup`, `ValueIteration`, `PolicyIteration`, mirrored in JS with parity tests) | done |
 | Lessons 09–13, 15 | planned |
 
 ```bash
@@ -349,21 +349,19 @@ Offline RL has one ability and one limit, both about the graph: **stitching** (v
 
 ### Part II — Learning values
 
-#### 04. State Value and Action Value
+#### 04. Return, Discount and Value
 
-Same charging room as Part I, now with a fixed policy: one move per node, drawn as dark arrows on the graph. Every node shows
+Why care about values at all? Three points open the lesson. **The return is the task:** the robot is told to make $G = r_0 + \gamma r_1 + \gamma^2 r_2 + \dots$ large, and which charger is best follows from that sum. **γ says how far ahead to look:** a reward $t$ edges ahead counts $\gamma^t$, and the weights add up to $1/(1-\gamma)$ (2 edges at γ = 0.5, 10 at 0.9, 100 at 0.99). **A value stores the future at a node,** so a decision needs one edge: $Q(s,a) = r + \gamma V(s')$.
 
-$$
-V^\pi(s) = \sum_t \gamma^t r_t \quad\text{along the walk from } s,
-$$
+*A value is a multi-step return.* A fixed policy (every node heads for the slow charger) is drawn on the graph. Clicking a node unrolls its walk to the end in a table with columns $t$, move, $r_t$, $\gamma^t$, $\gamma^t r_t$ and $G_t$. The table adds up the same return two ways: forward, $\sum_t \gamma^t r_t$, and backward from the last row, $G_t = r_t + \gamma G_{t+1}$. A γ slider and a bar chart of the weights $\gamma^t$, with $1/(1-\gamma)$ marked, show what far-sighted (γ = 0.99: the +1 four edges ahead keeps 96%) and near-sighted (γ = 0.3: less than 1%) mean. The backward column is $V(s) = r + \gamma V(s')$, the equation lesson 05 is built on.
 
-and clicking a node lists its four edges with
+*Values of edges.*
 
 $$
 Q^\pi(s,a) = r(s,a) + \gamma V^\pi(s').
 $$
 
-The policy starts by sending every node to the slow charger (+1). The task: find edges with $Q^\pi(s,a) > V^\pi(s)$ and switch to them. Pointing the column under the fast charger at it, and then the node above the slow charger, raises $V(\text{dock})$ from 0.656 to 4.783 without touching the dock's own arrow. This is the policy improvement theorem, applied one node at a time.
+Find edges with $Q^\pi(s,a) > V^\pi(s)$ and switch to them. At γ = 0.9, pointing the column under the fast charger at it, and then the node above the slow charger, raises $V(\text{dock})$ from 0.656 to 4.783. Below γ ≈ 0.46 the same switch stops being an improvement: $Q(\downarrow) = 1 > Q(\rightarrow) = 10\gamma^3$. γ decides what "better" means.
 
 #### 05. Bellman Backup and the Optimal Policy
 
@@ -375,7 +373,9 @@ $$
 
 1. **One backup by hand.** Click a node and back it up. The panel lists every move, where it lands, the arithmetic $r + \gamma V(s')$, and the result; the new value is the largest one. Next to the slow charger the value becomes 1.0, one node further 0.9.
 2. **Every node, repeated (value iteration).** One sweep backs up every node at once. Values spread outward from the chargers one edge per sweep: the dock first gets a value at sweep 5 (0.656, from the slow charger, $0.9^4$), switches to the fast charger at sweep 8 ($0.9^7 \times 10 = 4.783$), and nothing changes after that. The best edge out of each node is then the optimal policy $\pi^*$, and the robot drives it in the 3D view: its return equals $V^*(\text{dock})$.
-3. **A slippery floor.** With probability 0.2 the robot takes a random move. Each move now has several outcomes, and the backup averages them. Near the ledge the averages include a −10 branch, so the optimal route moves to the top row, away from the ledge, and $V^*(\text{dock})$ drops to 3.317.
+3. **A slippery floor.** With probability 0.2 the robot takes a random move. Each move now has several outcomes, and the backup averages them. Near the ledge the averages include a −10 branch, so the optimal route moves to the top row, away from the ledge, and $V^*(\text{dock})$ drops to 3.317. Averaging 2000 real drives gives the same number: a value is an expected multi-step return. At γ = 0.3 the dock's value turns negative (−0.527). The near-sighted robot sees the 5% chance of sliding over the ledge next to it, but not the charger five edges away.
+
+Every experiment has its own γ slider. Dragging it redoes the same backups at the new γ: below γ ≈ 0.464 the optimal policy turns to the slow charger ($\gamma^4 \cdot 1 > \gamma^7 \cdot 10$). Clicking a node after the sweeps follows its best edges to the end, so the one-step backups can be checked against the multi-step return they computed.
 
 #### 06. Policy Iteration
 
@@ -384,7 +384,7 @@ Lesson 05's backup evaluates and improves in one step. Policy iteration separate
 - **Evaluate** runs expectation backups, $V(s) \leftarrow \sum_a \pi(a\mid s)\sum_{s'}P(s'\mid s,a)[r+\gamma V(s')]$, until $V = V^\pi$. It changes the numbers, never the arrows.
 - **Improve** makes every node greedy on $Q^\pi$. It changes the arrows, never the numbers.
 
-Starting from the random policy ($V(\text{dock}) = -14.278$: a coin-flip walk keeps falling off the ledge), Improve changes the policy 5 times (17 nodes the first time, then 3, 1, 1, 1) and the 6th changes nothing. The policy is then greedy on its own values, which is the Bellman optimality equation, and $V(\text{dock}) = 4.783$ is the same $V^*$ as value iteration.
+Starting from the random policy ($V(\text{dock}) = -14.278$ at γ = 0.9: a coin-flip walk keeps falling off the ledge), Improve changes the policy 5 times (17 nodes the first time, then 3, 1, 1, 1) and the 6th changes nothing. With the γ slider at 0.99, each evaluation takes about 1100 sweeps instead of about 200. The policy is then greedy on its own values, which is the Bellman optimality equation, and $V(\text{dock}) = 4.783$ is the same $V^*$ as value iteration.
 
 #### 07. Monte Carlo vs TD
 
