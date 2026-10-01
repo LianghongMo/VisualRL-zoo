@@ -60,11 +60,11 @@ export class WorldView {
   }
 }
 // Rewards belong to arrows, including the arrow into the terminal state.
-export function routeStrip(env, transitions, { values = null, active = -1, visited = transitions.length, reverse = false, label = "" } = {}) {
+export function routeStrip(env, transitions, { values = null, active = -1, visited = transitions.length, reverse = false, maskFuture = false, label = "" } = {}) {
   const states = statesOf(transitions);
-  return h("figure", { class: "route-figure" }, label ? h("figcaption", {}, label) : null,
+  return h("figure", { class: `route-figure${transitions.length <= 5 ? " short-route" : ""}` }, label ? h("figcaption", {}, label) : null,
     h("div", { class: `route-strip${reverse ? " reverse-info" : ""}`, "aria-label": label || "路线与奖励" }, states.flatMap((state, i) => [
-      i > 0 ? h("div", { class: `route-edge${active === i - 1 ? " active" : ""}${i <= visited ? " visited" : ""}` }, h("b", {}, signed(transitions[i - 1].reward)), h("span", {}, reverse ? "← 信息" : "→")) : null,
+      i > 0 ? h("div", { class: `route-edge${active === i - 1 ? " active" : ""}${i <= visited ? " visited" : ""}` }, h("b", {}, maskFuture && i > visited ? "?" : signed(transitions[i - 1].reward)), h("span", {}, reverse ? "←" : "→")) : null,
       h("div", { class: `route-node${active === i ? " active" : ""}${i <= visited ? " visited" : ""}` }, h("span", {}, i === 0 ? "S" : i === states.length - 1 ? "终点" : String.fromCharCode(64 + i)), h("small", {}, values ? num(values[state]) : i <= visited ? "已到达" : "未到达")),
     ])));
 }

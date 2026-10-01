@@ -1,5 +1,6 @@
 import { LESSONS, lessonById } from "../lessons/curriculum.js";
 import { h } from "./dom.js";
+import { KNOWLEDGE } from "../lessons/knowledge.js";
 export function courseNav(id = "") {
   const links = LESSONS.map((l) => h("a", {
     href: `#lesson-${l.id}`, class: l.id === id ? "active" : "", "aria-current": l.id === id ? "page" : undefined,
@@ -7,11 +8,11 @@ export function courseNav(id = "") {
   const nav = h("nav", { "aria-label": "课程目录" }, links, h("a", { href: "#", class: "nav-home" }, "← 回到课程首页"));
   return h("aside", { class: "course-sidebar" },
     h("details", { class: "course-menu", open: true }, h("summary", {}, "学习路线 · 7 章"), nav),
-    h("p", { class: "sidebar-note" }, "先看图像，再动手验证。每章只引入一件新的事。"));
+    h("p", { class: "sidebar-note" }, "图像 → 公式 → 实验 → 自检。用具体经验解释每一个符号。"));
 }
 export function lessonHeader(id) {
   const l = lessonById(id);
-  return h("header", { class: "lesson-head" }, h("p", { class: "eyebrow" }, l.number ? `第 ${l.number} 章 / 7 · ${l.group}` : l.group), h("h1", {}, l.title), h("p", { class: "lead" }, l.image), h("p", { class: "learning-goal" }, h("strong", {}, "这一章要掌握："), l.goal));
+  return h("header", { class: "lesson-head" }, h("p", { class: "eyebrow" }, l.number ? `第 ${l.number} 章 / 7 · ${l.group}` : l.group), h("h1", {}, l.title), h("p", { class: "lead" }, l.image), h("p", { class: "learning-goal" }, h("strong", {}, "这一章要掌握："), l.goal), h("div", { class: "essentials" }, h("h2", {}, "必须掌握的知识点"), h("ul", {}, KNOWLEDGE[id].map(([concept]) => h("li", {}, concept)))));
 }
 export const step = (label, ...body) => h("section", { class: "step" }, h("h2", {}, label), ...body);
 export const wideStep = step;
@@ -21,7 +22,12 @@ export const takeaway = (text) => h("section", { class: "takeaway" }, h("h2", {}
 export function lessonFooter(id) {
   const l = lessonById(id), i = LESSONS.findIndex((x) => x.id === id);
   const prev = LESSONS[i - 1], next = id === "06" ? lessonById("02") : LESSONS[i + 1];
-  return h("footer", { class: "lesson-foot" }, h("p", {}, l.next), h("nav", { "aria-label": "继续学习" }, prev ? h("a", { href: `#lesson-${prev.id}` }, `← ${prev.short}`) : h("a", { href: "#" }, "← 课程首页"), next ? h("a", { class: "next-lesson", href: `#lesson-${next.id}` }, `${next.short} →`) : h("a", { class: "next-lesson", href: "#" }, "完成主线 · 回到首页 →")));
+  const audit = h("section", { class: "mastery-audit" }, h("h2", {}, "逐项检查：你能解释这些问题了吗？"), h("p", {}, "勾选表示你已经能独立回答；有疑问就回到对应的图像、公式和实验。"), KNOWLEDGE[id].map(([concept, section, question]) => h("div", { class: "mastery-row", dataset: { evidence: section } }, h("label", {}, h("input", { type: "checkbox" }), h("span", {}, h("strong", {}, concept), h("span", {}, question))), h("button", { type: "button", class: "evidence-link", onclick: (event) => {
+    const main = event.target.closest("main");
+    const target = [...main.querySelectorAll(".step > h2")].find((el) => el.textContent === section);
+    target?.parentElement.scrollIntoView({ behavior: "smooth", block: "start" });
+  } }, `回看：${section}`))));
+  return h("footer", { class: "lesson-foot" }, audit, h("p", { class: "source-note" }, "公式参考：", h("a", { href: "https://www.incompleteideas.net/book/the-book-2nd.html", target: "_blank", rel: "noopener" }, "Sutton & Barto · Reinforcement Learning（第 3–6 章）"), "。本课程用小型确定性环境展示计算；各章会说明实验假设。"), h("p", {}, l.next), h("nav", { "aria-label": "继续学习" }, prev ? h("a", { href: `#lesson-${prev.id}` }, `← ${prev.short}`) : h("a", { href: "#" }, "← 课程首页"), next ? h("a", { class: "next-lesson", href: `#lesson-${next.id}` }, `${next.short} →`) : h("a", { class: "next-lesson", href: "#" }, "完成主线 · 回到首页 →")));
 }
 export function predict({ question, choices, answer, explain }) {
   const verdict = h("p", { class: "quiz-verdict", hidden: true, role: "status" });

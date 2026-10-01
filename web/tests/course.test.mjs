@@ -7,6 +7,7 @@ import { pathToFileURL, fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { parseHTML } from "linkedom";
 import { MAIN_IDS } from "../src/lessons/curriculum.js";
+import { KNOWLEDGE } from "../src/lessons/knowledge.js";
 const dir = mkdtempSync(join(tmpdir(), "visualrl-course-"));
 await build({ stdin: { contents: [...MAIN_IDS, "06"].map((id) => `export * as l${id} from './lesson${id}.js';`).join("\n"), resolveDir: fileURLToPath(new URL("../src/lessons", import.meta.url)) }, bundle: true, platform: "node", format: "esm", target: "node24", loader: { ".py": "text" }, outfile: join(dir, "lessons.mjs") });
 const lessons = await import(pathToFileURL(join(dir, "lessons.mjs")));
@@ -28,6 +29,13 @@ test("chapter order, chapter essentials and next links follow prerequisites", ()
   for (let i = 0; i < MAIN_IDS.length; i++) {
     const { root, cleanup } = mount(MAIN_IDS[i]); assert.equal(root.querySelectorAll("h1").length, 1);
     assert.ok(root.querySelector(".learning-goal")); assert.ok(root.querySelector(".takeaway"));
+    assert.equal(root.querySelectorAll(".essentials li").length, KNOWLEDGE[MAIN_IDS[i]].length);
+    const sections = [...root.querySelectorAll(".step > h2")].map(el => el.textContent);
+    for (const [, evidence] of KNOWLEDGE[MAIN_IDS[i]]) assert.ok(sections.includes(evidence), `missing evidence section: ${evidence}`);
+    assert.equal(root.querySelectorAll(".mastery-row input[type=checkbox]").length, KNOWLEDGE[MAIN_IDS[i]].length);
+    const visibleEquations = [...root.querySelectorAll(".equation")].filter(el => !el.closest("details"));
+    assert.ok(visibleEquations.length >= 1, `chapter ${MAIN_IDS[i]} has no visible equation`);
+    assert.equal(root.querySelectorAll(".katex-error").length, 0);
     assert.equal(root.querySelector(".next-lesson").getAttribute("href"), i + 1 < MAIN_IDS.length ? `#lesson-${MAIN_IDS[i + 1]}` : "#"); cleanup?.();
   }
   assert.equal(mount("06").root.querySelector(".next-lesson").getAttribute("href"), "#lesson-02");
@@ -56,7 +64,7 @@ test("acting only adds experience and learning only propagates values", () => {
 });
 test("MC waits for termination and reversed TD replay reaches the same observed return", () => {
   const { root } = mount("07"); for (let i = 0; i < 3; i++) click(root, "沿固定路线走一步");
-  assert.equal(button(root, "MC：学完整回合").disabled, true); click(root, "TD：学最近的一步"); assert.equal(metric(root, "TD 更新"), "1");
+  assert.equal(button(root, "MC：学完整回合").disabled, true); click(root, "TD：学习选中的一步"); assert.equal(metric(root, "TD 更新"), "1");
   for (let i = 0; i < 2; i++) click(root, "沿固定路线走一步"); click(root, "MC：学完整回合"); assert.equal(metric(root, "MC 更新"), "5");
   for (let i = 0; i < 5; i++) click(root, "TD：从终点向前重放一条");
   for (const card of root.querySelectorAll(".comparison-card")) assert.ok(card.querySelector(".route-strip").textContent.includes("0.656"));
@@ -70,7 +78,44 @@ test("SARSA and Q-learning differ for exploratory actions and match for greedy a
 test("offline stitching uses existing connections and online collection fills missing coverage", () => {
   const { root } = mount("03"); click(root, "离线：只用这些记录规划"); assert.equal(metric(root, "规划出的路线"), "8 步 / 4.783");
   click(root, "只保留记录 A"); click(root, "离线：只用这些记录规划"); assert.equal(metric(root, "规划出的路线"), "5 步 / 0.656");
-  click(root, "在线：实际采集一次到 +10 的路线"); assert.equal(metric(root, "规划出的路线"), "8 步 / 4.783");
+  for (let i = 0; i < 8; i++) click(root, "在线：沿示范路线采集一步");
+  assert.equal(metric(root, "V(S)"), "0.656"); assert.equal(metric(root, "新增行动"), "8 步");
+  click(root, "离线：只用这些记录规划"); assert.equal(metric(root, "规划出的路线"), "8 步 / 4.783");
+});
+test("Q example preserves estimates between clicks and masks bootstrap at true termination", () => {
+  const { root, cleanup } = mount("08");
+  click(root, "用这条经验分别更新一次"); click(root, "用这条经验分别更新一次");
+  let cards = root.querySelectorAll(".comparison-card");
+  assert.ok(cards[0].textContent.includes("-60.5 → -80.75"));
+  assert.ok(cards[1].textContent.includes("-15.5 → -13.25"));
+  click(root, "终止经验 · 后续项"); click(root, "用这条经验分别更新一次");
+  cards = root.querySelectorAll(".comparison-card");
+  for (const card of cards) assert.ok(card.textContent.includes("-20 → -10.5"));
+  click(root, "用这条经验分别更新一次");
+  for (const card of root.querySelectorAll(".comparison-card")) assert.ok(card.textContent.includes("-10.5 → -5.75")); cleanup();
+});
+test("MC/TD hide unobserved rewards, respect alpha and retain estimates across episodes", () => {
+  const { root } = mount("07");
+  assert.equal(root.querySelectorAll(".route-figure")[0].querySelectorAll(".route-edge b")[4].textContent, "?");
+  const range = root.querySelector("#prediction-alpha"); range.value = "0.5"; range.dispatchEvent(new window.Event("input"));
+  for (let i = 0; i < 5; i++) click(root, "沿固定路线走一步");
+  click(root, "MC：学完整回合"); assert.equal(metric(root, "MC · V(S)"), "0.328"); assert.equal(button(root, "MC：学完整回合").disabled, true);
+  for (let i = 0; i < 5; i++) click(root, "TD：从终点向前重放一条");
+  assert.equal(metric(root, "TD · V(S)"), "0.021");
+  click(root, "保留估计，再走一回合"); assert.equal(metric(root, "MC · V(S)"), "0.328"); assert.equal(metric(root, "已收集经验"), "0 / 5 步");
+  click(root, "重新开始"); assert.equal(metric(root, "TD · V(S)"), "0"); assert.equal(metric(root, "MC · V(S)"), "0");
+});
+test("stitching propagates at the junction and supplies a provenance record for every new edge", () => {
+  const { root } = mount("03");
+  for (let i = 0; i < 4; i++) click(root, "离线：只更新一轮"); assert.equal(metric(root, "V(J)"), "7.29"); assert.equal(metric(root, "V(S)"), "0");
+  for (let i = 0; i < 4; i++) click(root, "离线：只更新一轮"); assert.equal(metric(root, "规划出的路线"), "8 步 / 4.783");
+  const table = root.querySelector(".experiment-content .table-wrap table"), rows = table.querySelectorAll("tbody tr");
+  assert.equal(rows.length, 8);
+  for (let i = 0; i < 8; i++) assert.ok(rows[i].lastElementChild.textContent.includes(i < 4 ? "A" : "B"));
+  click(root, "同一位置，但电量不同"); assert.ok(root.textContent.includes("完整状态不同"));
+  click(root, "只保留记录 A"); click(root, "离线：只用这些记录规划");
+  const edges = metric(root, "已知连接"); for (let i = 0; i < 20; i++) click(root, "离线：只更新一轮");
+  assert.equal(metric(root, "已知连接"), edges); assert.equal(metric(root, "V(S)"), "0.656");
 });
 test("policy improvement follows evaluation and preserves the displayed values", () => {
   const { root } = mount("06"); assert.equal(button(root, "2 · 改进").disabled, true); click(root, "1 · 评价"); const v = metric(root, "V(出发点)");

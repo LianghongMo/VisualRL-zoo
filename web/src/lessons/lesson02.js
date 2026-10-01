@@ -1,3 +1,4 @@
+import { foundations } from "./foundations.js";
 import graphSource from "../../../visualrl/algorithms/tabular/experience_graph.py";
 import { GridWorld } from "../rl/envs/gridworld.js";
 import { ExperienceGraph } from "../rl/tabular/experience-graph.js";
@@ -36,7 +37,8 @@ export function mount(root) {
   }
   const picker = segmented([{ value: "near", label: "采集近处路线" }, { value: "far", label: "采集远处路线" }], { value: choice, label: "下一轮由你指定的采集路线", onChange: (v) => { choice = v; newWalk(); } });
   root.append(lessonHeader("02"), step("先看图像：留下脚印，再沿脚印计算", prose("上一章可以查询完整模型。现在收起它：学习器只记得机器人实际做过的动作及其结果。你指定采集路线；学习器在收集到的连接中寻找最好的路线。", "行动增加经验，学习更新价值。站着不动也能反复计算；但如果从没观察到通向远处充电站的连接，计算再多次也补不出那条路。")),
-    step("动手验证：把两个按钮分开按", h("div", { class: "experiment" },
+    ...foundations("02"),
+    step("动手验证：按顺序分开两件事", h("div", { class: "experiment" },
       h("div", { class: "experiment-instruction" }, h("strong", {}, "5 次行动 → 5 次学习"), "先到达近处 +1，注意所有价值仍为 0；再让奖励传回出发点。最后换成远处路线，检查新经验带来什么。"),
       h("div", { class: "toolbar" }, actBtn, learnBtn, button("同一路线再走一轮", { kind: "ghost", onClick: newWalk }), button("清空经验和价值", { kind: "ghost", onClick: () => { graph = new ExperienceGraph({ nStates: env.nStates, nActions: 4, gamma: 0.9 }); acted = 0; newWalk(); } })),
       h("div", { class: "experiment-grid" }, map.el, h("div", { class: "experiment-reading" }, stats, picker, note)), h("div", { class: "experiment-content" }, strip, report))),

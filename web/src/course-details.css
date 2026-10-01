@@ -1,0 +1,29 @@
+.course-layout .page { min-width: 0; }
+.step { min-width: 0; scroll-margin-top: 90px; }
+.step > *, .experiment-content > *, .comparison-card > * { min-width: 0; }
+.essentials { padding: 16px 20px; border: 1px solid var(--rule); border-radius: 9px; }
+.essentials h2 { font-size: 14px; }
+.essentials ul { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 5px 25px; margin: 10px 0 0; padding-left: 20px; color: var(--ink-2); font-size: 13px; }
+.physical-flow { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 20px; background: var(--env-wash); border-radius: 9px; font-size: 13px; }
+.physical-flow b { color: var(--act); }
+.mastery-audit { display: grid; gap: 15px; color: var(--ink-2); margin-bottom: 30px; }
+.mastery-audit h2 { color: var(--ink); font-size: 18px; }
+.mastery-row { padding: 15px; border: 1px solid var(--rule); border-radius: 9px; display: grid; gap: 10px; }
+.mastery-row label { display: flex; gap: 12px; align-items: flex-start; cursor: pointer; }
+.mastery-row input { margin-top: 5px; accent-color: var(--learn); }
+.mastery-row label span span { display: block; margin-top: 3px; } .mastery-row strong { color: var(--ink); }
+.evidence-link { justify-self: start; text-align: left; color: var(--learn); font-size: 12px; border: none; background: transparent; padding: 4px 0; }
+.source-note { font-size: 11px; color: var(--ink-3); margin-bottom: 20px; }
+.equation { padding: 18px 12px; background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; }
+.equation math { margin: 0; }
+.equation-caption { font-size: 13px; color: var(--ink-2); margin-top: 9px; }
+.short-route .route-node { flex: 1 1 36px; min-width: 26px; max-width: 57px; }
+.short-route .route-edge, .short-route .reverse-info .route-edge { flex: 0 0 18px; }
+.short-route .route-node small { font-size: 10px; }
+.short-route .route-node > span { font-size: 12px; }
+@media (max-width: 400px) { .essentials ul { grid-template-columns: 1fr; } }
+@media (max-width: 400px) {
+  .short-route .route-node { min-width: 24px; }
+  .short-route .route-edge, .short-route .reverse-info .route-edge { flex-basis: 16px; }
+  .short-route .route-node small { font-size: 9px; }
+}

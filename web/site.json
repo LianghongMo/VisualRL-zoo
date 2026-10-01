@@ -1,5 +1,5 @@
 {
-  "url": "https://visual-rl-learning-path.garden-squid-3225.chatgpt.site",
+  "url": "https://visual-rl-learning-path.lm8598.chatgpt.site",
   "title": "Visual RL · 看见强化学习",
-  "description": "从一张地图开始，用七个核心图像和可操作的例子理解强化学习。"
+  "description": "从 MDP 到 Bellman、MC/TD、SARSA/Q-learning 与轨迹拼接，用物理图像、公式和交互实验理解强化学习。"
 }

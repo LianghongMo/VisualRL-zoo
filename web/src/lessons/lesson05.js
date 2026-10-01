@@ -1,3 +1,4 @@
+import { foundations } from "./foundations.js";
 import viSource from "../../../visualrl/algorithms/tabular/value_iteration.py";
 import { GridWorld } from "../rl/envs/gridworld.js";
 import { ValueIteration, optimalBackup } from "../rl/tabular/dp.js";
@@ -32,6 +33,7 @@ export function mount(root) {
     note.textContent = vi.sweeps === 0 ? "价值全部从 0 开始。先更新一轮：只有一步能拿到奖励的位置得到正价值。" : vi.sweeps < 5 ? "蓝框向外扩展：每轮只读取上一轮的价值，所以新奖励的信息每次向后传播一条边。" : vi.sweeps < 8 ? "近处 +1 的信息已经到达出发点，V(S) = 0.656；远处 +10 的信息还在传播。继续更新，观察出发点何时改选路线。" : "远处 +10 的信息已传回出发点：V(S) = 4.783。此时最好的动作组成通向远处充电站的路线；继续更新，数值会稳定下来。";
   }
   root.append(lessonHeader("05"), step("先看图像：未来的信息，往回传", prose("站在一格上，想象往四个方向各看一步。每个动作值多少？把眼前收到的奖励，加上下一格价值的 0.9 倍。保留四个结果中最大的，作为这一格的新价值。", "这一章假设每个动作的后果都已知，所以是在完整模型上规划。下面所有位置同时更新，读取的都是上一轮的数字。机器人可以不动，价值照样传播。")),
+    ...foundations("05"),
     step("动手验证：每次只传播一条边", h("div", { class: "experiment" },
       h("div", { class: "experiment-instruction" }, h("strong", {}, "依次点 1 次、5 次、8 次更新"), "观察蓝框从哪里开始扩散；第 5 轮与第 8 轮，出发点得到的价值分别来自哪个充电站？"),
       h("div", { class: "toolbar" }, button("更新所有位置一轮", { kind: "learn", onClick: sweep }), button("继续更新到稳定", { onClick: () => { for (let i = 0; i < 100; i++) { trace = vi.sweep(); if (trace.max_change < 1e-10) break; } render(); } }), button("把价值清零", { kind: "ghost", onClick: () => { vi = new ValueIteration(model, 0.9); trace = null; render(); } })),

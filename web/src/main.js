@@ -1,4 +1,5 @@
 import "./styles.css";
+import "./course-details.css";
 
 import { h } from "./ui/dom.js";
 import { courseNav } from "./ui/shell.js";

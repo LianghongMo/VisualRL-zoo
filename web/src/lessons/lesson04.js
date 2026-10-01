@@ -1,3 +1,4 @@
+import { foundations } from "./foundations.js";
 import { GridWorld } from "../rl/envs/gridworld.js";
 import { h, button, replace, slider, segmented } from "../ui/dom.js";
 import { lessonHeader, step, prose, optional, takeaway, predict, lessonFooter } from "../ui/shell.js";
@@ -30,6 +31,7 @@ export function mount(root) {
   const gammaControl = slider({ id: "return-gamma", label: "未来奖励的折扣 γ", min: 0.1, max: 0.99, step: 0.01, value: gamma, format: (v) => v.toFixed(2), onInput: (v) => { gamma = v; render(); } });
   const picker = segmented([{ value: "near", label: "看近处路线 · 5 步" }, { value: "far", label: "看远处路线 · 8 步" }], { value: choice, label: "查看哪条固定路线", onChange: (v) => { choice = v; render(); } });
   root.append(lessonHeader("04"), step("先看图像：奖励沿路线逐项累计", prose("奖励 r 是一次移动收到的反馈；回报 G 是从现在开始，沿整条路线累计的奖励。γ 把未来奖励缩小：眼前奖励乘 1，晚一步乘 γ，晚两步乘 γ²。", "策略 π 是在每个位置选择动作的规则。这个确定性例子中，固定策略对应一条固定路线；从某个位置按它继续走的回报，就是这个位置在该策略下的价值 V。")),
+    ...foundations("04"),
     step("动手验证：只改变折扣，不改变路线", h("div", { class: "experiment" },
       h("div", { class: "experiment-instruction" }, h("strong", {}, "先比较 γ = 0.90，再拖到 0.30"), "看两条路线的回报谁更大。然后切换路线，看那一次终点奖励被打了几次折扣。"),
       h("div", { class: "toolbar" }, picker, gammaControl),
