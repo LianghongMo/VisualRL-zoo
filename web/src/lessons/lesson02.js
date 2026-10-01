@@ -1,257 +1,47 @@
-// Lesson 02: the learning loop. The robot does not know the graph. Acting adds the edges it
-// drives to its experience graph (control loop); learning backs values up along those edges
-// (learning loop). Learning can never know more than the graph it has.
 import graphSource from "../../../visualrl/algorithms/tabular/experience_graph.py";
-import { makeTransition } from "../rl/core.js";
-import { optimalValues } from "../rl/tabular/dp.js";
+import { GridWorld } from "../rl/envs/gridworld.js";
 import { ExperienceGraph } from "../rl/tabular/experience-graph.js";
-import { Rng } from "../rl/rng.js";
+import { h, button, replace, segmented } from "../ui/dom.js";
+import { lessonHeader, step, prose, optional, takeaway, predict, lessonFooter } from "../ui/shell.js";
+import { WorldView, route, routeStrip, NEAR_ROUTE, FAR_ROUTE, stateName, num, metric } from "../ui/world-view.js";
 import { codeBlock } from "../ui/code.js";
-import { button, h, replace, shortcuts } from "../ui/dom.js";
-import { ARROWS, fmt } from "../ui/format.js";
-import { Ledger } from "../ui/ledger.js";
-import { LoopDiagram } from "../ui/loop-diagram.js";
-import { Mission } from "../ui/mission.js";
-import { equation } from "../ui/math.js";
-import { WarehouseScene } from "../ui/scene3d.js";
-import { StateGraph, trueEdges } from "../ui/state-graph.js";
-import { lessonFooter, lessonHeader, predict, prose, step, wideStep } from "../ui/shell.js";
 import { extractDef } from "../ui/source.js";
-import { world } from "./lesson01.js";
-
-const [UP, RIGHT, DOWN, LEFT] = [0, 1, 2, 3];
-const GAMMA = 0.9;
 
 export function mount(root) {
-  const w = world();
-  const { env } = w;
-  const allEdges = trueEdges(env);
-  const optimum = optimalValues(env.model(), GAMMA).V[env.start];
-  const rng = new Rng(4);
-  let graph;
-  let state;
-  let envSteps;
-  let episodes;
-  let showTrue = false;
-  let lastSweep = null;
-  let solvedWith = null;
-  const name = (st) => (st === env.start ? "dock" : st === w.far ? "fast charger" : st === w.near ? "slow charger" : `(${env.toCell(st).join(",")})`);
-
-  const scene = new WarehouseScene(env, { robots: [{ id: "main", color: "--series-2" }], goalLabels: w.signs, caption: "The robot only knows the edges it has driven" });
-  const view = new StateGraph(env, { goalLabels: w.labels });
-  const loop = new LoopDiagram();
-  const counters = h("div", { class: "counters" });
-  const note = h("div", { class: "callout" });
-  const challenge = h("div", { class: "callout" });
-  const ledger = new Ledger({
-    titleFor: (t) => `Learning step ${t.sweep} · one backup of every visited node`,
-    groupsFor: (t) => [
-      {
-        label: t.changed.length ? "Values that changed" : "Nothing changed",
-        tone: "learn",
-        rows: t.changed.length
-          ? t.changed.map((c) => ({
-              label: `${name(c.state)}, via ${ARROWS[c.action]} to ${c.next_state === null ? "?" : name(c.next_state)}`,
-              formula: "V(s)",
-              value: `${fmt(c.before)} → ${fmt(c.after)}`,
-            }))
-          : [{ label: "Value has reached every node that a known edge connects to a charger.", formula: "", value: "" }],
-      },
-    ],
-    empty: "No learning step yet. Drive a few edges, then press Learn once.",
-    emptyTitle: "Learning step",
-  });
-
-  const mission = new Mission({
-    title: "Watch the two loops",
-    goal: "Collect some experience, then learn from it, and see what each loop changes.",
-    steps: [
-      { text: "Drive to the slow charger: ↑, then → three times, then ↓. Look at the graph: 5 new edges, but every value is still 0.", done: () => graph.terminal.has(w.near) },
-      { text: "Press Learn once five times. Each press moves value one node closer to the dock.", baseline: () => graph.sweeps, done: (b) => graph.sweeps - b >= 5 && graph.V[env.start] > 0 },
-      { text: "Now drive to the fast charger by the short route (↑, → five times, ↑ ↑), then press Learn until nothing changes.", done: () => graph.V[env.start] >= optimum - 1e-9 },
-    ],
-    conclusion: () =>
-      `Driving (the control loop) added edges but changed no value. Learning (the learning loop) changed values but added no edge: each press moved value one edge back, so the dock, 5 edges from the slow charger, needed 5 presses to reach ${fmt(0.9 ** 4, 3)}. It only reached the best possible value, ${fmt(optimum, 3)}, after you drove the edges to the fast charger. Learning can only use the edges that are in the graph.`,
-  });
-
-  function reset() {
-    graph = new ExperienceGraph({ nStates: env.nStates, nActions: 4, gamma: GAMMA });
-    [state] = env.reset();
-    envSteps = 0;
-    episodes = 0;
-    lastSweep = null;
-    solvedWith = null;
-    ledger.reset();
-    scene.place("main", state, UP);
-    mission.reset();
-    render();
+  const env = GridWorld.chargingRoom();
+  let graph = new ExperienceGraph({ nStates: env.nStates, nActions: 4, gamma: 0.9 });
+  let choice = "near", tr = route(env, NEAR_ROUTE), index = 0, acted = 0, state = env.start, last = null;
+  env.reset();
+  const map = new WorldView(env, { caption: "地图轮廓给读者定位；机器人用于学习的只有走过的连接。? 表示尚未到过，蓝线表示已观察到的连接。" });
+  const strip = h("div"), stats = h("div", { class: "metrics" }), note = h("p", { class: "observation", role: "status" });
+  const report = h("div", { class: "arithmetic" });
+  function newWalk() { tr = route(env, choice === "near" ? NEAR_ROUTE : FAR_ROUTE); index = 0; [state] = env.reset(); last = null; render(); }
+  function act() {
+    if (index >= tr.length) return;
+    const t = tr[index++]; const [next_state, reward, terminated] = env.step(t.action);
+    graph.add({ ...t, next_state, reward, terminated }); state = next_state; acted++; last = "act"; render();
   }
-
-  function drive(a) {
-    if (env.goals.includes(state)) return; // the episode just ended; the robot is being carried back to the dock
-    const [next, reward, terminated, , info] = env.step(a);
-    graph.add(makeTransition({ state, action: a, reward, next_state: next, terminated }));
-    scene.move("main", { from: state, to: next, fellInto: info.fell_into, action: a }, { duration: 260 });
-    envSteps += 1;
-    loop.pulse("control");
-    lastSweep = null;
-    if (terminated) {
-      episodes += 1;
-      setTimeout(() => {
-        [state] = env.reset();
-        scene.place("main", state, UP);
-        render();
-      }, 420);
-    }
-    state = next;
-    render();
-  }
-
-  function robotDrives() {
-    drive(rng.random() < 0.2 ? rng.integers(4) : graph.act(state));
-  }
-
-  function learn(times = 1) {
-    let t;
-    for (let i = 0; i < times; i++) {
-      t = graph.sweep();
-      ledger.push(t);
-      if (!t.changed.length) break;
-    }
-    lastSweep = t;
-    loop.pulse("learning");
-    if (solvedWith === null && graph.V[env.start] >= optimum - 1e-9) solvedWith = envSteps;
-    render();
-  }
-
+  function learn() { const t = graph.sweep(); last = "learn"; report.textContent = t.changed.length ? `这轮改变：${t.changed.map((x) => `${stateName(env, x.state)} ${num(x.before)}→${num(x.after)}`).join("；")}` : "这轮没有任何价值变化。已知连接中，没有更多奖励信息可向后传播。"; render(); }
+  const actBtn = button("行动：沿路线走一步", { kind: "env", onClick: act });
+  const learnBtn = button("学习：沿已知边更新一轮", { kind: "learn", onClick: learn });
   function render() {
-    const known = new Set([...graph.visited, ...graph.terminal]);
-    const hl = new Set((lastSweep?.changed ?? []).map((c) => `${c.state},${c.action}`));
-    const edges = [];
-    for (const e of allEdges) {
-      const k = `${e.from},${e.action}`;
-      const seen = graph.edges.has(k);
-      if (!seen && !showTrue) continue;
-      const best = seen && graph.V[e.from] !== 0 && graph.act(e.from) === e.action;
-      edges.push({ ...e, role: hl.has(k) ? "hl" : !seen ? "faint" : best ? "best" : e.from === e.to ? "faint" : "plain" });
-    }
-    const stubs = {};
-    for (const s of graph.visited) if (!graph.terminal.has(s)) stubs[s] = graph.untried(s);
-    view.render({ edges, values: graph.V, showValues: true, stubs, known, robot: state });
-
-    replace(
-      counters,
-      h("span", { class: "counter" }, h("span", { class: "dot env" }), "environment steps", h("b", {}, envSteps)),
-      h("span", { class: "counter" }, h("span", { class: "dot learn" }), "learning steps", h("b", {}, graph.sweeps)),
-      h("span", { class: "counter" }, h("span", { class: "dot muted" }), "episodes", h("b", {}, episodes)),
-      h("span", { class: "counter" }, "known edges", h("b", {}, `${graph.edges.size} of ${allEdges.length}`)),
-      h("span", { class: "counter" }, "value of the dock", h("b", {}, fmt(graph.V[env.start], 3))),
-    );
-
-    const reached = [...graph.terminal].map(name);
-    replace(
-      note,
-      h(
-        "p",
-        {},
-        graph.edges.size === 0
-          ? [h("strong", {}, "The robot knows nothing yet. "), "Every node except the dock is drawn dashed: it has never been there. Drive, and watch the graph grow."]
-          : !reached.length
-            ? [h("strong", {}, "No charger in the graph yet. "), "However much the robot learns, every value stays 0: there is no reward on any edge it knows."]
-            : [
-                h("strong", {}, `Known chargers: ${reached.join(" and ")}. `),
-                `The dock is worth ${fmt(graph.V[env.start], 3)} to the robot. The best possible is ${fmt(optimum, 3)}. ${graph.V[env.start] < optimum - 1e-9 ? "Learning more will not close that gap if the missing edges are not in the graph; only driving them will." : "Its graph already contains a best route."}`,
-              ],
-      ),
-    );
-
-    mission.update();
-    replace(
-      challenge,
-      solvedWith !== null
-        ? h("p", {}, h("span", { class: "verdict good" }, "Done. "), `The dock's value reached the optimum ${fmt(optimum, 3)} after ${solvedWith} environment steps. The fewest possible is 8: drive the best route once, then learn until nothing changes. Learning is free; information is not.`)
-        : h("p", {}, h("span", { class: "status-line" }, h("span", { class: "dot muted" }), `Not yet: the dock is worth ${fmt(graph.V[env.start], 3)} of ${fmt(optimum, 3)} after ${envSteps} environment steps.`)),
-    );
+    const known = new Set([env.start, ...graph.visited, ...graph.terminal]);
+    const edges = [...graph.edges].map(([key, [next_state]]) => ({ state: Number(key.split(",")[0]), next_state }));
+    map.render({ robot: state, values: graph.V, known, edges });
+    replace(strip, routeStrip(env, tr, { values: graph.V, visited: index, active: index, reverse: true, label: "机器人沿路线向右走；已观察到的奖励信息，经学习向左传。" }));
+    replace(stats, metric("行动", `${acted} 步`), metric("学习", `${graph.sweeps} 轮`), metric("已知连接", graph.edges.size), metric("V(出发点)", num(graph.V[env.start])));
+    actBtn.disabled = index >= tr.length; learnBtn.disabled = graph.edges.size === 0;
+    note.textContent = last === "act" ? "刚才只行动：多了一条经验，价值没有更新。即使已经到达 +1，出发点的 V 也不会自动改变。" : last === "learn" ? "刚才只学习：机器人没动，经验数量没变；已有奖励信息沿已知连接向后传播。" : "先只点行动 5 次，再只点学习 5 次。观察：一个按钮改变经验，另一个按钮改变数字。";
+    if (last !== "learn") report.textContent = "这里的学习是经验图上的规划：只计算已观察到的动作，未知动作不参与比较。这是展示两个循环的简化方式。";
   }
-
-  const pad = h(
-    "div",
-    { class: "drive-pad", role: "group", "aria-label": "Drive the robot" },
-    button("↑", { kind: "env", onClick: () => drive(UP), title: "up" }),
-    button("←", { kind: "env", onClick: () => drive(LEFT), title: "left" }),
-    button("↓", { kind: "env", onClick: () => drive(DOWN), title: "down" }),
-    button("→", { kind: "env", onClick: () => drive(RIGHT), title: "right" }),
-  );
-  [...pad.children].forEach((b, i) => b.classList.add(["up", "left", "down", "right"][i]));
-  const trueToggle = h("input", { type: "checkbox", id: "l02-true" });
-  trueToggle.addEventListener("change", () => ((showTrue = trueToggle.checked), render()));
-  const unbind = shortcuts({ arrowup: () => drive(UP), arrowright: () => drive(RIGHT), arrowdown: () => drive(DOWN), arrowleft: () => drive(LEFT), l: () => learn(1) });
-
-  root.append(
-    lessonHeader("02", {
-      lead: "The robot is not given the graph. It only knows the edges it has driven: its experience graph. Reinforcement learning is two loops around that graph. Acting adds edges to it; learning computes values on it.",
-      concepts: ["control loop", "learning loop", "experience", "Bellman backup", "model unknown"],
-    }),
-    step("Question", h("p", { class: "question" }, "The robot does not know the graph. How can it still learn where to go?")),
-    step(
-      "Predict",
-      predict({
-        question: "You drive once from the dock to the slow charger: 5 edges. Then the robot learns, one Bellman backup of every node per learning step. After how many learning steps does the dock's value first change?",
-        choices: [{ label: "After 1" }, { label: "After 5" }, { label: "Never: the robot did not learn while driving" }],
-        answer: 1,
-        explain: () =>
-          "Each backup moves value one edge back along the known edges: first to the node next to the charger, then the one before it, and so on. The dock is 5 edges from the charger, so it changes on the fifth learning step, to 0.9⁴ × 1 = 0.656. Try it below.",
-      }),
-    ),
-    wideStep(
-      "Experiment",
-      prose("The graph on the right is the robot's experience graph: only the nodes and edges it has seen. Dashed nodes are places it has never been; the numbers are its values."),
-      loop.el,
-      h(
-        "div",
-        { class: "bench" },
-        mission.el,
-        h(
-          "div",
-          { class: "toolbar" },
-          pad,
-          button("Robot drives one step", { onClick: robotDrives }),
-          h("span", { class: "spacer" }),
-          button("Learn once", { kind: "learn", kbd: "L", onClick: () => learn(1) }),
-          button("Learn until nothing changes", { onClick: () => learn(100) }),
-          button("Start over", { kind: "ghost", onClick: reset }),
-        ),
-        counters,
-        h("div", { class: "bench-grid part1-grid" }, scene.el, h("div", { class: "figure" }, view.el, h("div", { class: "key" },
-          h("span", { class: "key-item" }, h("span", { class: "key-swatch stub" }), "a move never tried"),
-          h("span", { class: "key-item" }, h("span", { class: "key-swatch best-edge" }), "edge the last learning step used, and the robot's best known edge"),
-          h("label", { class: "toggle", for: "l02-true" }, trueToggle, "show the rest of the true graph (the robot cannot see it)"),
-        ))),
-        note,
-        ledger.el,
-      ),
-    ),
-    step(
-      "Inspect",
-      prose(
-        "The two loops run at different speeds and cost different things. An environment step costs time, battery, and sometimes a fall off the ledge; a learning step only costs computation. But learning can only redistribute what the graph already contains: if no known edge leads to the fast charger, no amount of learning will find it.",
-        "Notice also who chose the actions. When you drive, the data comes from your policy, while the values the robot learns are for its own greedy policy. That mismatch is what off-policy means, and it returns in lessons 03 and 08.",
-      ),
-    ),
-    step(
-      "Equation",
-      equation(
-        "V(s) \\leftarrow \\max_{a \\,:\\, (s,a)\\ \\text{seen}} \\big[\\, r(s,a) + \\gamma\\, V(s') \\,\\big]",
-        "The Bellman equation of lesson 01, restricted to the edges the robot has seen. One learning step applies it to every visited node; after k steps a node's value is the best return of any known walk of at most k edges.",
-      ),
-    ),
-    step("Code", codeBlock(extractDef(graphSource, "sweep"), { title: "visualrl/algorithms/tabular/experience_graph.py" })),
-    step("Challenge", prose("Get the dock's value to the true optimum with as few environment steps as possible. Learning steps are free."), challenge),
-    lessonFooter("02"),
-  );
-  reset();
-  return () => {
-    unbind();
-    scene.dispose();
-  };
+  const picker = segmented([{ value: "near", label: "采集近处路线" }, { value: "far", label: "采集远处路线" }], { value: choice, label: "下一轮由你指定的采集路线", onChange: (v) => { choice = v; newWalk(); } });
+  root.append(lessonHeader("02"), step("先看图像：留下脚印，再沿脚印计算", prose("上一章可以查询完整模型。现在收起它：学习器只记得机器人实际做过的动作及其结果。你指定采集路线；学习器在收集到的连接中寻找最好的路线。", "行动增加经验，学习更新价值。站着不动也能反复计算；但如果从没观察到通向远处充电站的连接，计算再多次也补不出那条路。")),
+    step("动手验证：把两个按钮分开按", h("div", { class: "experiment" },
+      h("div", { class: "experiment-instruction" }, h("strong", {}, "5 次行动 → 5 次学习"), "先到达近处 +1，注意所有价值仍为 0；再让奖励传回出发点。最后换成远处路线，检查新经验带来什么。"),
+      h("div", { class: "toolbar" }, actBtn, learnBtn, button("同一路线再走一轮", { kind: "ghost", onClick: newWalk }), button("清空经验和价值", { kind: "ghost", onClick: () => { graph = new ExperienceGraph({ nStates: env.nStates, nActions: 4, gamma: 0.9 }); acted = 0; newWalk(); } })),
+      h("div", { class: "experiment-grid" }, map.el, h("div", { class: "experiment-reading" }, stats, picker, note)), h("div", { class: "experiment-content" }, strip, report))),
+    takeaway("行动改变我们知道什么；学习改变我们怎样评价已知的东西。已有数据可以多次使用，缺失的数据需要新的行动才能获得。"),
+    step("检查理解", predict({ question: "只走过通向 +1 的路线，连续学习 100 次，能知道远处 +10 的路线吗？", choices: [{ label: "不能，缺少那条路线的经验" }, { label: "能，只要更新次数足够多" }], answer: 0, explain: "学习只用已观察到的连接。必须获得通向 +10 的新经验，才能把它的奖励传回来。" })),
+    optional("展开：经验图上的真实更新", codeBlock(extractDef(graphSource, "sweep"), { title: "ExperienceGraph.sweep" })), lessonFooter("02"));
+  render(); return () => {};
 }

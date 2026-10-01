@@ -1,160 +1,22 @@
-// Lesson 06: policy iteration. Evaluate the policy (expectation backups until V stops changing),
-// then improve it (switch every node to its best edge by Q). Two buttons, two different things.
-import piSource from "../../../visualrl/algorithms/tabular/policy_iteration.py";
-import { bellmanBackup, PolicyIteration } from "../rl/tabular/dp.js";
-import { BackupPanel } from "../ui/backup-panel.js";
-import { codeBlock } from "../ui/code.js";
-import { button, h, replace } from "../ui/dom.js";
-import { fmt } from "../ui/format.js";
-import { gammaControl } from "../ui/gamma.js";
-import { equation } from "../ui/math.js";
-import { Mission } from "../ui/mission.js";
-import { StateGraph, trueEdges } from "../ui/state-graph.js";
-import { lessonFooter, lessonHeader, predict, prose, step, wideStep } from "../ui/shell.js";
-import { extractDef } from "../ui/source.js";
-import { world } from "./lesson01.js";
+import { GridWorld } from "../rl/envs/gridworld.js";
+import { PolicyIteration } from "../rl/tabular/dp.js";
+import { h, button, replace } from "../ui/dom.js";
+import { lessonHeader, step, prose, takeaway, lessonFooter } from "../ui/shell.js";
+import { WorldView, num, metric } from "../ui/world-view.js";
 
 export function mount(root) {
-  const w = world();
-  const { env } = w;
-  const model = env.model();
-  const edges = trueEdges(env);
-  const name = (st) => (st === env.start ? "dock" : st === w.far ? "fast charger" : st === w.near ? "slow charger" : `(${env.toCell(st).join(",")})`);
-  let pi;
-  let log;
-  let selected = null;
-  let evaluatedSinceImprove;
-  let lastImprove;
-  let gamma = 0.9;
-  let finished; // { changes, dock } at the first Improve that changed nothing
-
-  const graph = new StateGraph(env, { goalLabels: w.labels, onNode: (st) => ((selected = model.terminal[st] ? null : st), render()) });
-  const panel = new BackupPanel({ name, title: "Evaluation backup" });
-  const logEl = h("div", { class: "sweep-log" });
-  const note = h("div", { class: "callout" });
-  const gammaEl = gammaControl({ id: "l06-gamma", value: gamma, onInput: (g) => ((gamma = g), reset()) });
-
-  function reset() {
-    pi = new PolicyIteration(model, gamma); // starts from the random policy: every move equally likely
-    log = [];
-    evaluatedSinceImprove = false;
-    lastImprove = null;
-    finished = null;
-    render();
-  }
-
-  function evaluate(full) {
-    const t = full ? pi.evaluate({ theta: 1e-10, maxSweeps: 100000 }) : pi.evaluateStep();
-    const settled = t.max_change < 1e-10;
-    if (settled) evaluatedSinceImprove = true;
-    log.push({ kind: full || settled ? "evaluate (settled)" : "evaluate: 1 sweep", dock: pi.V[env.start], detail: `${pi.sweeps} sweeps so far` });
-    render();
-  }
-
-  function improve() {
-    lastImprove = pi.improveStep();
-    evaluatedSinceImprove = false;
-    const n = lastImprove.changed_states.length;
-    log.push({ kind: "improve", dock: pi.V[env.start], detail: n === 0 ? "no node changed: stable" : `${n} node${n === 1 ? "" : "s"} changed move` });
-    if (n === 0 && !finished) finished = { changes: log.filter((x) => x.kind === "improve").length - 1, dock: pi.V[env.start] };
-    render();
-  }
-
-  const mission = new Mission({
-    title: "Evaluate, improve, repeat",
-    goal: "Start from the worst kind of plan, a coin flip at every node, and turn it into the optimal policy with two operations.",
-    steps: [
-      { text: "Press Evaluate until nothing changes. These are the values of the random policy.", done: () => pi.improvements === 0 && evaluatedSinceImprove },
-      { text: "Press Improve the policy. Every node switches to its best edge according to those values.", done: () => pi.improvements >= 1 },
-      { text: "Press Evaluate until nothing changes again, then Improve again. Repeat until Improve changes no node.", done: () => finished !== null },
-    ],
-    conclusion: () =>
-      `Improve changed the policy ${finished?.changes} times, and the next one changed nothing. Under the random policy the dock was worth ${fmt(log.find((x) => x.kind !== "improve")?.dock ?? 0, 3)} at γ = ${gamma.toFixed(2)}: a coin-flip walk next to the ledge falls off it again and again. Each improvement made the policy greedy on the latest values, and each evaluation computed what that policy is really worth. When an improvement changed nothing, the policy was greedy on its own values: that is the Bellman optimality equation, so this is the optimal policy, and V(dock) = ${fmt(finished?.dock ?? pi.V[env.start], 3)} is the same V* as value iteration found in lesson 05.`,
-  });
-
+  const env = GridWorld.chargingRoom(); let pi = new PolicyIteration(env.model(), 0.9), evaluated = false, stable = false, operation = "";
+  const map = new WorldView(env, { caption: "数字表示当前估计 V；箭头表示策略允许的动作。初始策略随机选择四个方向，所以每格都有四个箭头。" });
+  const stats = h("div", { class: "metrics" }), note = h("p", { class: "observation", role: "status" });
+  const improveBtn = button("2 · 改进：切换到最好的动作", { kind: "env", onClick: () => { const t = pi.improveStep(); stable = t.stable; evaluated = false; operation = `改进改变了 ${t.changed_states.length} 个位置的策略，数字没有改变。${stable ? "策略已稳定，不再需要改变。" : "箭头换了，新策略的价值需要重新评价。"}`; render(); } });
   function render() {
-    const P = pi.policy;
-    graph.render({
-      edges: edges.map((e) => {
-        const p = P[e.from][e.action];
-        return { ...e, role: p > 0.99 ? "best" : p > 0 ? (e.from === e.to ? "faint" : "plain") : "faint" };
-      }),
-      values: pi.V,
-      showValues: true,
-      selected,
-    });
-    panel.show(selected === null ? null : bellmanBackup(model, pi.V, P, selected, gamma));
-    replace(
-      logEl,
-      h(
-        "table",
-        {},
-        h("thead", {}, h("tr", {}, ["step", "what", "V(dock)", ""].map((c) => h("th", {}, c)))),
-        h(
-          "tbody",
-          {},
-          log.length
-            ? log.map((x, i) => h("tr", { class: x.kind === "improve" ? "highlight" : "" }, h("td", {}, i + 1), h("td", { style: { textAlign: "left", fontFamily: "var(--font-body)" } }, x.kind), h("td", {}, fmt(x.dock, 3)), h("td", { class: "wrap", style: { textAlign: "left", fontFamily: "var(--font-body)" } }, x.detail)))
-            : h("tr", {}, h("td", { colspan: 4, style: { textAlign: "left", fontFamily: "var(--font-body)" } }, "Nothing yet. The policy picks each of the four moves with probability 1/4.")),
-        ),
-      ),
-    );
-    replace(
-      note,
-      h(
-        "p",
-        {},
-        h("strong", {}, `${pi.improvements === 0 ? "The random policy" : `Policy after ${pi.improvements} improvement${pi.improvements === 1 ? "" : "s"}`}, γ = ${gamma.toFixed(2)}. `),
-        "Thin arrows are moves the policy takes with some probability, dark ones moves it always takes. Evaluate changes the numbers and never the arrows; Improve changes the arrows and never the numbers. Click a node to see its evaluation backup: the average of its moves, weighted by the policy. Changing γ starts over; a larger γ needs more evaluation sweeps, because rewards further away still matter.",
-      ),
-    );
-    mission.update();
+    map.render({ values: pi.V, policy: pi.policy });
+    replace(stats, metric("V(出发点)", num(pi.V[env.start])), metric("改进次数", pi.improvements));
+    improveBtn.disabled = !evaluated || stable;
+    note.textContent = operation || "先评价：箭头不动，数字改变。再改进：数字不动，箭头改变。重复这个顺序。";
   }
-
-  root.append(
-    lessonHeader("06", {
-      lead: "Lesson 05 found the optimal policy by repeating one backup that both evaluates and improves. Policy iteration splits it into two separate operations. Evaluate: compute what the current policy is worth, with expectation backups. Improve: switch every node to its best edge by those values. Alternate until improving changes nothing.",
-      concepts: ["policy evaluation", "policy improvement", "policy iteration", "expectation backup"],
-    }),
-    step("Question", h("p", { class: "question" }, "If you start from a bad plan, how do you turn it into the best one?")),
-    step(
-      "Predict",
-      predict({
-        question: "With γ = 0.9, you start from the random policy and alternate a full evaluation with an improvement. How many times will Improve change the policy before it stops changing?",
-        choices: [{ label: "Once: one improvement is enough" }, { label: "A handful of times" }, { label: "Hundreds of times" }],
-        answer: 1,
-        explain: () =>
-          "Here, 5 improvements change something and the 6th changes nothing. The first one fixes 17 nodes at once, because a full evaluation gives every node exact values; the later ones fix the few nodes whose successors only became good in the previous round. Each improvement is paid for with a full evaluation, dozens of sweeps.",
-      }),
-    ),
-    wideStep(
-      "Experiment",
-      h(
-        "div",
-        { class: "bench" },
-        mission.el,
-        h(
-          "div",
-          { class: "toolbar" },
-          button("Evaluate: one sweep", { onClick: () => evaluate(false) }),
-          button("Evaluate until nothing changes", { kind: "learn", onClick: () => evaluate(true) }),
-          button("Improve the policy", { kind: "env", onClick: improve }),
-          h("span", { class: "spacer" }),
-          button("Start over from the random policy", { kind: "ghost", onClick: reset }),
-          gammaEl,
-        ),
-        h("div", { class: "bench-grid part1-grid even" }, h("div", { class: "figure" }, graph.el), h("div", { class: "figure" }, logEl, panel.el)),
-        note,
-      ),
-    ),
-    step(
-      "Equation",
-      equation("\\text{Evaluate:}\\quad V(s) \\leftarrow \\sum_a \\pi(a\\mid s) \\sum_{s'} P(s'\\mid s,a)\\,\\big[\\, r + \\gamma V(s') \\,\\big]", "The expectation backup: an average over the policy's moves, not a max. Repeated until V stops changing, it gives V^π."),
-      equation("\\text{Improve:}\\quad \\pi(s) \\leftarrow \\arg\\max_a \\sum_{s'} P(s'\\mid s,a)\\,\\big[\\, r + \\gamma V^\\pi(s') \\,\\big]", "Greedy on Q^π. By lesson 04, this never makes any node worse; when it changes nothing, the policy is optimal."),
-    ),
-    step("Code", codeBlock(extractDef(piSource, "improve_step", { cutAt: "return LearningTrace(", replacement: "return LearningTrace(...)" }), { title: "visualrl/algorithms/tabular/policy_iteration.py" })),
-    lessonFooter("06"),
-  );
-  reset();
-  return () => {};
+  root.append(lessonHeader("06"), step("先看图像：数字和箭头轮流改变", prose("已知完整环境模型时，先计算当前策略的 V，再按照这些价值选择更好的动作。评价策略是在回答「照这些箭头走，会怎么样？」；改进策略是在回答「既然知道这些结果，箭头该怎样换？」")),
+    step("动手验证：每次只看一种变化", h("div", { class: "experiment" }, h("div", { class: "toolbar" }, button("1 · 评价：算出当前策略的价值", { kind: "learn", onClick: () => { pi.evaluate({ theta: 1e-10 }); evaluated = true; operation = "评价完成：只更新了数字，箭头仍然表示原来的策略。现在可以改进。"; render(); } }), improveBtn, button("重新开始", { kind: "ghost", onClick: () => { pi = new PolicyIteration(env.model(), 0.9); evaluated = false; stable = false; operation = ""; render(); } })), h("div", { class: "experiment-grid" }, map.el, h("div", { class: "experiment-reading" }, stats, note)))),
+    takeaway("策略评价改变价值估计，策略改进改变动作选择。评价与改进交替进行，是策略迭代。它和价值迭代一样，在这一实验中都使用已知的环境模型。"), lessonFooter("06"));
+  render(); return () => {};
 }

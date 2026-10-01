@@ -1,6 +1,8 @@
 import "./styles.css";
 
 import { h } from "./ui/dom.js";
+import { courseNav } from "./ui/shell.js";
+import { lessonById } from "./lessons/curriculum.js";
 import * as home from "./lessons/home.js";
 import * as lesson01 from "./lessons/lesson01.js";
 import * as lesson02 from "./lessons/lesson02.js";
@@ -10,7 +12,6 @@ import * as lesson05 from "./lessons/lesson05.js";
 import * as lesson06 from "./lessons/lesson06.js";
 import * as lesson07 from "./lessons/lesson07.js";
 import * as lesson08 from "./lessons/lesson08.js";
-import * as lesson14 from "./lessons/lesson14.js";
 
 // Routes are bare hash tokens (#lesson-08) so links work in a standalone file too.
 const ROUTES = {
@@ -23,7 +24,6 @@ const ROUTES = {
   "lesson-06": lesson06,
   "lesson-07": lesson07,
   "lesson-08": lesson08,
-  "lesson-14": lesson14,
 };
 
 const app = document.getElementById("app");
@@ -36,11 +36,11 @@ function topbar() {
     h(
       "div",
       { class: "topbar-inner" },
-      h("a", { class: "wordmark", href: "#" }, h("span", { class: "wordmark-mark", "aria-hidden": "true" }, h("i"), h("i")), "Visual RL"),
+      h("a", { class: "wordmark", href: "#" }, "Visual RL", h("small", {}, "看见强化学习")),
       h(
         "nav",
         {},
-        h("a", { href: "#" }, "Lessons"),
+        h("a", { href: "#" }, "课程首页"),
         h("a", { href: "https://github.com/LianghongMo/VisualRL-zoo" }, "GitHub"),
       ),
     ),
@@ -66,12 +66,14 @@ function show(key) {
   current = key;
   const page = ROUTES[key] ?? home;
   const main = h("main", { class: "page" });
-  app.replaceChildren(topbar(), main);
+  const lesson = lessonById(key.replace(/^lesson-/, ""));
+  document.title = lesson ? `${lesson.short} · Visual RL` : "Visual RL · 看见强化学习";
+  app.replaceChildren(topbar(), lesson ? h("div", { class: "course-layout" }, courseNav(lesson.id), main) : main);
   try {
     cleanup = page.mount(main) ?? (() => {});
   } catch (err) {
     console.error(err);
-    main.append(h("div", { class: "callout error" }, h("p", {}, h("strong", {}, "This page failed to load. "), "Please report this message: ", h("code", {}, String(err?.message ?? err)))));
+    main.append(h("div", { class: "callout error" }, h("p", {}, h("strong", {}, "这一页未能加载。"), "错误信息：", h("code", {}, String(err?.message ?? err)))));
   }
   window.scrollTo(0, 0);
 }
@@ -86,7 +88,7 @@ document.addEventListener("click", (e) => {
   const key = a.getAttribute("href").slice(1);
   try {
     if (location.hash.replace(/^#/, "") !== key) {
-      history.replaceState?.(null, "", `#${key}`);
+      history.pushState?.(null, "", `#${key}`);
     }
   } catch {}
   show(key);
@@ -102,7 +104,7 @@ window.addEventListener("unhandledrejection", (e) => showErrorBanner(String(e.re
 
 function showErrorBanner(message) {
   if (document.querySelector(".error-banner")) return;
-  document.body.append(h("div", { class: "error-banner", role: "alert" }, "Something went wrong on this page: ", h("code", {}, message)));
+  document.body.append(h("div", { class: "error-banner", role: "alert" }, "页面运行出错：", h("code", {}, message)));
 }
 
 show(currentKey());

@@ -1,65 +1,33 @@
-// Page scaffolding shared by the lessons: the header and the Question → Challenge steps (README §15).
 import { LESSONS, lessonById } from "../lessons/curriculum.js";
 import { h } from "./dom.js";
-
-export function lessonHeader(id, { lead, concepts = [] }) {
-  const lesson = lessonById(id);
-  return h(
-    "header",
-    { class: "lesson-head" },
-    h("p", { class: "eyebrow" }, `${lesson.part} · ${lesson.partTitle} · Lesson ${lesson.id}`),
-    h("h1", {}, lesson.title),
-    h("p", { class: "lead" }, lead),
-    concepts.length ? h("div", { class: "chips" }, concepts.map((c) => h("span", { class: "chip" }, c))) : null,
-  );
+export function courseNav(id = "") {
+  const links = LESSONS.map((l) => h("a", {
+    href: `#lesson-${l.id}`, class: l.id === id ? "active" : "", "aria-current": l.id === id ? "page" : undefined,
+  }, h("span", { class: "nav-number" }, l.number), h("span", {}, l.short)));
+  const nav = h("nav", { "aria-label": "课程目录" }, links, h("a", { href: "#", class: "nav-home" }, "← 回到课程首页"));
+  return h("aside", { class: "course-sidebar" },
+    h("details", { class: "course-menu", open: true }, h("summary", {}, "学习路线 · 7 章"), nav),
+    h("p", { class: "sidebar-note" }, "先看图像，再动手验证。每章只引入一件新的事。"));
 }
-
-export function step(label, ...body) {
-  return h("section", { class: "step" }, h("h2", { class: "step-label" }, label), h("div", { class: "step-body" }, body));
+export function lessonHeader(id) {
+  const l = lessonById(id);
+  return h("header", { class: "lesson-head" }, h("p", { class: "eyebrow" }, l.number ? `第 ${l.number} 章 / 7 · ${l.group}` : l.group), h("h1", {}, l.title), h("p", { class: "lead" }, l.image), h("p", { class: "learning-goal" }, h("strong", {}, "这一章要掌握："), l.goal));
 }
-
-// A step whose body needs the full page width (benches, charts): the label sits above it.
-export function wideStep(label, ...body) {
-  return h("section", { class: "step wide" }, h("h2", { class: "step-label" }, label), h("div", { class: "step-body" }, body));
-}
-
-export const prose = (...paragraphs) => h("div", { class: "prose" }, paragraphs.map((p) => (p instanceof Node ? p : h("p", {}, p))));
-
+export const step = (label, ...body) => h("section", { class: "step" }, h("h2", {}, label), ...body);
+export const wideStep = step;
+export const prose = (...paragraphs) => h("div", { class: "prose" }, paragraphs.map((p) => p instanceof Node ? p : h("p", {}, p)));
+export const optional = (label, ...body) => h("details", { class: "optional" }, h("summary", {}, label), h("div", { class: "optional-body" }, ...body));
+export const takeaway = (text) => h("section", { class: "takeaway" }, h("h2", {}, "带走这一句话"), h("p", {}, text));
 export function lessonFooter(id) {
-  const ready = LESSONS.filter((l) => l.ready);
-  const i = ready.findIndex((l) => l.id === id);
-  const prev = ready[i - 1];
-  const next = ready[i + 1];
-  return h(
-    "nav",
-    { class: "lesson-foot", "aria-label": "More lessons" },
-    prev ? h("a", { href: `#lesson-${prev.id}` }, `← ${prev.id} ${prev.title}`) : h("a", { href: "#" }, "← All lessons"),
-    next ? h("a", { href: `#lesson-${next.id}` }, `${next.id} ${next.title} →`) : h("a", { href: "#" }, "All lessons →"),
-  );
+  const l = lessonById(id), i = LESSONS.findIndex((x) => x.id === id);
+  const prev = LESSONS[i - 1], next = id === "06" ? lessonById("02") : LESSONS[i + 1];
+  return h("footer", { class: "lesson-foot" }, h("p", {}, l.next), h("nav", { "aria-label": "继续学习" }, prev ? h("a", { href: `#lesson-${prev.id}` }, `← ${prev.short}`) : h("a", { href: "#" }, "← 课程首页"), next ? h("a", { class: "next-lesson", href: `#lesson-${next.id}` }, `${next.short} →`) : h("a", { class: "next-lesson", href: "#" }, "完成主线 · 回到首页 →")));
 }
-
-// "Predict" step: pick an answer, then see whether it was right and why.
 export function predict({ question, choices, answer, explain }) {
-  const verdict = h("div", { class: "prose", hidden: true });
-  const buttons = choices.map((choice, i) =>
-    h(
-      "button",
-      { class: "choice", type: "button", "aria-pressed": "false", onclick: () => pick(i) },
-      h("span", {}, choice.label),
-      choice.detail ? h("small", {}, choice.detail) : null,
-    ),
-  );
-  function pick(i) {
-    buttons.forEach((b, j) => {
-      b.setAttribute("aria-pressed", String(i === j));
-      b.classList.toggle("correct", j === answer);
-      b.disabled = true;
-    });
-    const right = i === answer;
-    verdict.replaceChildren(
-      h("p", {}, h("span", { class: `verdict ${right ? "good" : "bad"}` }, right ? "Right. " : "Not quite. "), explain()),
-    );
-    verdict.hidden = false;
-  }
-  return h("div", { class: "step-body" }, h("p", { class: "prose" }, question), h("div", { class: "choices" }, buttons), verdict);
+  const verdict = h("p", { class: "quiz-verdict", hidden: true, role: "status" });
+  const buttons = choices.map((c, i) => h("button", { type: "button", class: "choice", "aria-pressed": "false", onclick: () => {
+    buttons.forEach((b, j) => { b.setAttribute("aria-pressed", String(i === j)); b.classList.toggle("correct", j === answer); });
+    verdict.replaceChildren(h("strong", {}, i === answer ? "对。" : "再想一想。"), typeof explain === "function" ? explain() : explain); verdict.hidden = false;
+  } }, c.label, c.detail ? h("small", {}, c.detail) : null));
+  return h("div", { class: "quiz" }, h("p", {}, question), h("div", { class: "choices" }, buttons), verdict);
 }

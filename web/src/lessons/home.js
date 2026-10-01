@@ -1,103 +1,40 @@
 import { h } from "../ui/dom.js";
 import { PARTS } from "./curriculum.js";
-
-const LOOP = [
-  ["environment", "env"],
-  ["experience", "env"],
-  ["learning target", "learn"],
-  ["parameter update", "learn"],
-  ["policy / value change", "learn"],
-  ["new behavior", "env"],
-];
+import { WorldView, route, statesOf, NEAR_ROUTE, FAR_ROUTE, mapLegend } from "../ui/world-view.js";
+import { GridWorld } from "../rl/envs/gridworld.js";
 
 export function mount(root) {
+  const env = GridWorld.chargingRoom();
+  const map = new WorldView(env, { caption: "同一个出发点：近处的 +1，远处的 +10。机器人该选哪条路？" });
+  map.render({ robot: env.start, paths: [
+    { states: statesOf(route(env, NEAR_ROUTE)), color: "var(--act)" },
+    { states: statesOf(route(env, FAR_ROUTE)), color: "var(--learn)", dashed: true },
+  ] });
+  const groups = PARTS.map((part) => {
+    const rows = part.lessons.map((l) => h("li", {},
+      h("a", { class: "lesson-row", href: `#lesson-${l.id}` },
+        h("span", { class: "n" }, String(l.number).padStart(2, "0")),
+        h("span", { class: "t" }, l.title, h("span", { class: "d" }, l.image)),
+        h("span", { class: "row-arrow", "aria-hidden": "true" }, "→"))));
+    return h("section", { class: "course-group" }, h("h3", {}, part.title), h("ol", { class: "lesson-list" }, rows));
+  });
   root.append(
-    h(
-      "section",
-      { class: "hero" },
-      h("p", { class: "eyebrow" }, "An interactive reinforcement learning tutorial"),
-      h("h1", {}, "Learn reinforcement learning by seeing every decision, target, and update."),
-      h(
-        "p",
-        { class: "lead" },
-        "Most demos show what an agent does. These lessons show how it learns: pause at any update and see the data it used, the target it computed, the error, and the value that changed.",
-      ),
-      h(
-        "div",
-        { class: "loop", "aria-label": "The learning loop" },
-        LOOP.flatMap(([label, tone], i) => [
-          i ? h("span", { class: "loop-arrow", "aria-hidden": "true" }, "→") : null,
-          h("span", { class: `loop-step ${tone}` }, label),
-        ]),
-      ),
-      h(
-        "p",
-        { class: "note" },
-        h("span", { class: "dot env" }),
-        " Acting (environment steps, experience)   ",
-        h("span", { class: "dot learn" }),
-        " Learning (targets, updates, changed values). The two are separate buttons in every lesson.",
-      ),
-    ),
-    h(
-      "div",
-      { class: "curriculum" },
-      PARTS.map((part) =>
-        h(
-          "section",
-          { class: "part" },
-          h("h2", { class: "part-title" }, part.part, h("strong", {}, part.title)),
-          h(
-            "ol",
-            { class: "lesson-list" },
-            part.lessons.map((l) =>
-              h(
-                "li",
-                {},
-                h(
-                  l.ready ? "a" : "div",
-                  { class: `lesson-row${l.ready ? "" : " planned"}`, href: l.ready ? `#lesson-${l.id}` : undefined },
-                  h("span", { class: "n" }, l.id),
-                  h("span", { class: "t" }, l.title, h("span", { class: "d" }, l.about)),
-                  h("span", { class: `status${l.ready ? " ready" : ""}` }, l.ready ? "Open" : "Planned"),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    ),
-    h(
-      "section",
-      { class: "about" },
-      h("h2", { class: "part-title" }, "How it works"),
-      h(
-        "div",
-        { class: "prose" },
-        h(
-          "p",
-          {},
-          "Every number on these pages comes from a real computation. The lessons run a JavaScript copy of the Python algorithms in the ",
-          h("a", { href: "https://github.com/LianghongMo/VisualRL-zoo" }, "visualrl"),
-          " package, and a test replays Python's recorded updates through it to check that both produce identical learning traces.",
-        ),
-        h(
-          "p",
-          {},
-          "Values drawn with a dashed line are reference quantities computed from the environment's model. The learning agent never sees them.",
-        ),
-        h(
-          "p",
-          {},
-          "The early lessons share one world: a delivery robot in a warehouse. Its maps use the same format as the PointMaze and AntMaze tasks of Gymnasium-Robotics, so the discrete lessons and the continuous-control ones run on the same layouts. In the 3D view the robot glides between cells, but each glide is one discrete environment step.",
-        ),
-        h(
-          "p",
-          {},
-          "The deep-RL lessons use MuJoCo robots (InvertedPendulum, Hopper, HalfCheetah, Ant, PointMaze). The browser cannot run MuJoCo, so these robots are trained in Python and their episodes recorded; the page replays the recorded position of every body, frame by frame, next to the real training log.",
-        ),
-      ),
-    ),
-  );
+    h("section", { class: "home-intro" },
+      h("div", { class: "home-copy" },
+        h("p", { class: "eyebrow" }, "Visual RL · 看见强化学习"),
+        h("h1", {}, "一台机器人，", h("br"), "怎样学会选路？"),
+        h("p", { class: "lead" }, "从一张地图开始，看奖励怎样变成经验，经验怎样改变估计，估计又怎样改变下一次行动。"),
+        h("a", { class: "btn primary", href: "#lesson-01" }, "从第 1 章开始 →"),
+        h("p", { class: "home-note" }, "7 章 · 中文讲解 · 每章一个核心图像与可操作的例子")),
+      h("div", { class: "home-map" }, map.el, mapLegend("实线：近处充电站", "虚线：远处充电站"))),
+    h("section", { class: "course-overview" },
+      h("h2", {}, "每一章，回答一个问题"),
+      h("p", { class: "muted" }, "下一章只在上一章的图像上，多加一件事。"), groups),
+    h("section", { class: "home-method" }, h("h2", {}, "怎么读这些页面"),
+      h("div", { class: "method-grid" },
+        h("div", {}, h("b", {}, "1 · 先看图像"), h("p", {}, "先说清发生了什么，再引入名字。")),
+        h("div", {}, h("b", {}, "2 · 动手验证"), h("p", {}, "每次只改变一个条件，观察哪里变了。")),
+        h("div", {}, h("b", {}, "3 · 说出原因"), h("p", {}, "能解释一个具体例子，才算掌握。公式和源码按需展开。")))),
+    h("p", { class: "home-end" }, "这些图像是教学示意：地图中的一步是一次离散环境转移，图上的价值来自实际算法计算。"));
   return () => {};
 }

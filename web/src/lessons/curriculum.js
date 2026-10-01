@@ -1,49 +1,16 @@
-// The main tutorial path. Lessons with `ready` have an interactive page.
-export const PARTS = [
-  {
-    part: "Part I",
-    title: "The problem and the loop",
-    lessons: [
-      { id: "01", title: "The World as a Graph", about: "States are nodes, moves are edges, rewards are weights; optimal control is a best path.", ready: true },
-      { id: "02", title: "The Learning Loop", about: "Acting adds edges to the experience graph; learning moves value back along them.", ready: true },
-      { id: "03", title: "Online and Offline", about: "Stitching and coverage offline, exploration online, and what an untried move is worth.", ready: true },
-    ],
-  },
-  {
-    part: "Part II",
-    title: "Learning values",
-    lessons: [
-      { id: "04", title: "Return, Discount and Value", about: "A value is the return of a whole walk; γ sets how far ahead it looks. Q on every edge, and where Q beats V.", ready: true },
-      { id: "05", title: "Bellman Backup and the Optimal Policy", about: "One backup by hand, then repeated everywhere until the optimal policy appears.", ready: true },
-      { id: "06", title: "Policy Iteration", about: "Evaluate and improve: two buttons that change two different things.", ready: true },
-      { id: "07", title: "Monte Carlo vs TD", about: "The same trajectory, two targets, and n-step TD in between.", ready: true },
-    ],
-  },
-  {
-    part: "Part III",
-    title: "Control",
-    lessons: [
-      { id: "08", title: "SARSA vs Q-learning", about: "A warehouse robot at a loading ledge: behavior action vs target action, and an experience graph.", ready: true },
-      { id: "09", title: "On-policy, Off-policy, and Replay", about: "A visible replay buffer and the minibatches drawn from it." },
-    ],
-  },
-  {
-    part: "Part IV",
-    title: "Function approximation",
-    lessons: [{ id: "10", title: "From Tables to Functions", about: "Update one state and watch predictions move everywhere." }],
-  },
-  {
-    part: "Part V",
-    title: "Deep reinforcement learning",
-    lessons: [
-      { id: "11", title: "DQN", about: "Replay, online network, target network, Bellman target, loss." },
-      { id: "12", title: "REINFORCE", about: "Logits to probabilities to a policy gradient." },
-      { id: "13", title: "Actor-Critic and Advantage", about: "Update the critic, then update the actor." },
-      { id: "14", title: "PPO", about: "Rollouts, GAE, probability ratios and clipping, in the warehouse and on MuJoCo robots.", ready: true },
-      { id: "15", title: "Evaluation and Debugging", about: "Seeds, uncertainty, and why a falling loss is not a better policy." },
-    ],
-  },
+// Preserve original route IDs while putting prerequisites before their uses.
+const chapters = [
+  ["01", "环境与一步经验", "机器人在怎样的世界里行动？", "位置是状态，移动是动作；走一步，环境就返回一个新位置和奖励。", "把一次移动读成「状态 → 动作 → 奖励、新状态」。", "认识一步之后，下一章把整条路线的奖励加起来。", "认识任务"],
+  ["04", "回报与价值", "近处的 +1，还是远处的 +10？", "沿一条路线，把收到的奖励逐项加起来。越晚收到的奖励，折扣越多。", "区分一步的奖励、整条路线的回报，以及按某个策略出发的价值。", "价值概括了未来。下一章看它怎样从充电站一格格传回来。", "认识任务"],
+  ["05", "Bellman 更新", "只看下一格，怎样找到整条好路线？", "机器人向前走；对未来的估计从充电站向后传播。每次更新只跨一条边。", "解释「眼前奖励 + 下一格的折扣价值」，看懂更新怎样改变路线。", "这里知道每个动作的后果。下一章只使用实际走过的经验。", "让价值传回来"],
+  ["02", "行动与学习", "地图未知时，行动和学习分别改变什么？", "行动留下走过的边；学习沿这些已知的边传播价值。两个按钮改变两种东西。", "区分新增经验与更新估计，解释没到过的地方为何不能凭空学出来。", "有一条经验后，拿什么当学习目标？下一章比较 MC 和 TD。", "让价值传回来"],
+  ["07", "Monte Carlo 与 TD", "必须走到终点，才能学到东西吗？", "MC 看完余下的整条路；TD 看一步，再接上对下一格的估计。", "指出 MC 和 TD 各自使用哪些数据，以及为什么 TD 不必等到终点。", "这里按固定路线估计 V。下一章估计动作的 Q，让学习参与选路。", "用经验学会选路"],
+  ["08", "SARSA 与 Q-learning", "明知近路更短，为什么还会绕远？", "靠近悬崖时，一次随机动作就可能跌落。实际会怎么走，与理想地走，有不同的后果。", "指出 SARSA 用实际的下一动作，Q-learning 用估计最好的下一动作。", "最后一章只改变一件事：机器人还能不能继续获得新经验。", "用经验学会选路"],
+  ["03", "在线与离线", "只能看旧记录，还能发现更好的路线吗？", "旧路线在同一位置相交，就能拼接；没有记录的连接，必须真的走一次才知道。", "区分「重新组合已有经验」与「获得新经验」，理解数据覆盖的限制。", "你已经能把环境、经验、目标、更新和动作选择连起来。主线到这里结束。", "用经验学会选路"],
 ];
-
-export const LESSONS = PARTS.flatMap((p) => p.lessons.map((l) => ({ ...l, part: p.part, partTitle: p.title })));
-export const lessonById = (id) => LESSONS.find((l) => l.id === id);
+export const LESSONS = chapters.map(([id, short, title, image, goal, next, group], i) => ({ id, short, title, image, goal, next, group, number: i + 1, ready: true }));
+export const MAIN_IDS = LESSONS.map((l) => l.id);
+export const lessonById = (id) => LESSONS.find((l) => l.id === id) ?? (id === "06" ? {
+  id, number: null, title: "先评价路线，再改进路线", short: "策略迭代", image: "评价只改数字；改进只改箭头。两件事轮流做，直到箭头不再改变。", goal: "辨认策略评价和策略改进各自改变什么。", next: "返回主线，看看没有完整环境模型时怎样学习。", group: "选读 · 已知模型下的规划",
+} : null);
+export const PARTS = [...new Set(LESSONS.map((l) => l.group))].map((title) => ({ title, lessons: LESSONS.filter((l) => l.group === title) }));
