@@ -1,17 +1,80 @@
-// Preserve original route IDs while putting prerequisites before their uses.
-const chapters = [
-  ["01", "MDP 与环境", "先定义任务：机器人在怎样的 MDP 里行动？", "位置是状态，移动是动作；走一步，环境就返回一个新位置和奖励。", "定义 MDP，判断状态是否包含预测下一步所需的信息，再读懂一条经验。", "认识一步之后，下一章把整条路线的奖励加起来。", "认识任务"],
-  ["04", "回报与价值", "近处的 +1，还是远处的 +10？", "沿一条路线，把收到的奖励逐项加起来。越晚收到的奖励，折扣越多。", "区分一步的奖励、整条路线的回报，以及按某个策略出发的价值。", "价值概括了未来。下一章看它怎样从充电站一格格传回来。", "认识任务"],
-  ["05", "最优策略与 Bellman", "怎样找到一个最优策略？", "任务是找一套动作规则，让预期累计奖励最大。先在地图上比较策略，再从路线的计算中推导 Bellman 方程。", "从具体路线推导一步递推，区分评价与优化，并用价值迭代求出最优策略。", "这里知道每个动作的后果。下一章只使用实际走过的经验。", "让价值传回来"],
-  ["02", "行动与学习", "地图未知时，行动和学习分别改变什么？", "行动留下走过的边；学习沿这些已知的边传播价值。两个按钮改变两种东西。", "区分新增经验与更新估计，解释没到过的地方为何不能凭空学出来。", "有一条经验后，拿什么当学习目标？下一章比较 MC 和 TD。", "让价值传回来"],
-  ["07", "Monte Carlo 与 TD", "必须走到终点，才能学到东西吗？", "MC 看完余下的整条路；TD 看一步，再接上对下一格的估计。", "指出 MC 和 TD 各自使用哪些数据，以及为什么 TD 不必等到终点。", "这里按固定路线估计 V。下一章估计动作的 Q，让学习参与选路。", "用经验学会选路"],
-  ["08", "SARSA 与 Q-learning", "明知近路更短，为什么还会绕远？", "靠近悬崖时，一次随机动作就可能跌落。实际会怎么走，与理想地走，有不同的后果。", "指出 SARSA 用实际的下一动作，Q-learning 用估计最好的下一动作。", "下一章只改变一件事：机器人还能不能继续获得新经验。", "用经验学会选路"],
-  ["03", "在线与离线", "只能看旧记录，还能发现更好的路线吗？", "旧路线在同一位置相交，就能拼接；没有记录的连接，必须真的走一次才知道。", "区分「重新组合已有经验」与「获得新经验」，理解数据覆盖的限制。", "已经能重组旧经验了。最后一章把目标也作为输入，看看同一经验怎样服务多个任务。", "用经验学会选路"],
-  ["09", "GCRL 与未来目标", "同一个机器人，怎样学会到达不同目标？", "位置与墙没有变，只换目标，合理的动作就变了。预测未来，再选择让目标更可能发生的动作。", "读懂目标条件策略与价值，解释改标、未来状态分布、分类与对比学习，并用路标连接局部能力。", "用一个明确的目标，把状态、经验、价值、动作与规划重新连起来。接下来可以带着章末的问题阅读 Ben 的论文。", "把目标也放进来"],
+// Public curriculum. Individual experiments are catalogued separately.
+export const BOOK_TOC = "https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/10094/Toc.pdf?dl=1";
+export const THESIS = "https://ml.cmu.edu/research/phd-dissertation-pdfs/thesis_eysenbach.pdf";
+const definitions = [
+  ["01", "强化学习问题与 MDP", "我们的任务是什么？怎样比较并找到最优策略？", "从机器人一步的反馈，到一整条路线的回报，再到最优策略的 Bellman 方程。", "理解完整状态、策略价值与最优性的定义，并从具体路线推导 Bellman 关系。", "不需要 RL 前置知识；能读懂概率、求和与最大值。", "Sutton & Barto §1、§3", "问题与探索", [
+    ["task", "MDP、Markov 状态与经验", "先定义环境、动作、奖励和终止；给状态一个足够完整的物理含义。"],
+    ["returns", "回报、策略与 V/Q", "把一步反馈变成整段未来的目标，再说明价值依赖哪个策略。"],
+    ["optimal", "最优策略与 Bellman 方程", "先比较完整策略，再从具体路线推导一步递推和最优性关系。"],
+  ]],
+  ["02", "多臂赌博机与探索", "不知道哪个动作好，怎样边试边选？", "反复选择两个奖励来源，观察估计如何改变，又如何决定下一次尝试。", "区分估计、真实均值和不确定性；理解探索的作用。", "第1章：奖励、策略、期望。这里没有影响未来的状态转移。", "Sutton & Barto §2", "问题与探索", [
+    ["bandit", "动作价值与增量估计", "先用最简单的单步任务，隔离「未知奖励」这个问题。"],
+    ["exploration", "探索、利用与 UCB", "比较只相信当前最好结果和主动尝试尚不了解的动作。"],
+    ["nonstationary", "非平稳奖励与上下文", "当奖励会变、不同输入有不同好动作时，估计与策略怎样调整。"],
+  ]],
+  ["03", "动态规划", "已知 MDP，怎样计算出最优策略？", "数字与箭头交替改变，或把最佳未来一格格传回来。", "区分评价、改进、策略迭代和价值迭代。", "第1章：Bellman 期望/最优方程。第2章帮助区分规划与探索。", "Sutton & Barto §4", "表格方法", [
+    ["policy-iteration", "策略评价、改进与策略迭代", "固定箭头计算价值，再按价值改箭头，反复交替。"],
+    ["value-iteration", "价值迭代与收敛", "把未知的最优后续暂时替换成旧估计，再反复备份。"],
+    ["gpi", "广义策略迭代与更新顺序", "评价与改进可以交错；同步、异步和误差阈值影响计算过程。"],
+  ]],
+  ["04", "Monte Carlo 方法", "没有模型，能否用完整经历评价和改进策略？", "走完一个回合，沿真实奖励从后往前算每个访问点的回报。", "掌握首访/每访、回报更新、MC 控制和重要性采样。", "第1章：G、Vπ、Qπ；第2章：ε-greedy；第3章：评价与改进。", "Sutton & Barto §5", "表格方法", [
+    ["prediction", "完整回报与首访/每访预测", "未来全部来自这个回合的实际奖励，不读取后继价值来补尾巴。"],
+    ["control", "动作价值与 MC 控制", "把评价对象从 V 换成 Q，再改善产生经验的策略。"],
+    ["importance", "异策略学习与重要性采样", "数据来自 b、目标是 π 时，按动作概率比修正回报的权重。"],
+  ]],
+  ["05", "TD 学习与表格控制", "能否不等回合结束，就学会更好的动作？", "用真实一步接上后继估计，再看 SARSA 与 Q-learning 如何处理探索的未来。", "掌握 TD 误差、自举、SARSA、Q-learning 与行为/目标策略。", "第4章：MC 目标；第3章：Bellman 备份；第2章：探索。", "Sutton & Barto §6", "表格方法", [
+    ["prediction", "TD(0)：一步采样与自举", "把 MC 的完整回报换成一步奖励加当前后继估计。"],
+    ["control", "SARSA 与 Q-learning", "在悬崖边区分实际会执行的后续和理想贪心后续。"],
+    ["expected", "Expected SARSA、最大化偏差与学习条件", "把采样下一动作换成动作平均，并理解 max 的估计偏差。"],
+  ]],
+  ["06", "多步学习与资格迹", "未来看几步？一条误差怎样影响过去多个状态？", "一条路线可以截取不同长度，再把这些目标混合；资格迹记住最近经过的位置。", "连接 TD、n-step、MC、λ-return 与 TD(λ)。", "第4、5章：实际回报、自举目标、学习率和终止。", "Sutton & Barto §7；§12 的表格资格迹", "表格方法", [
+    ["n-step", "n-step 目标与等待时间", "先读 n 个真实奖励，再从截点接上价值估计。"],
+    ["lambda", "λ-return：混合不同长度的未来", "用权重选择短目标与完整回报的影响。"],
+    ["traces", "资格迹与 TD(λ)", "把当前 TD 误差沿逐渐衰减的访问记忆传给过去状态。"],
+  ]],
+  ["07", "模型、规划与 Dyna", "怎样把行动得到的模型，再用于更多学习？", "真实行动留下连接；模型可以重复生成这些连接，帮助奖励传向更远的起点。", "区分真实经验、学习模型、模拟经验和价值更新。", "第3章：规划；第5章：Q-learning；第6章：传播与更新顺序。", "Sutton & Barto §8", "表格方法", [
+    ["model", "模型学习与已观测连接", "模型记录环境如何响应动作，价值记录动作的长期好坏。"],
+    ["dyna", "Dyna-Q：直接学习与模型规划", "一条真实经验既更新 Q，也更新模型；模拟经验继续更新 Q。"],
+    ["search", "模型误差、优先级与搜索", "规划能放大模型的收益，也会传播模型的错误。"],
+  ]],
+  ["08", "函数近似与 Deep RL", "状态太多放不下表格，怎样表示价值？", "几个状态共享同一组参数，更新一个状态时，其他状态也会改变。", "理解特征、泛化、半梯度、DQN 目标与不稳定性。", "第5章：TD/Q-learning；基础向量、导数与梯度。", "Sutton & Barto §9–11；DQN 原论文", "近似与策略优化", [
+    ["features", "从表格到共享参数", "用线性特征实际观察一次更新对不同状态的影响。"],
+    ["semigradient", "梯度、半梯度与价值学习", "目标来自真实回报或自举估计；更新时说明对哪些量求导。"],
+    ["dqn", "DQN、经验回放与目标网络", "把表格 Q-learning 的目标接到神经网络，并区分稳定化手段与保证。"],
+  ]],
+  ["09", "策略梯度与 Actor–Critic", "怎样直接改变动作概率，让好路线更常发生？", "在交点给分支分配概率，正优势提高概率，负优势降低概率。", "掌握 REINFORCE、baseline、advantage、actor/critic 与 PPO 的入口。", "第1章：策略与回报；第5章：TD；第8章：可微参数与梯度。", "Sutton & Barto §13；PPO 原论文", "近似与策略优化", [
+    ["gradient", "策略参数化与 REINFORCE", "先看概率如何改变，再推导用回报加权的对数概率梯度。"],
+    ["actor-critic", "Baseline、优势与 Actor–Critic", "Critic 评价当前未来，actor 根据动作相对基准的好坏改变概率。"],
+    ["ppo", "从策略梯度到 PPO", "旧策略数据需要概率比；clipping 限制局部目标的激励。"],
+  ]],
+  ["10", "前沿课题：离线 RL 与 GCRL", "怎样重组旧经验、改变目标，再连接局部能力？", "先在旧数据交点拼接，再让同一状态和经验服务不同目标。", "把教材中的状态、价值、采样、表示与 actor 接到研究问题。", "第1–9章，尤其 Markov、off-policy、函数近似、策略梯度与规划。", "研究专题：Benjamin Eysenbach 博士论文 §2–4、附录 B", "研究专题", [
+    ["offline", "离线 RL、数据覆盖与 stitching", "先分清哪些连接来自数据，哪些只是估计，再计算兼容片段的回报。"],
+    ["gcrl", "GCRL：目标条件任务与经验改标", "把 g 加入 π/Q；重算奖励和终止，而不是修改物理转移。"],
+    ["future", "未来状态分布与 C-learning", "用折扣未来作为预测对象，把分类与 Bellman 递归连起来。"],
+    ["contrastive", "Contrastive RL 与目标条件 actor", "表示内积估计密度比；actor 选择让指定目标更常出现的动作。"],
+    ["sorb", "SoRB：把局部能力接成远距离计划", "用目标条件价值建立路标图，再搜索并实际执行局部策略。"],
+    ["research", "从演示到研究：还缺哪些证据？", "数据覆盖、模型与表示误差、长距离目标和评估共同决定方法是否有效。"],
+  ]],
 ];
-export const LESSONS = chapters.map(([id, short, title, image, goal, next, group], i) => ({ id, short, title, image, goal, next, group, number: i + 1, ready: true }));
-export const MAIN_IDS = LESSONS.map((l) => l.id);
-export const lessonById = (id) => LESSONS.find((l) => l.id === id) ?? (id === "06" ? {
-  id, number: null, title: "先评价路线，再改进路线", short: "策略迭代", image: "评价只改数字；改进只改箭头。两件事轮流做，直到箭头不再改变。", goal: "辨认策略评价和策略改进各自改变什么。", next: "返回主线，看看没有完整环境模型时怎样学习。", group: "选读 · 已知模型下的规划",
-} : null);
-export const PARTS = [...new Set(LESSONS.map((l) => l.group))].map((title) => ({ title, lessons: LESSONS.filter((l) => l.group === title) }));
+export const CHAPTERS = definitions.map(([id, title, question, image, goal, prerequisite, book, group, topics], i) => ({
+  id, number: i + 1, title, short: title, question, image, goal, prerequisite, book, group,
+  href: "#chapter-" + id, topics: topics.map(([id, title, description], j) => ({ id, number: (i + 1) + "." + (j + 1), title, description })),
+}));
+export const CHAPTER_IDS = CHAPTERS.map(c => c.id);
+export const chapterById = id => CHAPTERS.find(c => c.id === id);
+export const PARTS = [...new Set(CHAPTERS.map(c => c.group))].map(title => ({ title, chapters: CHAPTERS.filter(c => c.group === title) }));
+export const LEGACY_ROUTES = {
+  "lesson-01": ["01", "task"], "lesson-04": ["01", "returns"], "lesson-05": ["01", "optimal"],
+  "lesson-06": ["03", "policy-iteration"], "lesson-02": ["07", "model"],
+  "lesson-07": ["05", "prediction"], "lesson-08": ["05", "control"],
+  "lesson-03": ["10", "offline"], "lesson-09": ["10", "gcrl"],
+};
+export function resolveRoute(key) {
+  const legacy = LEGACY_ROUTES[key];
+  if (legacy) return { chapter: chapterById(legacy[0]), topic: legacy[1] };
+  const match = /^chapter-(\d{2})(?:\/([a-z-]+))?$/.exec(key);
+  if (!match) return { chapter: null, topic: null };
+  const chapter = chapterById(match[1]);
+  const topic = chapter?.topics.some(t => t.id === match[2]) ? match[2] : null;
+  return { chapter: chapter ?? null, topic };
+}

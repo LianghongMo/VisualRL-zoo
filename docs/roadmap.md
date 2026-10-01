@@ -1,31 +1,31 @@
 # 后续扩展路线图
 
-[返回项目首页](../README.md) · [开发说明](development.md) · [保留的草稿与组件](../web/src/extensions/README.md)
+[返回首页](../README.md) · [开发说明](development.md) · [保留草稿](../web/src/extensions/README.md)
 
-当前完成的是八章主线与策略迭代选读。下面区分已有实现、已有教学材料和之后还要写的内容，避免把 package 中存在的算法误当作已经完成的课程。
+当前十章：九章基础加研究专题。区分可操作算例、算法package和待接入的完整训练。
 
-## 已保留，可以继续使用
+## 当前网页覆盖
 
-| 方向 | 已有材料 | 接入课程时需要补充 |
+| 方向 | 实现 |
+|---|---|
+| 任务/表格方法 | MDP、G/V/Q、Bellman、DP、MC、TD、SARSA、Q-learning、Expected SARSA公式与例子 |
+| 探索 | 真实Bernoulli bandit、均值/常数步长、ε-greedy/UCB、乐观初值 |
+| 多步/规划 | n-step、λ-return、真实表格资格迹、观测模型、Dyna-Q模型抽样 |
+| 近似 | 特征、线性梯度、泛化/冲突、半梯度TD；DQN结构与公式 |
+| 策略 | 二动作REINFORCE、baseline/优势、actor–critic公式、PPO clipped曲线 |
+| 研究 | 第10章离线/stitching、目标改标、未来分布、分类/对比、SoRB与论文入口 |
+
+## 保留材料和下一步
+
+| 方向 | 已有 | 待实现和验收 |
 |---|---|---|
-| Bandit、探索与利用 | Python 环境与 ε-greedy bandit | 收益估计、探索代价和具体实验 |
-| n-step TD | Python / JavaScript 实现与一致性记录 | 一步 TD 到 MC 的连续图像，以及终止/截断例子 |
-| PPO | Python 表格/深度实现、浏览器实现、`extensions/ppo-draft.js` | 策略梯度、actor/critic、优势、GAE，再讲 ratio 与 clipping；适配当前课程壳 |
-| MuJoCo 与 3D | 训练脚本、五组回放数据、Three.js、回放组件 | 状态与动作的物理含义、训练数据来源、奖励与行为的联系；适配当前视觉样式 |
-| 图与价值的可视化 | `extensions/ui/` 中的网格、曲线、经验图、折扣图等 | 每章选择服务于物理图像的组件，并完成样式与交互检查 |
-| GCRL 的进一步学习 | 第八章、目标条件表格示范、论文阅读入口 | 若加入神经网络训练，需实际实现和验收 critic、actor、正负采样与评估；当前分类实验为精确算例 |
+| 完整DQN | 第8章前置/公式 | 神经网络、回放、目标更新、稳定性与多种子评估 |
+| 完整PPO | 第9章基础；Python表格/深度、浏览器算法和ppo-draft | GAE完整推导/实验，采集/minibatch/训练接入 |
+| MuJoCo/3D | 脚本、五组回放、Three.js组件 | 状态动作物理含义、数据来源、奖励/行为联系、样式适配 |
+| 神经GCRL | 第10章定义、改标、分类/对比/路标 | 真正训练表示/critic/actor，评估采样、覆盖、距离与泛化 |
+| 其他研究 | Markov、模型、规划和离线前置 | 部分可观测、随机模型、离线分布偏移、连续控制 |
+| 旧视觉组件 | extensions/ui/网格/曲线/图/3D | 按章节目的适配，用实验说明算法 |
 
-Python package、npm 依赖、MuJoCo JSON 和已有测试都保留在正式位置。扩展目录集中保存未接入页面及其视觉材料；当前主线不依赖这些草稿。
+Python package、npm依赖、MuJoCo JSON、测试和Git历史均保留。扩展文件不注册公共导航、不进入构建。完整训练接入后才声称已训练该方法。
 
-## 建议按前置知识展开
-
-| 前置知识 | 之后可加入 | 当前实现状态 |
-|---|---|---|
-| 表格 V/Q、MC/TD | n-step TD、资格迹 | n-step 已有；资格迹待实现 |
-| 函数近似与梯度 | 线性价值函数、小型 MLP、DQN | 待实现教学与对应算法 |
-| 策略分布与梯度 | REINFORCE、actor-critic、优势与 GAE | PPO 内已有优势计算；独立前置课程待写 |
-| 优势与策略比率 | 完整 PPO 教学，再接 MuJoCo | 算法与旧草稿已有，课程待适配 |
-| GCRL、表示与采样 | C-learning / contrastive RL 的训练与评估 | 当前讲清公式与物理关系，完整训练待实现 |
-| Markov 状态与模型 | 部分可观测、模型学习、model-based RL | 待实现 |
-
-SAC 等更后续内容可以在连续控制前置知识补齐后再加入。扩展时继续使用当前课程的要求：先列必学知识，建立物理图像，用实验显示关系，再用公式与逐项自检验证。
+扩展要求：核心问题/必学知识 → 图像/例子 → 方程/假设 → 真实更新 → 数值/执行验收。

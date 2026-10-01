@@ -10,24 +10,31 @@
 
 ## 当前课程
 
-| 章 | 内容 | 原有页面标识 |
-|---|---|---|
-| 1 | MDP 与环境 | `lesson-01` |
-| 2 | 回报与价值 | `lesson-04` |
-| 3 | 最优策略与 Bellman | `lesson-05` |
-| 4 | 行动与学习 | `lesson-02` |
-| 5 | Monte Carlo 与 TD | `lesson-07` |
-| 6 | SARSA 与 Q-learning | `lesson-08` |
-| 7 | 在线、离线与 stitching | `lesson-03` |
-| 8 | GCRL 与未来目标 | `lesson-09` |
+按 Sutton & Barto 第二版的知识依赖组织九章基础，最后一章是研究专题。章内小节承载地图、算例和实验。
 
-`lesson-06` 是策略迭代选读。页面标识保持兼容，阅读顺序由 `curriculum.js` 定义。GCRL 主要参考 Benjamin Eysenbach 的博士论文；具体知识点、例子与参考位置见[课程导读](docs/course-guide.md)。
+| 章 | 内容 | 教材对应 / 网页入口 |
+|---|---|---|
+| 1 | 强化学习问题与 MDP：回报、价值、最优策略、Bellman | §1、3；[#chapter-01](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-01) |
+| 2 | 多臂赌博机与探索 | §2；[#chapter-02](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-02) |
+| 3 | 动态规划：策略评价、策略迭代、价值迭代、GPI | §4；[#chapter-03](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-03) |
+| 4 | Monte Carlo：预测、控制、重要性采样 | §5；[#chapter-04](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-04) |
+| 5 | TD 学习与表格控制 | §6；[#chapter-05](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-05) |
+| 6 | 多步学习与资格迹 | §7、表格 §12；[#chapter-06](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-06) |
+| 7 | 模型、规划与 Dyna | §8；[#chapter-07](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-07) |
+| 8 | 函数近似与 Deep RL | §9–11、DQN；[#chapter-08](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-08) |
+| 9 | 策略梯度与 Actor–Critic | §13、PPO；[#chapter-09](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-09) |
+| 10 | 前沿课题：离线 RL、stitching 与 GCRL | Ben Eysenbach 博士论文；[#chapter-10](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-10) |
+
+先讲 MDP 是本课程的教学安排；表格资格迹提前与 n-step 对照。其余基础沿教材依赖展开，参考 [MIT Press 官方目录](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/10094/Toc.pdf?dl=1)。研究专题主要参考 Ben 的2023年论文，不作为所有最新方向的综述。
+
+旧链接继续兼容：lesson-01/04/05 进入第1章任务/价值/Bellman；lesson-06 进入第3章策略迭代；lesson-07/08 进入第5章预测/控制；lesson-02 进入第7章模型；lesson-03/09 进入第10章离线/GCRL。完整知识清单与边界见[课程导读](docs/course-guide.md)。
 
 ## 仓库结构
 
 ```text
 web/
-  src/lessons/       当前课程、目录和知识点
+  src/chapters/      十章正文、小节、知识清单与章节界面
+  src/lessons/       公共目录、首页、保留并复用的交互实验
   src/ui/            当前课程使用的界面组件
   src/rl/            浏览器算法与环境
   src/extensions/    保留的 PPO 草稿、MuJoCo 回放与旧视觉组件
@@ -63,4 +70,4 @@ GitHub 自动检查网页测试、构建产物与 Python package。详细安装�
 
 ## 后续扩展
 
-后续章节所需的算法、环境、Three.js 和深度 RL 依赖均保留。当前网页只接入已经整理好的课程；教学草稿的状态和待补前置知识见[扩展路线图](docs/roadmap.md)与[扩展目录说明](web/src/extensions/README.md)。
+后续章节所需的算法、环境、Three.js 和深度 RL 依赖均保留。当前网页已加入函数近似与策略梯度基础；完整训练和教学草稿的状态见[扩展路线图](docs/roadmap.md)与[扩展目录说明](web/src/extensions/README.md)。

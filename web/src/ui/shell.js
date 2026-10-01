@@ -1,4 +1,4 @@
-import { LESSONS, lessonById } from "../lessons/curriculum.js";
+import { LESSONS, lessonById } from "../lessons/lesson-catalog.js";
 import { h } from "./dom.js";
 import { KNOWLEDGE } from "../lessons/knowledge.js";
 export function courseNav(id = "") {

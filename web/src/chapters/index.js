@@ -1,0 +1,11 @@
+import * as c01 from "./chapter01.js";
+import * as c02 from "./chapter02.js";
+import * as c03 from "./chapter03.js";
+import * as c04 from "./chapter04.js";
+import * as c05 from "./chapter05.js";
+import * as c06 from "./chapter06.js";
+import * as c07 from "./chapter07.js";
+import * as c08 from "./chapter08.js";
+import * as c09 from "./chapter09.js";
+import * as c10 from "./chapter10.js";
+export const CHAPTER_MODULES = { "01": c01, "02": c02, "03": c03, "04": c04, "05": c05, "06": c06, "07": c07, "08": c08, "09": c09, "10": c10 };

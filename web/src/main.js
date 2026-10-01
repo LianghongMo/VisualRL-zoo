@@ -2,32 +2,10 @@ import "./styles.css";
 import "./course-details.css";
 
 import { h } from "./ui/dom.js";
-import { courseNav } from "./ui/shell.js";
-import { lessonById } from "./lessons/curriculum.js";
+import { chapterNav } from "./chapters/shell.js";
+import { resolveRoute } from "./lessons/curriculum.js";
+import { CHAPTER_MODULES } from "./chapters/index.js";
 import * as home from "./lessons/home.js";
-import * as lesson01 from "./lessons/lesson01.js";
-import * as lesson02 from "./lessons/lesson02.js";
-import * as lesson03 from "./lessons/lesson03.js";
-import * as lesson04 from "./lessons/lesson04.js";
-import * as lesson05 from "./lessons/lesson05.js";
-import * as lesson06 from "./lessons/lesson06.js";
-import * as lesson07 from "./lessons/lesson07.js";
-import * as lesson08 from "./lessons/lesson08.js";
-import * as lesson09 from "./lessons/lesson09.js";
-
-// Routes are bare hash tokens (#lesson-08) so links work in a standalone file too.
-const ROUTES = {
-  "": home,
-  "lesson-01": lesson01,
-  "lesson-02": lesson02,
-  "lesson-03": lesson03,
-  "lesson-04": lesson04,
-  "lesson-05": lesson05,
-  "lesson-06": lesson06,
-  "lesson-07": lesson07,
-  "lesson-08": lesson08,
-  "lesson-09": lesson09,
-};
 
 const app = document.getElementById("app");
 let cleanup = () => {};
@@ -61,24 +39,32 @@ function currentKey() {
 }
 
 // Show a lesson. Errors are shown on the page instead of leaving it blank.
+let activeChapter = null;
+function scrollToTopic(main, topic) {
+  const target = topic && [...main.querySelectorAll(".chapter-topic")].find(el => el.dataset.topic === topic);
+  if (target) target.scrollIntoView({ block: "start" });
+  else window.scrollTo(0, 0);
+}
 function show(key) {
-  try {
-    cleanup();
-  } catch {}
-  cleanup = () => {};
-  current = key;
-  const page = ROUTES[key] ?? home;
-  const main = h("main", { class: "page" });
-  const lesson = lessonById(key.replace(/^lesson-/, ""));
-  document.title = lesson ? `${lesson.short} · Visual RL` : "Visual RL · 看见强化学习";
-  app.replaceChildren(topbar(), lesson ? h("div", { class: "course-layout" }, courseNav(lesson.id), main) : main);
-  try {
-    cleanup = page.mount(main) ?? (() => {});
-  } catch (err) {
-    console.error(err);
-    main.append(h("div", { class: "callout error" }, h("p", {}, h("strong", {}, "这一页未能加载。"), "错误信息：", h("code", {}, String(err?.message ?? err)))));
+  const resolved = resolveRoute(key);
+  const id = resolved.chapter?.id;
+  if (id && activeChapter === id) {
+    current = key;
+    scrollToTopic(app.querySelector("main"), resolved.topic);
+    return;
   }
-  window.scrollTo(0, 0);
+  try { cleanup(); } catch {}
+  cleanup = () => {};
+  current = key; activeChapter = id ?? null;
+  const main = h("main", { class: "page" });
+  document.title = resolved.chapter ? "第" + resolved.chapter.number + "章 · " + resolved.chapter.title + " · Visual RL" : "Visual RL · 强化学习教材主线";
+  app.replaceChildren(topbar(), id ? h("div", { class: "course-layout" }, chapterNav(id), main) : main);
+  try { cleanup = (id ? CHAPTER_MODULES[id] : home).mount(main) ?? (() => {}); }
+  catch (err) {
+    console.error(err);
+    main.append(h("div", { class: "callout error" }, h("p", {}, h("strong", {}, "这一章未能加载。"), "错误信息：", h("code", {}, String(err?.message ?? err)))));
+  }
+  scrollToTopic(main, resolved.topic);
 }
 
 // In-page links are handled here, not by the browser: inside a sandboxed srcdoc frame (how the
@@ -97,6 +83,7 @@ document.addEventListener("click", (e) => {
   show(key);
 });
 
+window.addEventListener("popstate", () => { if (currentKey() !== current) show(currentKey()); });
 window.addEventListener("hashchange", () => {
   if (currentKey() !== current) show(currentKey());
 });

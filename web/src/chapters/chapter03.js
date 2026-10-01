@@ -1,0 +1,28 @@
+import * as policy from "../lessons/lesson06.js";
+import * as value from "../lessons/lesson05.js";
+import { chapterHeader, chapterFooter, topic, capture, prose, equation, table } from "./shell.js";
+export function mount(root) {
+  const a = capture(policy), b = capture(value);
+  root.append(chapterHeader("03"),
+    topic("03", "policy-iteration",
+      prose("第1章定义了最优策略，本章在已知完整模型的前提下真正求解。每个状态都能查询每个动作的全部后果，因此备份可以直接平均环境概率，不必等机器人实际走过。",
+        "先看评价与改进的分工：数字表示按当前箭头走的价值，箭头表示当前动作规则。评价固定箭头；改进固定已经算好的数字。"),
+      ...a.take("动手验证：每次只看一种变化", "公式：评价和改进各算什么？"),
+      prose("先把随机初始策略评价到稳定，再改进。新箭头产生新策略，所以必须重新评价，不能把旧Vπ直接贴成新策略的价值。重复到改进不再改变动作分布，就是策略迭代。",
+        "策略改进为什么成立？若新动作的一步期望不低于旧策略的Vπ，那么按新动作走一步、再接旧策略已经不差；不断沿新策略继续改善，得到不低于旧策略的价值。这需要用充分准确的旧策略评价。")),
+    topic("03", "value-iteration", ...b.take("动手验证：每次只传播一条边"), ...b.optional().filter(el => el.querySelector("summary").textContent.includes("真实实现")),
+      equation("\\|\\mathcal T_*V-\\mathcal T_*U\\|_\\infty\\leq\\gamma\\|V-U\\|_\\infty",
+        "Bellman最优算子是压缩映射：后续价值的最大误差每备份一次最多乘γ。有限MDP、γ<1、有界奖励下，反复应用它收敛到唯一V*。"),
+      equation("\\|V_k-V^*\\|_\\infty\\leq\\frac{\\gamma}{1-\\gamma}\\|V_k-V_{k-1}\\|_\\infty",
+        "同步精确备份时，可用相邻轮的最大变化控制当前误差。γ很接近1时，微小变化不等于同样小的价值误差。"),
+      prose("公式中的V*是真实最优价值，迭代中的Vₖ是暂估值；由它产生的箭头也只是候选策略。稳定后按最佳一步目标提取π*，才把最初的控制任务闭合。")),
+    topic("03", "gpi", table(["方法", "评价/改进怎样交替", "计算需要什么"], [
+      ["策略迭代", "先充分评价，再整体贪心改进", "完整模型；每次改进前的Vπ"],
+      ["价值迭代", "每次备份就取max，交错推进", "完整模型；上一轮Vₖ"],
+      ["广义策略迭代（GPI）", "评价与改进两个过程互相推动", "后续MC/TD控制也沿用这个分工"],
+    ]),
+      prose("同步备份每格读同一份旧值，信息每轮跨一条边；就地异步备份会读到本轮已改过的值，某些顺序会更快。有限折扣模型下，每个状态持续得到正确备份，异步方法也能指向同一个V*。",
+        "广义策略迭代是组织思路，不要求每次评价完全结束后才改策略。后面的MC控制和TD控制会用采样更新做近似评价，再用ε-greedy改进。中途的数字不一定是任何固定策略的精确价值。")),
+    chapterFooter("03", "Bellman方程定义解，动态规划用已知模型求解。策略迭代分开评价与改进；价值迭代反复做最优备份。更新顺序影响传播过程，稳定价值与贪心动作共同给出最优策略。"));
+  return () => { a.cleanup(); b.cleanup(); };
+}

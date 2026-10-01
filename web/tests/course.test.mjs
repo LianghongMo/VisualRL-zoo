@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { parseHTML } from "linkedom";
-import { MAIN_IDS } from "../src/lessons/curriculum.js";
+import { MAIN_IDS } from "../src/lessons/lesson-catalog.js";
 import { KNOWLEDGE } from "../src/lessons/knowledge.js";
 const dir = mkdtempSync(join(tmpdir(), "visualrl-course-"));
 await build({ stdin: { contents: [...MAIN_IDS, "06"].map((id) => `export * as l${id} from './lesson${id}.js';`).join("\n"), resolveDir: fileURLToPath(new URL("../src/lessons", import.meta.url)) }, bundle: true, platform: "node", format: "esm", target: "node24", loader: { ".py": "text" }, outfile: join(dir, "lessons.mjs") });
@@ -24,7 +24,7 @@ function click(root, label) { const b = button(root, label); assert.ok(!b.disabl
 function metric(root, label) {
   const m = [...root.querySelectorAll(".metric")].find((m) => m.querySelector("span")?.textContent === label); assert.ok(m, `missing metric: ${label}`); return m.querySelector("strong").textContent;
 }
-test("chapter order, chapter essentials and next links follow prerequisites", () => {
+test("preserved experiments retain their concepts, equations and links", () => {
   assert.deepEqual(MAIN_IDS, ["01", "04", "05", "02", "07", "08", "03", "09"]);
   for (let i = 0; i < MAIN_IDS.length; i++) {
     const { root, cleanup } = mount(MAIN_IDS[i]); assert.equal(root.querySelectorAll("h1").length, 1);

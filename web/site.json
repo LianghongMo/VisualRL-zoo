@@ -1,5 +1,5 @@
 {
   "url": "https://visual-rl-learning-path.lm8598.chatgpt.site",
   "title": "Visual RL · 看见强化学习",
-  "description": "从 MDP 到 Bellman、MC/TD、SARSA/Q-learning、轨迹拼接与 GCRL，用物理图像、公式和交互实验理解强化学习。"
+  "description": "按RL教材组织的10章中文课程：MDP与价值、探索、DP、MC、TD控制、多步学习、Dyna、函数近似、策略梯度，以及离线RL与GCRL研究专题。"
 }

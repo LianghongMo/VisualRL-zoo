@@ -144,7 +144,7 @@ export function mount(root) {
       equation(String.raw`w=\frac{C(s',a',g)}{1-C(s',a',g)}`, "对独立背景目标 g∼q，这个权重估计下一状态未来密度与背景密度之比。"),
       equation(String.raw`\mathcal L_C=-\mathbb E\!\left[(1-\gamma)\log C(s,a,s')+\gamma\operatorname{sg}[w]\log C(s,a,g)+\log(1-C(s,a,g))\right]`, "C-learning 的递归分类损失（论文 Eq. 2.7）：第一项以真实下一状态为正例，第二项用权重接上更远未来，第三项为背景负例。sg 表示计算本次梯度时固定权重；不是把普通 MC 正例标签直接当成 off-policy 修正。"),
       prose("本章的概率实验展示 MC 分类的精确目标，不运行这个递归分类器。真正的 C-learning 要训练分类器、用目标策略选动作，并随策略改变更新未来预测；其中加权自举让它能利用旧转移估计新的后续策略。"), cite("第 2 章 §2.5.1–2.5.2，印刷页 10–14，Eq. 2.1–2.7：分类、递归与策略", 28)),
-    step("Contrastive RL：学表示，也学会选动作", prose("第 3 章把分类器写成两个表示的内积。φ(s,a) 编码“从这里做这个动作”；ψ(g) 编码“想要的未来结果”。如果这个动作确实使某个结果更常出现在未来，训练会提高这对输入的分数。墙的两侧视觉上很近，却可能需要绕行；好的表示应反映受动作与动力学约束的可达关系，而不只是坐标距离。"),
+    step("Contrastive RL：学表示，也学会选动作", prose("Ben 论文第 3 章把分类器写成两个表示的内积。φ(s,a) 编码“从这里做这个动作”；ψ(g) 编码“想要的未来结果”。如果这个动作确实使某个结果更常出现在未来，训练会提高这对输入的分数。墙的两侧视觉上很近，却可能需要绕行；好的表示应反映受动作与动力学约束的可达关系，而不只是坐标距离。"),
       h("div", { class: "physical-flow" }, h("b", {}, "状态 s + 候选动作 a"), "→ φ(s,a)", h("span", { class: "flow-arrow" }, "·"), "ψ(g) ←", h("b", {}, "目标 g"), "→ 分数 f → 比较候选动作"),
       equation(String.raw`f_\theta(s,a,g)=\phi_\theta(s,a)^\top\psi_\theta(g),\qquad C_\theta=\sigma(f_\theta),\quad\sigma(z)=\frac{1}{1+e^{-z}}`, "f 是任意实数的 logit；σ(f) 才是来源分类概率。exp(f) 则是密度比估计，不是归一化的成功概率。"),
       equation(String.raw`\mathcal L_{\mathrm{NCE}}=-\mathbb E[\log\sigma(f(s,a,g^+))+\log(1-\sigma(f(s,a,g^-)))]`, "正例是这对 (s,a) 的折扣未来状态；负例是独立采样的未来状态。论文的批内实现把配对放在对角线、交叉配对放在非对角线。这是 NCE 二元分类目标，不是把所有相似度直接当作 Q 数值。"),

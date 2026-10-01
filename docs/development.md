@@ -74,12 +74,21 @@ npm run build
 
 重导出后检查数值差异。仅整理目录时，原有计算记录和算法不需要修改。
 
-## 加一章
+## 章节、小节与复用实验
 
-1. 先明确必须掌握的知识、物理图像和实验中可改变的条件。
-2. 在 `web/src/lessons/` 写页面；在 `curriculum.js` 放入阅读顺序，在 `knowledge.js` 写对应的自检与正文依据。
-3. 在 `main.js` 注册路由。保留已有页面标识；章节编号来自课程顺序。
-4. 把核心方程放在正文，连接到具体数据与数值。新增行为需要说明终止、截断、后续策略与数据假设。
-5. 验证交互与算法，再构建离线网页；更新课程导读与验收表。
+公共架构由 web/src/lessons/curriculum.js 的 CHAPTERS、PARTS、LEGACY_ROUTES 定义；正文在 web/src/chapters/。章节是知识单元，具体实验放入小节。
 
-`web/src/extensions/` 提供之后可复用的草稿和组件；接入前要适配当前课程壳与视觉样式，并补齐必学知识。新增 Python 算法继续放在 `visualrl/`，对应浏览器实现放在 `web/src/rl/`。
+1. 明确核心问题、前置知识、必学清单与例子。新主题优先归入所属章，仅独立知识层级才新增一章。
+2. 在 curriculum.js 登记章/小节、教材对应与稳定 id；地址为 #chapter-XX/topic。
+3. 在 chapters/knowledge.js 写知识、对应小节与自检问题。
+4. 用 chapters/shell.js 的 chapterHeader/topic/chapterFooter 组织，在 chapters/index.js 注册。main.js 使用统一路由。
+5. 核心方程直接显示，连接真实计算，说明模型、终止、策略和采样条件。
+6. 在 tests/chapters.test.mjs 验证有意义的行为和边界，更新导读/验收，再构建。
+
+章内跳转只滚动、不重新挂载；跨章先调用 cleanup，取消训练与监听。旧 lesson 链接在 LEGACY_ROUTES 映射到小节。
+
+原实验保存在 lessons/，lesson-catalog.js 与 lessons/knowledge.js 为旧元数据，不控制公共目录。capture 复用原模块实验，移除旧页头/页脚/导航，保留事件和 cleanup；MDP嵌入时关闭全局快捷键，避免阅读其他小节时移动机器人。
+
+rl/teaching-labs.js 集中新的 bandit、Dyna、线性价值、二动作梯度和表格资格迹计算；原有Python/JS一致性算法原位保留。教学计算与完整神经网络训练分开说明。
+
+extensions/ 保留PPO/MuJoCo草稿，接回时适配当前章节界面与知识清单。Python新增算法放 visualrl/，浏览器对应实现放 web/src/rl/。
