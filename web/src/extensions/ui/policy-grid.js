@@ -1,6 +1,6 @@
 // A GridWorld drawn as a policy: in every cell, one arrow per action whose
 // length is π(a|s), on a background colored by the value estimate V(s).
-import { h, replace, s } from "./dom.js";
+import { h, replace, s } from "../../ui/dom.js";
 import { ARROWS, fmt } from "./format.js";
 import { inkOn, valueFill } from "./grid-view.js";
 

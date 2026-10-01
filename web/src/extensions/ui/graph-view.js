@@ -4,7 +4,7 @@
 //
 // It shows what the agent actually knows about the world, and how a route can
 // be stitched together from edges seen in different episodes.
-import { h, replace, s } from "./dom.js";
+import { h, replace, s } from "../../ui/dom.js";
 import { valueFill } from "./grid-view.js";
 
 const C = 54;

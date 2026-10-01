@@ -1,8 +1,8 @@
 // The ledger shows one learning trace as a derivation: the experience it used,
 // the quantities it computed, and the value it changed. It keeps a history so
 // earlier updates can be inspected again.
-import { h, replace } from "./dom.js";
-import { tex } from "./math.js";
+import { h, replace } from "../../ui/dom.js";
+import { tex } from "../../ui/math.js";
 
 const HISTORY = 400;
 

@@ -1,7 +1,7 @@
 // A GridWorld drawn as cells split into four triangles, one per action, each
 // colored by Q(s,a). Overlays show the agent, its next action, the last move,
 // and which table entries the displayed learning trace read and wrote.
-import { h, replace, s } from "./dom.js";
+import { h, replace, s } from "../../ui/dom.js";
 import { ARROWS, fmt } from "./format.js";
 
 const C = 54; // cell size in SVG units

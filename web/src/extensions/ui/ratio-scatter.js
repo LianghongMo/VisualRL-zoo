@@ -1,7 +1,7 @@
 // Every sample of a PPO rollout as a dot: x is its probability ratio r = π_θ/π_old,
 // y its advantage. The shaded corners are where the clipped objective is flat,
 // so a sample there contributes no gradient.
-import { h, replace, s } from "./dom.js";
+import { h, replace, s } from "../../ui/dom.js";
 import { fmt } from "./format.js";
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));

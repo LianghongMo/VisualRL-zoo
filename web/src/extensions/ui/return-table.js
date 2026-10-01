@@ -3,8 +3,8 @@
 // The same number two ways. Forward: G_0 = Σ_t γ^t r_t, every reward weighted by how far ahead it
 // is (the γ^t and γ^t · r_t columns). Backward: G_t = r_t + γ G_{t+1}, filled in from the end of the
 // walk (Trajectory.returns). The backward form is what a Bellman backup does at every node.
-import { makeTransition, Trajectory } from "../rl/core.js";
-import { h } from "./dom.js";
+import { makeTransition, Trajectory } from "../../rl/core.js";
+import { h } from "../../ui/dom.js";
 import { ARROWS, fmt, fmtShort } from "./format.js";
 
 // Follow choose(state) from `start` on the deterministic graph until the walk ends. choose returns

@@ -9,3 +9,16 @@ dist/
 node_modules/
 web/dist/
 .DS_Store
+
+# Local training outputs, temporary files and browser crash dumps.
+*.pt
+*.pth
+/runs/
+/checkpoints/
+*.log
+*.tmp
+core.[0-9]*
+.coverage
+htmlcov/
+.ruff_cache/
+.mypy_cache/

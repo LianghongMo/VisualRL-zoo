@@ -1,5 +1,5 @@
 // The discount slider used across Part II, with a readout of how far ahead γ makes the robot look.
-import { h, slider } from "./dom.js";
+import { h, slider } from "../../ui/dom.js";
 import { fmtShort } from "./format.js";
 
 // The weights γ^t add up to 1/(1−γ): roughly how many edges ahead still count.

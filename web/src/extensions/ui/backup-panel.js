@@ -1,6 +1,6 @@
 // One Bellman backup written out as a calculation: every move out of a node, where it can land,
 // reward + γ × value where it lands, and then the max (or the policy's average) of the moves.
-import { h, replace } from "./dom.js";
+import { h, replace } from "../../ui/dom.js";
 import { ARROWS, fmt, fmtShort } from "./format.js";
 
 const MOVES = ["up", "right", "down", "left"];

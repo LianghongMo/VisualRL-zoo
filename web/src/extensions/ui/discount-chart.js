@@ -1,7 +1,7 @@
 // How much a reward t edges ahead counts: one bar of height γ^t per step. Bars where the walk being
 // inspected collects a reward are dark and labelled with that reward. A dashed rule marks
 // 1/(1−γ), the sum of all the weights: roughly how far ahead the robot looks.
-import { h, replace, s } from "./dom.js";
+import { h, replace, s } from "../../ui/dom.js";
 import { fmt, fmtShort } from "./format.js";
 
 export class DiscountChart {

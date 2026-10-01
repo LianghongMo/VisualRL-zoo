@@ -1,69 +1,66 @@
 # Visual RL · 看见强化学习
 
-用一台机器人，连起强化学习的基本过程：**环境 → 经验 → 学习目标 → 价值更新 → 下一次行动**。
+用一台机器人，连起 **环境 → 经验 → 学习目标 → 价值更新 → 下一次行动**。每章都有物理图像、正文公式、可操作的实验和知识点自检。
 
-每章先列必须掌握的知识点，再用物理图像、正文公式、数值算例和交互实验展开。章末逐项自检，并可回到对应内容；源码和扩展训练按需展开。完整内容检查见 [课程验收表](docs/course-audit.md)。
+仓库包含当前课程网页和可继续扩展的 Python 算法 package。PPO、MuJoCo、训练数据和依赖都保留，未完成的教学草稿集中在扩展目录。
 
-## 打开网页
+[在线课程](https://visual-rl-learning-path.lm8598.chatgpt.site) · [离线网页](docs/index.html) · [课程导读](docs/course-guide.md) · [课程验收表](docs/course-audit.md)
 
-直接打开 [docs/index.html](docs/index.html)，无需安装或服务器。这是包含全部教学代码和样式的单个 HTML 文件，核心实验离线可用。
+离线使用时下载 `docs/index.html`，用浏览器打开即可；核心实验不需要服务器。
+
+## 当前课程
+
+| 章 | 内容 | 原有页面标识 |
+|---|---|---|
+| 1 | MDP 与环境 | `lesson-01` |
+| 2 | 回报与价值 | `lesson-04` |
+| 3 | Bellman 更新 | `lesson-05` |
+| 4 | 行动与学习 | `lesson-02` |
+| 5 | Monte Carlo 与 TD | `lesson-07` |
+| 6 | SARSA 与 Q-learning | `lesson-08` |
+| 7 | 在线、离线与 stitching | `lesson-03` |
+| 8 | GCRL 与未来目标 | `lesson-09` |
+
+`lesson-06` 是策略迭代选读。页面标识保持兼容，阅读顺序由 `curriculum.js` 定义。GCRL 主要参考 Benjamin Eysenbach 的博士论文；具体知识点、例子与参考位置见[课程导读](docs/course-guide.md)。
+
+## 仓库结构
+
+```text
+web/
+  src/lessons/       当前课程、目录和知识点
+  src/ui/            当前课程使用的界面组件
+  src/rl/            浏览器算法与环境
+  src/extensions/    保留的 PPO 草稿、MuJoCo 回放与旧视觉组件
+  src/data/mujoco/   已记录的训练日志与轨迹
+  tests/             网页交互和 Python/JS 一致性检查
+visualrl/            Python package：环境、经验、表格算法、深度 PPO
+examples/            可直接运行的 Python 小例子
+scripts/             一致性记录导出和 MuJoCo 训练
+tests/              Python 测试与 golden 计算记录
+docs/               离线网页、课程导读、开发说明与路线图
+```
+
+## 本地使用
+
+网页开发使用 Node.js 24 和 npm。在 `web/` 中运行：
 
 ```bash
-cd web
 npm ci
-npm run dev       # http://localhost:8000，源码修改后自动重新构建
-npm test          # 教学交互、环境、Python / JS 算法一致性测试
-npm run build     # 生成 docs/index.html 和部署用 dist/index.html
+npm run dev       # http://localhost:8000
+npm test
+npm run build     # 更新 docs/index.html 和部署产物 dist/index.html
 ```
 
-## 学习主线
-
-页面保留原来的 URL 标识，显示编号按新的阅读顺序从 1 到 8 排列。
-
-| 章 | 页面 | 必须掌握什么 | 例子展示的图像 |
-|---|---|---|---|
-| 1 | `#lesson-01` MDP 与环境 | MDP、Markov 状态、策略、模型、经验与回合 | 定义任务，再读机器人一步反馈 |
-| 2 | `#lesson-04` 回报与价值 | 奖励、回报、指定策略的价值 | 同样两条充电路线，只改变折扣 |
-| 3 | `#lesson-05` Bellman 更新 | 期望方程、最优方程、价值迭代、随机后果 | 信息每轮向后传播一条边；随机时先平均再选动作 |
-| 4 | `#lesson-02` 行动与学习 | 新增经验与更新估计 | 分开按两个按钮，连接和数字各自变化 |
-| 5 | `#lesson-07` MC 与 TD | 完整回报与一步自举目标 | 比较何时可学习及信息怎样传播 |
-| 6 | `#lesson-08` SARSA 与 Q-learning | 实际下一动作与估计最好的下一动作 | 悬崖边的探索，接进两种不同目标 |
-| 7 | `#lesson-03` 在线与离线 | 数据的重组能力和覆盖限制 | 拼接旧路线，再实际补采缺失的经验 |
-| 8 | `#lesson-09` GCRL 与未来目标 | 目标条件策略与价值、改标、未来占用、C-learning、contrastive RL、SoRB | 改目标、重算回合、变负采样、用路标执行近目标 |
-
-`#lesson-06` 策略迭代是第 3 章的选读扩展：评价只改数字，改进只改箭头。
-
-初学者主线不展示未完成章节。PPO、MuJoCo 等已有算法与实验源码保留在仓库中，暂不作为教学入口；重新接入之前需要先补齐策略梯度、优势及函数近似的前置内容。
-
-## 实验边界
-
-- 一格是一个离散状态，一次移动是一次环境转移。进入充电站时收到奖励，终止之后的后续价值为 0。
-- 第 3 章使用完整环境模型，是规划。第 4 章只在已观察到的确定性连接上规划，展示行动与学习两个循环；这不是所有 RL 算法的统一实现。
-- 第 5 章固定路线、默认 α = 1；可调学习率、选择经验、保留估计再走一轮。随机问题通常需要累计多个样本。
-- 第 6 章的一步更新使用明确标注的旧 Q 示例值；展开的 500 回合实验从零开始运行真实算法。固定种子的结果不代表统计结论。
-- 第 7 章使用同一个确定性环境；逐边标记片段来源，采集与更新分开。完整状态、动力学、任务兼容才可拼接；随机环境不能把少量记录当作精确模型。
-
-第 8 章主要参考 [Benjamin Eysenbach 的博士论文](https://ml.cmu.edu/research/phd-dissertation-pdfs/thesis_eysenbach.pdf)（2023，第 2–4 章、附录 B）。正文标出印刷页码，并链接相应 PDF 页面。实验用精确地图和 Bayes 解展示物理关系，目标改标运行真实表格 Q-learning；不声称运行完整神经网络 C-learning、contrastive RL 或 SoRB 训练。
-
-## 代码位置
-
-- `web/src/lessons/`：各章内容和实验控制。
-- `web/src/lessons/curriculum.js`：阅读顺序、学习目标和章节衔接。
-- `web/src/ui/world-view.js`：由真实状态与转移绘制的地图和路线。
-- `web/src/rl/`：浏览器中的算法。
-- `visualrl/`：对应 Python 实现、环境和学习记录。
-- `tests/golden/traces.json`：Python 导出的计算记录；浏览器算法必须产生同样结果。
+Python package 支持 Python 3.10 及以上。在仓库根目录运行：
 
 ```bash
-pip install -e ".[dev]"
-pytest
+python -m pip install -e ".[dev]"
+python -m pytest -q
 python examples/td_update.py
-python examples/cliff_sarsa_vs_qlearning.py
 ```
 
-深度 PPO 和 MuJoCo 训练代码保留用于后续研究：
+GitHub 自动检查网页测试、构建产物与 Python package。详细安装、算法目录、深度 PPO 训练和新增章节步骤见[开发说明](docs/development.md)。
 
-```bash
-pip install -e ".[deep]"
-python scripts/train_mujoco_ppo.py Hopper-v5 --steps 1000000 --out web/src/data/mujoco/hopper.json
-```
+## 后续扩展
+
+后续章节所需的算法、环境、Three.js 和深度 RL 依赖均保留。当前网页只接入已经整理好的课程；教学草稿的状态和待补前置知识见[扩展路线图](docs/roadmap.md)与[扩展目录说明](web/src/extensions/README.md)。

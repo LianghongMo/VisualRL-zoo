@@ -12,7 +12,7 @@ const outDir = serve ? join(here, "dist", "preview") : join(root, "docs");
 const metaPath = join(here, "site.json");
 const metadata = existsSync(metaPath) ? JSON.parse(readFileSync(metaPath, "utf8")) : {};
 const title = metadata.title || "Visual RL · 看见强化学习";
-const description = metadata.description || "从一张地图开始，用七个核心图像和可操作的例子理解强化学习。";
+const description = metadata.description || "从一张地图开始，用物理图像、公式和可操作的例子理解强化学习。";
 const escapeHtml = (text) => String(text).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 // This URL is copied from the Sites connector, never from browser or forwarded headers.
 const siteUrl = metadata.url && new URL(metadata.url).protocol === "https:" ? metadata.url : "";
@@ -49,7 +49,7 @@ const writeHtml = {
       }
       mkdirSync(join(here, "dist"), { recursive: true });
       writeFileSync(join(here, "dist", "fragment.html"), fragment(js, css));
-      console.log(`wrote docs/index.html and dist/index.html (${Math.round((js.length + css.length) / 1024)} KB)`);
+      console.log(`wrote ${serve ? "web/dist/preview/index.html" : "docs/index.html and dist/index.html"} (${Math.round((js.length + css.length) / 1024)} KB)`);
     });
   },
 };

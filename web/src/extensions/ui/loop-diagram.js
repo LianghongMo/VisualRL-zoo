@@ -4,7 +4,7 @@
 //   learning loop (every learning step):     experience graph → Bellman backup → values → policy
 //
 // The world feeds the experience graph. Offline, that arrow is cut: the graph is a fixed dataset.
-import { h, s } from "./dom.js";
+import { h, s } from "../../ui/dom.js";
 
 const BOX = { w: 118, h: 34 };
 const NODES = {

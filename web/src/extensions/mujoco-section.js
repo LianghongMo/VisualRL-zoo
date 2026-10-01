@@ -2,9 +2,9 @@
 // points in training, and read the real training log next to them.
 import { MUJOCO_TASKS } from "../data/mujoco/index.js";
 import { h, replace, segmented } from "../ui/dom.js";
-import { fmt } from "../ui/format.js";
-import { LineChart } from "../ui/line-chart.js";
-import { MujocoReplay } from "../ui/mujoco-view.js";
+import { fmt } from "./ui/format.js";
+import { LineChart } from "./ui/line-chart.js";
+import { MujocoReplay } from "./ui/mujoco-view.js";
 
 const compact = (n) => (n >= 1e6 ? `${+(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : String(n));
 

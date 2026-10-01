@@ -7,7 +7,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-import { h } from "./dom.js";
+import { h } from "../../ui/dom.js";
 
 const DIRS = [
   [0, -1],

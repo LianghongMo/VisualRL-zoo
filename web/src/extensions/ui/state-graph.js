@@ -1,7 +1,7 @@
 // A GridWorld drawn as the graph it is: one node per state, laid out on the floor plan,
 // one directed edge per move. Used by Part I for the true graph, the experience graph,
 // datasets, policies and walks.
-import { h, replace, s } from "./dom.js";
+import { h, replace, s } from "../../ui/dom.js";
 import { fmt, fmtShort } from "./format.js";
 import { inkOn, valueFill } from "./grid-view.js";
 

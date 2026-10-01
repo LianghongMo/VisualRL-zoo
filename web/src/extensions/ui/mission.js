@@ -3,7 +3,7 @@
 // steps: [{ text, done(baseline) -> bool, baseline?() -> any }]
 // Steps complete in order. When a step becomes the current one, its baseline() is recorded, so a
 // step like "press Learn five times" counts from that moment. Call update() after every change.
-import { h, replace } from "./dom.js";
+import { h, replace } from "../../ui/dom.js";
 
 export class Mission {
   constructor({ title, goal, steps, conclusion }) {

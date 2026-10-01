@@ -5,7 +5,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-import { button, h, replace, s, segmented } from "./dom.js";
+import { button, h, replace, s, segmented } from "../../ui/dom.js";
 import { fmt, fmtSigned } from "./format.js";
 
 const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "#888888";

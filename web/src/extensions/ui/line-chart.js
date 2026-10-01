@@ -1,6 +1,6 @@
 // A responsive SVG line chart: hairline grid, 2px lines, crosshair tooltip
 // listing every series at the hovered x, a legend for two or more series.
-import { h, replace, s } from "./dom.js";
+import { h, replace, s } from "../../ui/dom.js";
 import { fmtShort } from "./format.js";
 
 function niceTicks(min, max, count = 5) {
