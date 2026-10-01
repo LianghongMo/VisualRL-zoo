@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 
 from visualrl import Transition, rollout
-from visualrl.algorithms.tabular import TD0, MonteCarlo, NStepTD, QLearning, Sarsa, run_episode
+from visualrl.algorithms.tabular import TD0, MonteCarlo, NStepTD, PolicyIteration, QLearning, Sarsa, ValueIteration, bellman_backup, optimal_backup, run_episode
 from visualrl.algorithms.tabular.experience_graph import OPTIMISTIC, PESSIMISTIC, ExperienceGraph, explore_episode
 from visualrl.algorithms.tabular.ppo import TabularPPO
 from visualrl.envs import Chain, GridWorld
@@ -129,6 +129,28 @@ def build() -> dict:
     part1["online_episode_lengths"] = [len(explore_episode(room, online, max_steps=40)) for _ in range(8)]
     part1["online_V"] = online.V
     golden["experience_graph"] = part1
+
+    # Part II: value iteration sweeps, single backups (also on a slippery floor), and policy iteration.
+    part2 = {}
+    for name, slip in (("det", 0.0), ("slip", 0.2)):
+        model = GridWorld.charging_room(slip=slip).model()
+        vi = ValueIteration(model, gamma=0.9)
+        sweeps = [vi.sweep().to_dict() for _ in range(10)]
+        part2[name] = {"slip": slip, "sweeps": [{"values_after": t["values_after"], "max_change": t["max_change"]} for t in sweeps], "V": vi.V.tolist()}
+        part2[name]["backups"] = [optimal_backup(model, vi.V, s, 0.9).to_dict() for s in (25, 26, 28, 33)]
+        part2[name]["expectation"] = bellman_backup(model, vi.V, uniform_policy(model.n_states, 4), 33, 0.9).to_dict()
+    model = GridWorld.charging_room().model()
+    pi = PolicyIteration(model, gamma=0.9, policy=uniform_policy(model.n_states, 4))
+    steps = []
+    for _ in range(8):
+        steps.append({"evaluate": pi.evaluate(theta=1e-10).to_dict()["values_after"]})
+        improvement = pi.improve_step().to_dict()
+        steps[-1]["policy_after"] = improvement["policy_after"]
+        steps[-1]["changed_states"] = improvement["changed_states"]
+        if improvement["stable"]:
+            break
+    part2["policy_iteration"] = steps
+    golden["part2"] = part2
 
     V_star, Q_star = optimal_values(GridWorld.cliff().model(), gamma=1.0)
     golden["cliff_optimal"] = {"gamma": 1.0, "V": V_star.tolist(), "Q": Q_star.tolist()}

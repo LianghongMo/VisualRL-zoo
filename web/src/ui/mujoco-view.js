@@ -159,7 +159,7 @@ export class MujocoReplay {
     this.sun.shadow.mapSize.set(1024, 1024);
     Object.assign(this.sun.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6, near: 0.5, far: 40 });
     this.scene.add(this.sun, this.sun.target);
-    new ResizeObserver(() => this.resize()).observe(this.canvasBox);
+    new ResizeObserver(() => requestAnimationFrame(() => this.resize())).observe(this.canvasBox);
     this.resize();
   }
 

@@ -55,8 +55,9 @@ export class StateGraph {
   // }
   render(view) {
     this.view = view;
+    this.tooltip.hidden = true; // a tooltip from before this render would show old values
     const env = this.env;
-    const { edges = [], values = null, stubs = {}, rings = new Set(), robot = null, known = null, showValues = false, route = [] } = view;
+    const { edges = [], values = null, stubs = {}, rings = new Set(), robot = null, known = null, showValues = false, route = [], selected = null } = view;
     const floor = [];
     for (let st = 0; st < env.nStates; st++) {
       const [r, c] = env.toCell(st);
@@ -100,7 +101,8 @@ export class StateGraph {
       }
       if (st === env.start) nodes.push(s("text", { x: cx, y: cy - R - 5, "text-anchor": "middle", class: "sg-label" }, "dock"));
       if (rings.has(st)) nodes.push(s("circle", { cx, cy, r: R + 5, class: "sg-ring" }));
-      const hit = s("circle", { cx, cy, r: R + 8, class: "hit" });
+      if (st === selected) nodes.push(s("circle", { cx, cy, r: R + 6, class: "sg-selected" }));
+      const hit = s("circle", { cx, cy, r: R + 8, class: "hit", "data-state": st });
       hit.addEventListener("pointerenter", () => this.tip(st));
       hit.addEventListener("pointerleave", () => (this.tooltip.hidden = true));
       if (this.onNode) hit.addEventListener("click", () => this.onNode(st));

@@ -27,9 +27,10 @@ export class LineChart {
     this.width = 600;
     new ResizeObserver((entries) => {
       const w = Math.round(entries[0].contentRect.width);
+      // Redraw on the next frame: redrawing inside the callback can resize the observed box again.
       if (w > 0 && w !== this.width) {
         this.width = w;
-        this.render();
+        requestAnimationFrame(() => this.render());
       }
     }).observe(this.wrap);
     this.svg.addEventListener("pointermove", (e) => this.hover(e));

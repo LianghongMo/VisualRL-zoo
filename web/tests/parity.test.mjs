@@ -159,3 +159,28 @@ test("experience-graph planning and online exploration match Python", async () =
   assert.deepEqual(lengths, g.online_episode_lengths);
   assertClose(online.V, g.online_V, "online.V");
 });
+
+test("Part II backups, value iteration and policy iteration match Python", async () => {
+  const { bellmanBackup, optimalBackup, PolicyIteration, ValueIteration } = await import("../src/rl/tabular/dp.js");
+  const g = golden.part2;
+  for (const name of ["det", "slip"]) {
+    const model = GridWorld.chargingRoom({ slip: g[name].slip }).model();
+    const vi = new ValueIteration(model, 0.9);
+    g[name].sweeps.forEach((expected, k) => {
+      const t = vi.sweep();
+      assertClose(t.values_after, expected.values_after, `${name}.sweep${k}`);
+      assertClose(t.max_change, expected.max_change, `${name}.max_change${k}`);
+    });
+    [25, 26, 28, 33].forEach((s, i) => assertClose(JSON.parse(JSON.stringify(optimalBackup(model, vi.V, s, 0.9))), g[name].backups[i], `${name}.backup${s}`));
+    const uniform = Array.from({ length: model.nStates }, () => [0.25, 0.25, 0.25, 0.25]);
+    assertClose(JSON.parse(JSON.stringify(bellmanBackup(model, vi.V, uniform, 33, 0.9))), g[name].expectation, `${name}.expectation`);
+  }
+  const model = GridWorld.chargingRoom().model();
+  const pi = new PolicyIteration(model, 0.9);
+  for (const [k, expected] of g.policy_iteration.entries()) {
+    assertClose(pi.evaluate({ theta: 1e-10 }).values_after, expected.evaluate, `pi.evaluate${k}`);
+    const imp = pi.improveStep();
+    assertClose(imp.policy_after, expected.policy_after, `pi.policy${k}`);
+    assert.deepEqual(imp.changed_states, expected.changed_states);
+  }
+});

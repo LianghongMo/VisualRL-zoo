@@ -45,7 +45,8 @@ Phase 1 (core tabular system) is in progress.
 | Lesson 14 (PPO) in the warehouse: rollout replay, probability-ratio scatter with clipped samples, per-sample objective, clip vs no-clip experiment | done |
 | `visualrl/algorithms/deep/ppo.py` + `scripts/train_mujoco_ppo.py`: deep PPO (CleanRL defaults) on MuJoCo robots, exporting training logs and recorded episodes at several points in training | done |
 | MuJoCo replays in the browser (Three.js, every frame is recorded MuJoCo geometry): InvertedPendulum, Hopper, Ant, HalfCheetah, PointMaze in lesson 14 | done |
-| Lessons 04–06, 09–13, 15 | planned |
+| Part II, lessons 04–06: V and Q under a fixed policy, Bellman optimality backups and value iteration (deterministic and slippery), policy iteration (`optimal_backup`, `ValueIteration`, `PolicyIteration`, mirrored in JS with parity tests) | done |
+| Lessons 09–13, 15 | planned |
 
 ```bash
 pip install -e ".[dev]"
@@ -350,81 +351,40 @@ Offline RL has one ability and one limit, both about the graph: **stitching** (v
 
 #### 04. State Value and Action Value
 
-Introduce
+Same charging room as Part I, now with a fixed policy: one move per node, drawn as dark arrows on the graph. Every node shows
 
 $$
-V^\pi(s)
+V^\pi(s) = \sum_t \gamma^t r_t \quad\text{along the walk from } s,
 $$
 
-and
+and clicking a node lists its four edges with
 
 $$
-Q^\pi(s,a).
+Q^\pi(s,a) = r(s,a) + \gamma V^\pi(s').
 $$
 
-Grid cells display $V(s)$.
+The policy starts by sending every node to the slow charger (+1). The task: find edges with $Q^\pi(s,a) > V^\pi(s)$ and switch to them. Pointing the column under the fast charger at it, and then the node above the slow charger, raises $V(\text{dock})$ from 0.656 to 4.783 without touching the dock's own arrow. This is the policy improvement theorem, applied one node at a time.
 
-Each action direction inside the cell can display $Q(s,a)$.
+#### 05. Bellman Backup and the Optimal Policy
 
-Clicking a state repeatedly generates rollouts from that state and shows the empirical return distribution.
-
-#### 05. Bellman Backup
-
-For a selected state, explicitly expand
+The central lesson of Part II: the optimal policy is found by repeating one backup.
 
 $$
-V^\pi(s)
-=
-\sum_a
-\pi(a\mid s)
-\sum_{s'}
-P(s'\mid s,a)
-\left[
-r+\gamma V^\pi(s')
-\right].
+V(s) \leftarrow \max_a \sum_{s'} P(s'\mid s,a)\left[r + \gamma V(s')\right]
 $$
 
-Visualization:
+1. **One backup by hand.** Click a node and back it up. The panel lists every move, where it lands, the arithmetic $r + \gamma V(s')$, and the result; the new value is the largest one. Next to the slow charger the value becomes 1.0, one node further 0.9.
+2. **Every node, repeated (value iteration).** One sweep backs up every node at once. Values spread outward from the chargers one edge per sweep: the dock first gets a value at sweep 5 (0.656, from the slow charger, $0.9^4$), switches to the fast charger at sweep 8 ($0.9^7 \times 10 = 4.783$), and nothing changes after that. The best edge out of each node is then the optimal policy $\pi^*$, and the robot drives it in the 3D view: its return equals $V^*(\text{dock})$.
+3. **A slippery floor.** With probability 0.2 the robot takes a random move. Each move now has several outcomes, and the backup averages them. Near the ledge the averages include a −10 branch, so the optimal route moves to the top row, away from the ledge, and $V^*(\text{dock})$ drops to 3.317.
 
-```text
-                    action 1 → next state
-                  /
-current state → action 2 → next state
-                  \
-                    action 3 → next state
-```
+#### 06. Policy Iteration
 
-Every branch shows
+Lesson 05's backup evaluates and improves in one step. Policy iteration separates them into two buttons:
 
-- policy probability,
-- transition probability,
-- reward,
-- next-state value,
-- contribution to the final expectation.
+- **Evaluate** runs expectation backups, $V(s) \leftarrow \sum_a \pi(a\mid s)\sum_{s'}P(s'\mid s,a)[r+\gamma V(s')]$, until $V = V^\pi$. It changes the numbers, never the arrows.
+- **Improve** makes every node greedy on $Q^\pi$. It changes the arrows, never the numbers.
 
-The learner can perform **one Bellman backup** manually.
-
-#### 06. Policy Evaluation and Policy Improvement
-
-Separate two operations.
-
-```text
-Evaluate Policy
-```
-
-changes value estimates but leaves the policy unchanged.
-
-```text
-Improve Policy
-```
-
-changes the policy according to the current values.
-
-This chapter introduces
-
-- iterative policy evaluation,
-- policy iteration,
-- value iteration.
+Starting from the random policy ($V(\text{dock}) = -14.278$: a coin-flip walk keeps falling off the ledge), Improve changes the policy 5 times (17 nodes the first time, then 3, 1, 1, 1) and the 6th changes nothing. The policy is then greedy on its own values, which is the Bellman optimality equation, and $V(\text{dock}) = 4.783$ is the same $V^*$ as value iteration.
 
 #### 07. Monte Carlo vs TD
 

@@ -218,7 +218,7 @@ export class WarehouseScene {
     this.scene.add(this.marker);
 
     this.recolor();
-    new ResizeObserver(() => this.resize()).observe(this.el);
+    new ResizeObserver(() => requestAnimationFrame(() => this.resize())).observe(this.el);
   }
 
   pos(state, y = 0) {

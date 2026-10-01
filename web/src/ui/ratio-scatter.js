@@ -16,9 +16,10 @@ export class RatioScatter {
     this.el = h("div", { class: "rel scatter" }, this.svg, this.tooltip);
     new ResizeObserver((entries) => {
       const w = Math.round(entries[0].contentRect.width);
+      // Redraw on the next frame: redrawing inside the callback can resize the observed box again.
       if (w > 0 && w !== this.width) {
         this.width = w;
-        if (this.view) this.render(this.view);
+        requestAnimationFrame(() => this.view && this.render(this.view));
       }
     }).observe(this.el);
     this.svg.addEventListener("pointermove", (e) => this.hover(e));

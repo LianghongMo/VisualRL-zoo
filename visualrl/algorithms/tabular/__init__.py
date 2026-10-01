@@ -1,5 +1,5 @@
 from visualrl.algorithms.tabular.bandit import EpsilonGreedyBandit
-from visualrl.algorithms.tabular.bellman import bellman_backup, q_from_v
+from visualrl.algorithms.tabular.bellman import bellman_backup, optimal_backup, q_from_v
 from visualrl.algorithms.tabular.episode import run_episode
 from visualrl.algorithms.tabular.monte_carlo import MonteCarlo
 from visualrl.algorithms.tabular.n_step_td import NStepTD
@@ -19,6 +19,7 @@ __all__ = [
     "TD0",
     "ValueIteration",
     "bellman_backup",
+    "optimal_backup",
     "q_from_v",
     "run_episode",
 ]

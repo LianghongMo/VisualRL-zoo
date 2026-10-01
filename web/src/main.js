@@ -5,6 +5,9 @@ import * as home from "./lessons/home.js";
 import * as lesson01 from "./lessons/lesson01.js";
 import * as lesson02 from "./lessons/lesson02.js";
 import * as lesson03 from "./lessons/lesson03.js";
+import * as lesson04 from "./lessons/lesson04.js";
+import * as lesson05 from "./lessons/lesson05.js";
+import * as lesson06 from "./lessons/lesson06.js";
 import * as lesson07 from "./lessons/lesson07.js";
 import * as lesson08 from "./lessons/lesson08.js";
 import * as lesson14 from "./lessons/lesson14.js";
@@ -15,6 +18,9 @@ const ROUTES = {
   "lesson-01": lesson01,
   "lesson-02": lesson02,
   "lesson-03": lesson03,
+  "lesson-04": lesson04,
+  "lesson-05": lesson05,
+  "lesson-06": lesson06,
   "lesson-07": lesson07,
   "lesson-08": lesson08,
   "lesson-14": lesson14,
@@ -89,7 +95,9 @@ document.addEventListener("click", (e) => {
 window.addEventListener("hashchange", () => {
   if (currentKey() !== current) show(currentKey());
 });
-window.addEventListener("error", (e) => showErrorBanner(e.message));
+// "ResizeObserver loop ..." is a harmless browser notice, not a failure of the page.
+const harmless = (message) => /ResizeObserver loop/i.test(String(message ?? ""));
+window.addEventListener("error", (e) => !harmless(e.message) && showErrorBanner(e.message));
 window.addEventListener("unhandledrejection", (e) => showErrorBanner(String(e.reason?.message ?? e.reason)));
 
 function showErrorBanner(message) {
