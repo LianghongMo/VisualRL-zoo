@@ -25,7 +25,7 @@ function metric(root, label) {
   const m = [...root.querySelectorAll(".metric")].find((m) => m.querySelector("span")?.textContent === label); assert.ok(m, `missing metric: ${label}`); return m.querySelector("strong").textContent;
 }
 test("chapter order, chapter essentials and next links follow prerequisites", () => {
-  assert.deepEqual(MAIN_IDS, ["01", "04", "05", "02", "07", "08", "03"]);
+  assert.deepEqual(MAIN_IDS, ["01", "04", "05", "02", "07", "08", "03", "09"]);
   for (let i = 0; i < MAIN_IDS.length; i++) {
     const { root, cleanup } = mount(MAIN_IDS[i]); assert.equal(root.querySelectorAll("h1").length, 1);
     assert.ok(root.querySelector(".learning-goal")); assert.ok(root.querySelector(".takeaway"));
@@ -120,4 +120,35 @@ test("stitching propagates at the junction and supplies a provenance record for 
 test("policy improvement follows evaluation and preserves the displayed values", () => {
   const { root } = mount("06"); assert.equal(button(root, "2 · 改进").disabled, true); click(root, "1 · 评价"); const v = metric(root, "V(出发点)");
   click(root, "2 · 改进"); assert.equal(metric(root, "V(出发点)"), v); assert.equal(button(root, "2 · 改进").disabled, true);
+});
+test("goal chapter changes goal-conditioned actions and handles the terminal boundary", () => {
+  const { root } = mount("09"); assert.equal(metric(root, "这里该往哪走"), "←");
+  click(root, "目标：右上角"); assert.equal(metric(root, "这里该往哪走"), "→"); assert.equal(metric(root, "V*(s,g)"), "0.656");
+  click(root, "查看目标状态"); assert.equal(metric(root, "这里该往哪走"), "已到目标"); assert.equal(metric(root, "V*(s,g)"), "0");
+});
+test("goal relabeling recomputes termination, excludes the suffix, and preserves observed data", () => {
+  const { root } = mount("09");
+  for (let i = 0; i < 5; i++) click(root, "用改标经验更新一条");
+  assert.equal(metric(root, "Q(S,←,g′)"), "0.656"); assert.equal(button(root, "用改标经验更新一条").disabled, true);
+  const range = root.querySelector("#gcrl-relabel-step"); range.value = "2"; range.dispatchEvent(new window.Event("input"));
+  assert.equal(metric(root, "改标后回合长度"), "2 步"); assert.equal(metric(root, "逆序更新次数"), "0");
+  const data = root.querySelectorAll(".experiment")[1].querySelectorAll("tbody tr");
+  assert.equal(data.length, 5); assert.ok(data[1].textContent.includes("1 / true"));
+  for (let i = 2; i < 5; i++) assert.ok(data[i].textContent.includes("排除后缀"));
+  click(root, "用改标经验更新一条"); click(root, "用改标经验更新一条");
+  assert.equal(metric(root, "Q(S,←,g′)"), "0.9"); assert.equal(metric(root, "真实观察的转移"), "5 条");
+});
+test("future classifier controls change q independently of p and gamma changes the horizon", () => {
+  const { root } = mount("09"); const p = metric(root, "真正的 pγ(g|S,←)");
+  assert.equal(p, "0.656"); assert.equal(metric(root, "contrastive 分数 f*"), "1.188");
+  click(root, "负例 q：第一格更常见"); assert.equal(metric(root, "真正的 pγ(g|S,←)"), p); assert.equal(metric(root, "contrastive 分数 f*"), "1.881");
+  const range = root.querySelector("#gcrl-future-gamma"); range.value = "0.5"; range.dispatchEvent(new window.Event("input"));
+  assert.equal(metric(root, "真正的 pγ(g|S,←)"), "0.063"); assert.equal(metric(root, "未来分布总和"), "1");
+});
+test("the goal controller changes local targets and stops when replay waypoints cannot connect", () => {
+  const { root } = mount("09"); assert.equal(metric(root, "当前局部目标"), "W₁");
+  click(root, "执行局部控制器一步"); click(root, "执行局部控制器一步"); assert.equal(metric(root, "当前局部目标"), "W₂");
+  for (let i = 0; i < 3; i++) click(root, "执行局部控制器一步");
+  assert.equal(metric(root, "当前局部目标"), "已完成"); assert.equal(metric(root, "实际执行动作"), "5 步");
+  click(root, "移除路标 W₁"); assert.equal(metric(root, "路标搜索距离"), "无路径"); assert.equal(button(root, "执行局部控制器一步").disabled, true);
 });

@@ -18,7 +18,7 @@ npm run build     # 生成 docs/index.html 和部署用 dist/index.html
 
 ## 学习主线
 
-页面保留原来的 URL 标识，显示编号按新的阅读顺序从 1 到 7 排列。
+页面保留原来的 URL 标识，显示编号按新的阅读顺序从 1 到 8 排列。
 
 | 章 | 页面 | 必须掌握什么 | 例子展示的图像 |
 |---|---|---|---|
@@ -29,6 +29,7 @@ npm run build     # 生成 docs/index.html 和部署用 dist/index.html
 | 5 | `#lesson-07` MC 与 TD | 完整回报与一步自举目标 | 比较何时可学习及信息怎样传播 |
 | 6 | `#lesson-08` SARSA 与 Q-learning | 实际下一动作与估计最好的下一动作 | 悬崖边的探索，接进两种不同目标 |
 | 7 | `#lesson-03` 在线与离线 | 数据的重组能力和覆盖限制 | 拼接旧路线，再实际补采缺失的经验 |
+| 8 | `#lesson-09` GCRL 与未来目标 | 目标条件策略与价值、改标、未来占用、C-learning、contrastive RL、SoRB | 改目标、重算回合、变负采样、用路标执行近目标 |
 
 `#lesson-06` 策略迭代是第 3 章的选读扩展：评价只改数字，改进只改箭头。
 
@@ -41,6 +42,8 @@ npm run build     # 生成 docs/index.html 和部署用 dist/index.html
 - 第 5 章固定路线、默认 α = 1；可调学习率、选择经验、保留估计再走一轮。随机问题通常需要累计多个样本。
 - 第 6 章的一步更新使用明确标注的旧 Q 示例值；展开的 500 回合实验从零开始运行真实算法。固定种子的结果不代表统计结论。
 - 第 7 章使用同一个确定性环境；逐边标记片段来源，采集与更新分开。完整状态、动力学、任务兼容才可拼接；随机环境不能把少量记录当作精确模型。
+
+第 8 章主要参考 [Benjamin Eysenbach 的博士论文](https://ml.cmu.edu/research/phd-dissertation-pdfs/thesis_eysenbach.pdf)（2023，第 2–4 章、附录 B）。正文标出印刷页码，并链接相应 PDF 页面。实验用精确地图和 Bayes 解展示物理关系，目标改标运行真实表格 Q-learning；不声称运行完整神经网络 C-learning、contrastive RL 或 SoRB 训练。
 
 ## 代码位置
 

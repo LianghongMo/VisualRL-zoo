@@ -13,6 +13,7 @@ import * as lesson05 from "./lessons/lesson05.js";
 import * as lesson06 from "./lessons/lesson06.js";
 import * as lesson07 from "./lessons/lesson07.js";
 import * as lesson08 from "./lessons/lesson08.js";
+import * as lesson09 from "./lessons/lesson09.js";
 
 // Routes are bare hash tokens (#lesson-08) so links work in a standalone file too.
 const ROUTES = {
@@ -25,6 +26,7 @@ const ROUTES = {
   "lesson-06": lesson06,
   "lesson-07": lesson07,
   "lesson-08": lesson08,
+  "lesson-09": lesson09,
 };
 
 const app = document.getElementById("app");

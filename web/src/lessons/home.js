@@ -1,5 +1,5 @@
 import { h } from "../ui/dom.js";
-import { PARTS } from "./curriculum.js";
+import { PARTS, LESSONS } from "./curriculum.js";
 import { WorldView, route, statesOf, NEAR_ROUTE, FAR_ROUTE, mapLegend } from "../ui/world-view.js";
 import { GridWorld } from "../rl/envs/gridworld.js";
 
@@ -25,7 +25,7 @@ export function mount(root) {
         h("h1", {}, "一台机器人，", h("br"), "怎样学会选路？"),
         h("p", { class: "lead" }, "从一张地图开始，看奖励怎样变成经验，经验怎样改变估计，估计又怎样改变下一次行动。"),
         h("a", { class: "btn primary", href: "#lesson-01" }, "从第 1 章开始 →"),
-        h("p", { class: "home-note" }, "7 章 · 中文讲解 · 每章一个核心图像与可操作的例子")),
+        h("p", { class: "home-note" }, `${LESSONS.length} 章 · 中文讲解 · 物理图像、正文公式与交互实验`)),
       h("div", { class: "home-map" }, map.el, mapLegend("实线：近处充电站", "虚线：远处充电站"))),
     h("section", { class: "course-overview" },
       h("h2", {}, "每一章，回答一个问题"),
@@ -34,7 +34,7 @@ export function mount(root) {
       h("div", { class: "method-grid" },
         h("div", {}, h("b", {}, "1 · 先看图像"), h("p", {}, "先说清发生了什么，再引入名字。")),
         h("div", {}, h("b", {}, "2 · 动手验证"), h("p", {}, "每次只改变一个条件，观察哪里变了。")),
-        h("div", {}, h("b", {}, "3 · 说出原因"), h("p", {}, "能解释一个具体例子，才算掌握。公式和源码按需展开。")))),
+        h("div", {}, h("b", {}, "3 · 说出原因"), h("p", {}, "能解释一个具体例子，才算掌握。用正文公式核对实验，源码可选读。")))),
     h("p", { class: "home-end" }, "这些图像是教学示意：地图中的一步是一次离散环境转移，图上的价值来自实际算法计算。"));
   return () => {};
 }
