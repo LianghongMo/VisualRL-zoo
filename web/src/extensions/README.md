@@ -10,7 +10,7 @@
 
 这些文件不注册到当前导航，也不进入当前网页的构建入口。它们是后续写章节时可复用的材料，而不是已经完成的课程。
 
-第9章已建立策略梯度、actor/critic、优势、ratio和clipping的基础。接回完整PPO前，继续补齐GAE推导与实验，为草稿补采集和训练的验收，并适配 chapterHeader/topic/chapterFooter。旧组件样式仍需适配。
+第9章已建立完整策略梯度推导、baseline方差、actor/critic、GAE双mask、surrogate/TRPO、ratio和clipping，以及训练流程。GAE推导与有限算例已接入；接回完整PPO时仍须为真实采集、minibatch与训练补验收，并适配 chapterHeader/topic/chapterFooter。旧组件样式仍需适配。
 
 相关代码和数据：
 

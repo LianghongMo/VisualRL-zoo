@@ -2,6 +2,7 @@ import { h, button, segmented, replace } from "../ui/dom.js";
 import { LinearValueLab } from "../rl/teaching-labs.js";
 import { metric, num } from "../ui/world-view.js";
 import { chapterHeader, chapterFooter, topic, prose, equation, table, predict } from "./shell.js";
+import { dqnTricks } from "./value-tricks.js";
 export function mount(root) {
   let lab = new LinearValueLab(), mode = "similar";
   const states = h("div", { class: "feature-cards" }), weights = h("div", { class: "physical-flow" }), calculation = h("p", { class: "arithmetic", role: "status" });
@@ -49,6 +50,7 @@ export function mount(root) {
       prose("函数近似、自举和off-policy共同构成deadly triad：组合后可能出现不稳定或发散。经验回放与目标网络是实用稳定化手段，不是对任意网络和数据的普遍收敛保证。",
         "本章交互运行的是可逐项验算的线性训练。DQN部分说明神经网络训练的目标和组件，没有把线性例子称为已完成的DQN训练。"),
       h("p", { class: "source-note" }, "论文阅读：", h("a", { href: "https://arxiv.org/abs/1312.5602", target: "_blank", rel: "noopener" }, "Mnih et al. · Playing Atari with Deep Reinforcement Learning"))),
-    chapterFooter("08", "从独立表格走向共享参数，获得泛化，也引入表示误差和更新耦合。MC/TD目标仍有原来的含义；半梯度要说明目标怎样固定。DQN把Q-learning接到网络，用回放与目标网络组织训练，再通过真实策略表现验收。"));
+    topic("08", "stability", ...dqnTricks()),
+    chapterFooter("08", "共享参数获得泛化，也引入表示误差与更新耦合。DQN接入Q-learning目标，用回放与目标网络组织训练；Double DQN分开选择和评价，Huber与裁剪解决不同数值问题。先检查任务与目标，再用同预算、多种子和消融验收实际表现。"));
   render(); return () => {};
 }

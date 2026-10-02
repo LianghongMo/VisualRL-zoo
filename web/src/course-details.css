@@ -46,6 +46,11 @@
 .chapter-transition h2 { font-size: 20px; }
 .chapter-transition p { color: var(--ink-2); line-height: 1.8; }
 .bandit-supplement > .step { margin-top: 24px; }
+.proof-step { display: grid; gap: 16px; padding: 24px 0; border-top: 1px solid var(--rule); }
+.proof-step > h3 { font-size: 20px; line-height: 1.4; }
+.proof-kind { justify-self: start; padding: 4px 10px; background: var(--env-wash); color: var(--ink-2); border-radius: 5px; font-size: 12px; }
+.algorithm-flow { margin: 20px 0; padding: 18px; border: 1px solid var(--rule); background: var(--sheet); border-radius: 8px; overflow-x: auto; font-size: 12px; line-height: 2; }
+.course-reading-links { display: flex; gap: 10px; flex-wrap: wrap; }
 @media (max-width: 1100px) { .curriculum-levels { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (max-width: 760px) {
   .course-sidebar { max-height: none; overflow: visible; }

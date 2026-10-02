@@ -2,6 +2,7 @@ import * as returns from "../lessons/lesson04.js";
 import * as optimal from "../lessons/lesson05.js";
 import { h } from "../ui/dom.js";
 import { chapterHeader, chapterFooter, topic, capture, prose, equation } from "./shell.js";
+import { rewardShaping } from "./value-tricks.js";
 export function mount(root) {
   const a = capture(returns), b = capture(optimal);
   root.append(chapterHeader("02"),
@@ -21,6 +22,7 @@ export function mount(root) {
         "如果每次都展开完整路线，计算会重复。第3章将把每个动作的未来拆成「眼前奖励＋下一状态价值」，由这些例子推导Bellman关系，再求解全局最优策略。"),
       h("a", { class: "btn", href: "#chapter-03/bellman" }, "继续：把完整未来拆成一步关系 →"),
       ...a.take("检查理解")),
-    chapterFooter("02", "即时奖励 → 折扣回报G → 固定策略的Vπ/Qπ → 比较完整策略 → 定义最优价值和π*。本章建立评价尺度与控制目标；下一章解释如何复用后续价值并实际求解。"));
+    topic("02", "shaping", ...rewardShaping()),
+    chapterFooter("02", "即时奖励 → 折扣回报G → 固定策略的Vπ/Qπ → 比较完整策略 → 定义最优价值和π*。势函数塑形用边界抵消保留这个比较目标；任意奖励变换则可能改任务。下一章解释如何复用后续价值并实际求解。"));
   return () => { a.cleanup(); b.cleanup(); };
 }

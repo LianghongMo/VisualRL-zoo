@@ -91,4 +91,8 @@ npm run build
 
 rl/teaching-labs.js 集中新的 bandit、Dyna、线性价值、二动作梯度和表格资格迹计算；原有Python/JS一致性算法原位保留。教学计算与完整神经网络训练分开说明。
 
+rl/policy-math.js 提供精确有限算例：baseline均值/方差、GAE双mask、两状态surrogate、log Jensen、熵目标/KL、势函数塑形和Double DQN。chapters/policy-derivations.js、entropy-tools.js、value-tricks.js把计算接到对应章节的公式和控件；sources.js集中公开课程与原始阅读链接。推导用proof()注明恒等式、局部近似或实践方法，避免混淆其保证。
+
+tests/policy-tools.test.mjs校验这些数学恒等式、边界与反例，并通过Node/linkedom触发真实章节控件。修改折扣、终止规则、采样分布或目标时，应同时更新对应算例与课程验收表，保持知识清单指向存在的小节。
+
 extensions/ 保留PPO/MuJoCo草稿，接回时适配当前章节界面与知识清单。Python新增算法放 visualrl/，浏览器对应实现放 web/src/rl/。

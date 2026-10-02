@@ -1,5 +1,5 @@
 {
   "url": "https://visual-rl-learning-path.lm8598.chatgpt.site",
   "title": "Visual RL · 看见强化学习",
-  "description": "中文强化学习课程：任务 → 回报与价值 → Bellman与规划 → 经验学习 → 函数近似与策略优化 → 离线RL与GCRL；每章含公式、图像、实验与承接说明。"
+  "description": "中文强化学习课程：MDP → 价值与Bellman → 经验学习 → Deep RL → 策略梯度、GAE与PPO → 离线RL与GCRL；含Jensen、熵与训练技巧的推导、图像和交互算例。"
 }
