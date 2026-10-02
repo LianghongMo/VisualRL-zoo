@@ -9,7 +9,7 @@
 | 方向 | 实现 |
 |---|---|
 | 任务/表格方法 | MDP、G/V/Q、Bellman、DP、MC、TD、SARSA、Q-learning、Expected SARSA公式与例子 |
-| 探索 | 真实Bernoulli bandit、均值/常数步长、ε-greedy/UCB、乐观初值 |
+| 探索 | 第4章MC控制引入ε-soft；第5章探索小节补充真实Bernoulli bandit、均值/常数步长、UCB/乐观初值 |
 | 多步/规划 | n-step、λ-return、真实表格资格迹、观测模型、Dyna-Q模型抽样 |
 | 近似 | 特征、线性梯度、泛化/冲突、半梯度TD；DQN结构与公式 |
 | 策略 | 二动作REINFORCE、baseline/优势、actor–critic公式、PPO clipped曲线 |

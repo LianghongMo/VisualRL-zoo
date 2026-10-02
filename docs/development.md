@@ -79,13 +79,13 @@ npm run build
 公共架构由 web/src/lessons/curriculum.js 的 CHAPTERS、PARTS、LEGACY_ROUTES 定义；正文在 web/src/chapters/。章节是知识单元，具体实验放入小节。
 
 1. 明确核心问题、前置知识、必学清单与例子。新主题优先归入所属章，仅独立知识层级才新增一章。
-2. 在 curriculum.js 登记章/小节、教材对应与稳定 id；地址为 #chapter-XX/topic。
+2. 在 curriculum.js 登记章/小节、教材对应、稳定id和relation（承接、结果、下一章的问题）；地址为 #chapter-XX/topic。
 3. 在 chapters/knowledge.js 写知识、对应小节与自检问题。
 4. 用 chapters/shell.js 的 chapterHeader/topic/chapterFooter 组织，在 chapters/index.js 注册。main.js 使用统一路由。
 5. 核心方程直接显示，连接真实计算，说明模型、终止、策略和采样条件。
 6. 在 tests/chapters.test.mjs 验证有意义的行为和边界，更新导读/验收，再构建。
 
-章内跳转只滚动、不重新挂载；跨章先调用 cleanup，取消训练与监听。旧 lesson 链接在 LEGACY_ROUTES 映射到小节。
+章内跳转只滚动、不重新挂载；跨章先调用 cleanup，取消训练与监听。旧lesson链接在LEGACY_ROUTES映射到小节，上一版本的章内链接在CHAPTER_ROUTE_ALIASES中兼容。
 
 原实验保存在 lessons/，lesson-catalog.js 与 lessons/knowledge.js 为旧元数据，不控制公共目录。capture 复用原模块实验，移除旧页头/页脚/导航，保留事件和 cleanup；MDP嵌入时关闭全局快捷键，避免阅读其他小节时移动机器人。
 

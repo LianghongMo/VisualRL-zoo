@@ -1,5 +1,5 @@
 {
   "url": "https://visual-rl-learning-path.lm8598.chatgpt.site",
   "title": "Visual RL · 看见强化学习",
-  "description": "按RL教材组织的10章中文课程：MDP与价值、探索、DP、MC、TD控制、多步学习、Dyna、函数近似、策略梯度，以及离线RL与GCRL研究专题。"
+  "description": "中文强化学习课程：任务 → 回报与价值 → Bellman与规划 → 经验学习 → 函数近似与策略优化 → 离线RL与GCRL；每章含公式、图像、实验与承接说明。"
 }

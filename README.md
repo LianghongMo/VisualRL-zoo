@@ -10,24 +10,24 @@
 
 ## 当前课程
 
-按 Sutton & Barto 第二版的知识依赖组织九章基础，最后一章是研究专题。章内小节承载地图、算例和实验。
+参考 Sutton & Barto 第二版，按同一任务的学习依赖组织九章基础与一章研究。每章分小节，开头说明承接关系，结尾解释下一章要解决的剩余问题。
 
 | 章 | 内容 | 教材对应 / 网页入口 |
 |---|---|---|
-| 1 | 强化学习问题与 MDP：回报、价值、最优策略、Bellman | §1、3；[#chapter-01](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-01) |
-| 2 | 多臂赌博机与探索 | §2；[#chapter-02](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-02) |
-| 3 | 动态规划：策略评价、策略迭代、价值迭代、GPI | §4；[#chapter-03](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-03) |
+| 1 | 强化学习任务与 MDP | §1、3的任务定义；[#chapter-01](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-01) |
+| 2 | 回报、价值与最优策略 | §3的评价与控制目标；[#chapter-02](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-02) |
+| 3 | Bellman 方程与动态规划 | §3的Bellman、§4；[#chapter-03](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-03) |
 | 4 | Monte Carlo：预测、控制、重要性采样 | §5；[#chapter-04](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-04) |
-| 5 | TD 学习与表格控制 | §6；[#chapter-05](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-05) |
+| 5 | TD 学习与表格控制，含探索补充 | §6；探索参考§2；[#chapter-05](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-05) |
 | 6 | 多步学习与资格迹 | §7、表格 §12；[#chapter-06](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-06) |
 | 7 | 模型、规划与 Dyna | §8；[#chapter-07](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-07) |
 | 8 | 函数近似与 Deep RL | §9–11、DQN；[#chapter-08](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-08) |
 | 9 | 策略梯度与 Actor–Critic | §13、PPO；[#chapter-09](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-09) |
 | 10 | 前沿课题：离线 RL、stitching 与 GCRL | Ben Eysenbach 博士论文；[#chapter-10](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-10) |
 
-先讲 MDP 是本课程的教学安排；表格资格迹提前与 n-step 对照。其余基础沿教材依赖展开，参考 [MIT Press 官方目录](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/10094/Toc.pdf?dl=1)。研究专题主要参考 Ben 的2023年论文，不作为所有最新方向的综述。
+第1章定义任务，第2章比较长期结果，第3章拆解未来并求解。模型未知时再进入MC/TD。赌博机归入第5章探索补充，表格资格迹与n-step对照，参考 [MIT Press 官方目录](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/10094/Toc.pdf?dl=1)。研究专题主要参考 Ben 的2023年论文，不作为所有最新方向的综述。
 
-旧链接继续兼容：lesson-01/04/05 进入第1章任务/价值/Bellman；lesson-06 进入第3章策略迭代；lesson-07/08 进入第5章预测/控制；lesson-02 进入第7章模型；lesson-03/09 进入第10章离线/GCRL。完整知识清单与边界见[课程导读](docs/course-guide.md)。
+旧链接继续兼容：lesson-01进入第1章任务，lesson-04/05进入第2章回报/最优策略；lesson-06 进入第3章策略迭代；lesson-07/08 进入第5章预测/控制；lesson-02 进入第7章模型；lesson-03/09 进入第10章离线/GCRL。旧章内链接也继续映射：chapter-01/returns与optimal进入第2章，chapter-02/bandit、exploration与nonstationary进入第5章探索。完整知识清单与边界见[课程导读](docs/course-guide.md)。
 
 ## 仓库结构
 

@@ -6,7 +6,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { CHAPTERS, CHAPTER_IDS, LEGACY_ROUTES, resolveRoute } from "../src/lessons/curriculum.js";
+import { CHAPTERS, CHAPTER_IDS, LEGACY_ROUTES, CHAPTER_ROUTE_ALIASES, resolveRoute } from "../src/lessons/curriculum.js";
 import { CHAPTER_KNOWLEDGE } from "../src/chapters/knowledge.js";
 import { BanditLab, LinearValueLab, PolicyGradientLab, ppoObjective, lambdaWeights } from "../src/rl/teaching-labs.js";
 const dir = mkdtempSync(join(tmpdir(), "visualrl-chapters-"));
@@ -45,6 +45,8 @@ test("ten textbook chapters have a single hierarchy, visible formulas, and compl
     assert.equal(root.querySelector("h1").textContent, c.title);
     assert.equal(root.querySelectorAll(".chapter-topic").length, c.topics.length);
     assert.equal(root.querySelectorAll(".chapter-toc a").length, c.topics.length);
+    assert.equal(root.querySelector(".chapter-connection").textContent, "为什么学到这里：" + c.relation.from);
+    assert.ok(root.querySelector(".chapter-transition").textContent.includes(c.relation.next));
     assert.equal(root.querySelectorAll(".mastery-row").length, CHAPTER_KNOWLEDGE[c.id].length);
     for (const [, evidence] of CHAPTER_KNOWLEDGE[c.id]) {
       assert.ok([...root.querySelectorAll(".chapter-topic")].some(el => el.dataset.topic === evidence));
@@ -56,22 +58,30 @@ test("ten textbook chapters have a single hierarchy, visible formulas, and compl
     cleanup();
   }
 });
-test("MDP includes the foundations while DP owns the solvers and the last chapter owns GCRL", () => {
-  const first = mount("01"), dp = mount("03"), frontier = mount("10");
-  assert.ok(first.root.textContent.includes("Bellman 最优方程"));
-  assert.ok(first.root.textContent.includes("V 和 Q"));
-  assert.ok(!first.root.textContent.includes("继续更新到稳定"));
+test("task, valuation and Bellman have separate chapters, with exploration attached to control", () => {
+  const first = mount("01"), values = mount("02"), dp = mount("03"), td = mount("05"), frontier = mount("10");
+  assert.deepEqual(CHAPTERS[0].topics.map(t => t.id), ["task", "state", "interaction"]);
+  assert.ok(!first.root.textContent.includes("Bellman 最优方程"));
+  assert.ok(!first.root.textContent.includes("V 和 Q"));
+  assert.ok(values.root.textContent.includes("V 和 Q"));
+  assert.ok(values.root.textContent.includes("我们的任务：找一个最优策略"));
+  assert.ok(!values.root.textContent.includes("Bellman 最优方程"));
+  assert.ok(!values.root.textContent.includes("赌博机"));
+  assert.ok(dp.root.textContent.includes("Bellman 最优方程"));
   assert.ok(dp.root.textContent.includes("继续更新到稳定"));
   assert.ok(dp.root.textContent.includes("改进：切换到最好的动作"));
+  assert.ok(td.root.querySelector(".chapter-topic[data-topic='exploration'] .bandit-supplement"));
+  assert.ok(td.root.querySelector(".bandit-supplement").textContent.includes("单步特例"));
   assert.ok(frontier.root.textContent.includes("GCRL"));
   assert.ok(frontier.root.textContent.includes("Contrastive RL"));
   assert.ok(frontier.root.textContent.includes("stitching"));
-  for (const [key, [id, topic]] of Object.entries(LEGACY_ROUTES)) {
+  for (const [key, [id, topic]] of Object.entries({ ...LEGACY_ROUTES, ...CHAPTER_ROUTE_ALIASES })) {
     assert.equal(resolveRoute(key).chapter.id, id); assert.equal(resolveRoute(key).topic, topic);
   }
+  assert.equal(resolveRoute("chapter-01/returns").chapter.id, "02");
   assert.equal(resolveRoute("chapter-01/returns").topic, "returns");
   assert.equal(resolveRoute("chapter-99").chapter, null);
-  first.cleanup(); dp.cleanup(); frontier.cleanup();
+  [first, values, dp, td, frontier].forEach(page => page.cleanup());
 });
 test("bandit updates preserve per-action sample means and UCB tries unobserved actions", () => {
   const lab = new BanditLab();
@@ -81,7 +91,7 @@ test("bandit updates preserve per-action sample means and UCB tries unobserved a
   assert.equal(lab.choose({ mode: "ucb" }), 1);
   assert.ok(Math.abs(lab.Q[0] - rewards.reduce((sum, r) => sum + r, 0) / 10) < 1e-12);
   assert.equal(lab.N[1], 0); assert.equal(lab.Q[1], 0);
-  const { root } = mount("02"); click(root, "手动试 A"); assert.equal(metric(root, "真实尝试"), "1");
+  const { root } = mount("05"); click(root, "手动试 A"); assert.equal(metric(root, "真实尝试"), "1");
   click(root, "按当前规则试10次"); assert.equal(metric(root, "真实尝试"), "11");
   click(root, "交换真实均值"); assert.equal(metric(root, "真实尝试"), "11");
   click(root, "切换均值/α=0.1并清零");
@@ -166,13 +176,13 @@ test("public navigation resolves old links and preserves an experiment when jump
   Object.assign(globalThis, { location: { hash: "#lesson-05" }, history: { pushState: (_, __, href) => { location.hash = href; } } });
   await import(pathToFileURL(join(dir, "app.mjs")));
   const root = document.querySelector("#app");
-  assert.equal(root.querySelector("h1").textContent, CHAPTERS[0].title);
+  assert.equal(root.querySelector("h1").textContent, CHAPTERS[1].title);
   click(root, "策略 C"); assert.equal(metric(root, "从 S 出发的回报"), "4.783");
   function follow(href) {
     const a = [...root.querySelectorAll("a")].find(a => a.getAttribute("href") === href); assert.ok(a, "missing link: " + href);
     const event = new window.Event("click", { bubbles: true, cancelable: true }); Object.defineProperty(event, "button", { value: 0 }); a.dispatchEvent(event);
   }
-  follow("#chapter-01/returns");
+  follow("#chapter-02/returns");
   assert.equal(metric(root, "从 S 出发的回报"), "4.783");
   follow("#chapter-03"); assert.equal(root.querySelector("h1").textContent, CHAPTERS[2].title);
   follow("#");

@@ -11,7 +11,7 @@ export function chapterNav(id) {
           part.chapters.map(c => h("a", { href: c.href, class: c.id === id ? "active" : "", "aria-current": c.id === id ? "page" : undefined },
             h("span", { class: "nav-number" }, c.number), h("span", {}, c.short))))),
         h("a", { href: "#", class: "nav-home" }, "← 课程架构与教材对应"))),
-    h("p", { class: "sidebar-note" }, "问题定义 → 表格求解 → 近似与策略优化 → 研究专题。"));
+    h("p", { class: "sidebar-note" }, "任务 → 价值 → Bellman与规划 → 经验学习 → 近似与策略优化 → 研究。"));
 }
 export function chapterHeader(id) {
   const c = chapterById(id);
@@ -20,6 +20,7 @@ export function chapterHeader(id) {
     h("h1", {}, c.title), h("p", { class: "lead" }, c.image),
     h("p", { class: "chapter-reference" }, h("a", { href: id === "10" ? THESIS : BOOK_TOC, target: "_blank", rel: "noopener" }, c.book)),
     h("p", { class: "learning-goal" }, h("strong", {}, "核心问题："), c.question, h("br"), h("strong", {}, "学习目标："), c.goal, h("br"), h("strong", {}, "前置知识："), c.prerequisite),
+    h("p", { class: "chapter-connection" }, h("strong", {}, "为什么学到这里："), c.relation.from),
     h("nav", { class: "chapter-toc", "aria-label": "本章小节" },
       c.topics.map(t => h("a", { href: c.href + "/" + t.id }, h("b", {}, t.number), " " + t.title))),
     h("details", { class: "chapter-essentials" }, h("summary", {}, "本章必须掌握的 " + CHAPTER_KNOWLEDGE[id].length + " 项知识"),
@@ -42,6 +43,10 @@ export function chapterFooter(id, summary) {
           h("a", { class: "evidence-link", href: c.href + "/" + evidence }, "回到对应小节 →")))),
     h("p", { class: "source-note" }, "阅读依据：", h("a", { href: id === "10" ? THESIS : BOOK_TOC, target: "_blank", rel: "noopener" }, c.book),
       id === "10" ? "。研究专题保留论文页码与实验假设；演示和完整训练分开说明。" : "。本课程按概念整合教材章节，正文注明示范数据、模型与更新条件。"),
+    h("section", { class: "chapter-transition", dataset: { next: next?.id ?? "complete" } },
+      h("h2", {}, next ? "为什么进入第" + next.number + "章？" : "接下来怎样继续研究？"),
+      h("p", {}, h("strong", {}, "本章得到："), c.relation.result),
+      h("p", {}, c.relation.next)),
     h("nav", { "aria-label": "前后章节" },
       h("a", { href: previous?.href ?? "#" }, previous ? "← 第" + previous.number + "章 · " + previous.short : "← 课程架构"),
       h("a", { class: "next-lesson", href: next?.href ?? "#" }, next ? "第" + next.number + "章 · " + next.short + " →" : "完成主线 · 回到课程架构 →")));
