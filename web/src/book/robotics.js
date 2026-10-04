@@ -158,7 +158,7 @@ export function robotics(root){
       equation("d_\\gamma^\\pi(B\\mid s,a)=(1-\\gamma)\\sum_{k\\ge0}\\gamma^k\\Pr_\\pi(S_{t+k+1}\\in B\\mid s_t=s,a_t=a)",
         "0≤γ<1；B为目标集合。它统计未来占用，允许重复到访；有密度时可写dγ(g)。"),
       prose("对比critic用未来状态作正样本、目标作负样本；平衡分类的Bayes最优odds对应dγ(g|s,a)/p(g)。须明确未来策略，并区分占用奖励、到达奖励和首次到达终止。",
-        "表示、分类与对比方法连接神经GCRL；表示、critic/actor训练和远目标泛化需分别验证。"),
+        "蒙特卡洛Contrastive RL直接用采样的未来状态训练，不用TD目标；对应的Q仍满足Bellman关系。TD对比方法则用后继预测构造自举目标。"),
       optional("论文选读：C-learning、Contrastive RL与SoRB",
         prose("论文第2–4章、附录B讨论未来分布、目标条件actor和路标搜索。路标须含充分状态，局部控制和搜索边须能实际执行；几何接近不保证可控。"),
         reading("Ben论文 §2–4、附录B",THESIS))),

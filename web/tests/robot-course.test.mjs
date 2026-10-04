@@ -114,6 +114,19 @@ test("continuous state and feature controls reveal velocity and representation e
   ({root,window}=mount("03"));assert.equal(metric(root,"拟合预测"),"-0.667");click(root,"二次特征");assert.equal(metric(root,"拟合预测"),"-4");
   input(root,window,"feature-query",0.5);assert.equal(metric(root,"拟合预测"),"-0.25");
 });
+test("Bellman controls keep the chosen action, return decomposition and optimal action consistent",()=>{
+  const {root,window,cleanup}=mount("01");
+  const lab=root.querySelector('[data-topic="bellman"] .experiment');
+  assert.equal(metric(lab,"当前 Qₜ*(2,a)"),"-20");
+  input(root,window,"bellman-force",-1);assert.equal(metric(lab,"当前 Qₜ*(2,a)"),"-8.5");
+  assert.equal(lab.querySelector('[role="status"]').textContent,"当前 Qₜ*(2,a) = -4.5 + (-4) = -8.5");
+  assert.ok(lab.querySelector("tbody").textContent.includes("-1（当前）"));
+  click(lab,"选择最优动作");close(Number(root.querySelector("#bellman-force").value),-16/9);
+  assert.equal(metric(lab,"当前 Qₜ*(2,a)"),metric(lab,"最大 Qₜ*＝Vₜ*(2)"));
+  input(root,window,"bellman-tail",0);click(lab,"选择最优动作");
+  assert.equal(Number(root.querySelector("#bellman-force").value),0);
+  assert.equal(metric(lab,"当前 Qₜ*(2,a)"),"-4");cleanup();
+});
 test("Gaussian, baseline, GAE, PPO and Jensen controls operate within their stated mathematical examples",()=>{
   let {root,window}=mount("05");click(root,"用这个样本更新均值");assert.equal(metric(root,"均值 μ"),"-0.2");
   click(root,"设为策略价值");assert.equal(metric(root,"梯度估计方差"),"18");click(root,"设为最小方差");assert.equal(metric(root,"梯度估计方差"),"14");

@@ -34,12 +34,22 @@ export function stateLab(){
   render();return experiment(controls,scene,readout,h("p",{class:"arithmetic"},"m=1 kg。蓝线是速度，橙线是推力。"));
 }
 export function bellmanLab(){
-  let error=2,tail=4,force=0;const readout=stats(),body=h("div");
-  function render(){const t=oneStepControl(error,tail);replace(readout,metric("当前候选动作 u",num(force)),metric("动作价值 Q(e,u)",num(t.evaluate(force))),metric("连续最优动作 u*",num(t.force)),metric("最优价值 V*(e)",num(t.value)));
-    replace(body,h("div",{class:"physical-flow"},h("span",{},"当前 e="+num(error)),h("b",{},"→ 选u="+num(force)),h("span",{},"后继 e′="+num(error+force))),table(["动作 u","reward r=−e²−0.5u²","后续 V(e′)=−Pe′²","Q=r+V(e′)"],[0,-1,-2,t.force].map(u=>[num(u),num(-(error**2+0.5*u*u)),num(-tail*(error+u)**2),num(t.evaluate(u))])));}
-  render();return experiment([slider({id:"bellman-tail",label:"给定后续价值系数 P",min:0,max:8,step:0.5,value:tail,onInput:v=>{tail=v;render();}}),
-    slider({id:"bellman-force",label:"先试一个动作 u",min:-3,max:1,step:0.05,value:force,format:num,onInput:v=>{force=v;render();}}),
-    button("换成连续最优动作",{onClick:()=>{force=oneStepControl(error,tail).force;render();}})],body,readout,h("p",{class:"muted"},"简化动力学e′=e+u；选择让Q最大的动作。"));
+  const error=2;let tail=4,action=0;const readout=stats(),body=h("div"),scene=s("svg",{viewBox:"0 0 520 180",class:"robot-scene",role:"img","aria-label":"位置调整：当前误差、动作位移与下一误差"}),arithmetic=h("p",{class:"arithmetic",role:"status"});
+  const actionControl=slider({id:"bellman-force",label:"本步移动距离 a (m)",min:-3,max:1,step:"any",value:action,format:num,onInput:v=>{action=v;render();}});
+  function render(){const t=oneStepControl(error,tail),next=error+action,r=-(error**2+0.5*action*action),value=-tail*next**2,x=e=>150+100*e,end=x(next),direction=Math.sign(action);
+    replace(scene,s("line",{x1:40,y1:120,x2:480,y2:120,stroke:"var(--rule)","stroke-width":3}),
+      [-1,0,1,2,3].map(e=>[s("line",{x1:x(e),y1:116,x2:x(e),y2:126,stroke:"var(--ink-3)"}),s("text",{x:x(e),y:148,"text-anchor":"middle"},e+" m")]),
+      s("line",{x1:x(0),y1:40,x2:x(0),y2:120,stroke:"var(--learn)","stroke-dasharray":"4 4"}),s("text",{x:x(0),y:26,"text-anchor":"middle"},"目标 e=0"),
+      s("circle",{cx:x(error),cy:120,r:6,fill:"var(--ink)"}),s("text",{x:x(error),y:45,"text-anchor":"middle"},"当前 e=2"),
+      s("line",{x1:x(error),y1:65,x2:end,y2:65,stroke:"var(--act)","stroke-width":3}),
+      direction?s("polygon",{points:end+",65 "+(end-direction*8)+",60 "+(end-direction*8)+",70",fill:"var(--act)"}):null,
+      s("text",{x:(x(error)+end)/2,y:89,"text-anchor":"middle"},"移动 a="+num(action)),
+      s("circle",{cx:end,cy:120,r:4,fill:"var(--act)"}),s("text",{x:end,y:170,"text-anchor":"middle"},"下一误差 e′="+num(next)));
+    replace(readout,metric("当前动作 a",num(action)),metric("当前 Qₜ*(2,a)",num(t.evaluate(action))),metric("最优动作 a*",num(t.force)),metric("最大 Qₜ*＝Vₜ*(2)",num(t.value)));
+    replace(body,table(["动作 a","当前 reward rₜ","末端价值 Vₜ₊₁*(2+a)","两项之和 Qₜ*(2,a)"],[...new Set([0,-1,-2,action,t.force])].map(a=>[num(a)+(a===action?"（当前）":""),num(-(error**2+0.5*a*a)),num(-tail*(error+a)**2),num(t.evaluate(a))])));
+    arithmetic.textContent="当前 Qₜ*(2,a) = "+num(r)+" + ("+num(value)+") = "+num(t.evaluate(action));}
+  render();return experiment([slider({id:"bellman-tail",label:"末端 reward 权重 κ",min:0,max:8,step:0.5,value:tail,onInput:v=>{tail=v;render();}}),actionControl,
+    button("选择最优动作",{onClick:()=>{action=oneStepControl(error,tail).force;actionControl.set(action);render();}})],scene,body,arithmetic,readout,h("p",{class:"muted"},"增大κ，再选择最优动作：末端位置更重要，最优动作更接近−2 m。"));
 }
 export function featureLab(){
   let mode="linear",query=2;const readout=stats(),plot=chart("连续位置的价值函数，线性与二次拟合"),labels=h("div");
