@@ -1,6 +1,6 @@
 export const CHAPTER_KNOWLEDGE={
   "01":[["状态与MDP","task","为什么状态需要包含速度？"],["G、V、Q与π*","values","G、V和Q分别评价什么？"],["Bellman方程","bellman","怎样从return分解得到Qπ、Vπ和最优方程？"],["Bellman与Q-learning","bellman","样本reward和估计的后续Q怎样组成学习目标？"],["动态规划","planning","策略评价、策略改进和价值迭代各更新什么？"]],
-  "02":[["数据访问权限","access","能否采新数据与能否任意查询状态，是同一个问题吗？"],["采样误差","statistics","样本数和折扣怎样影响误差？"],["MC、TD、SARSA与Q-learning","updates","它们使用哪种未来目标？"],["终止与截断","updates","什么时候保留后继V？"]],
+  "02":[["数据访问权限","access","能否采新数据与能否任意查询状态，是同一个问题吗？"],["采样误差","statistics","样本数和折扣怎样影响误差？"],["MC与TD评价","updates","完整return与一步自举怎样估计Vπ？"],["SARSA与Q-learning","updates","按π采下一动作与取最大Q分别来自哪条Bellman关系？"],["收敛条件","updates","覆盖、步长与探索策略分别需要满足什么？"],["终止与截断","updates","什么时候保留后继V？"]],
   "03":[["价值特征","features","线性特征能否表示V(x)=−x²？"],["表示与闭包","closure","能表示Q*，为何还需要Bellman闭包？"],["FQI与覆盖","offline","没有采过的动作，能靠回归判断吗？"],["Stitching","stitching","位置相同、速度不同的片段能拼接吗？"]],
   "04":[["UCB","bandit","均值与不确定性怎样决定动作？"],["策略性探索","strategic","怎样到达有学习信号的状态？"],["Linear MDP","structure","它与线性机械动力学有何区别？"],["Bellman rank","structure","哪个残差矩阵需要低维分解？"]],
   "05":[["Gaussian策略","gaussian","正优势怎样改变动作分布？"],["PG推导","derivation","为什么去掉过去reward仍保留外层γᵗ？"],["Baseline","baseline","为什么不改期望，却能改方差？"],["Actor–Critic与GAE","actor-critic","终止和截断怎样影响GAE？"]],
