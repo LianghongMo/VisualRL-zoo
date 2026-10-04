@@ -1,4 +1,5 @@
 import {h} from "../ui/dom.js";
+import {tex} from "../ui/math.js";
 import {chapterHeader,chapterFooter,topic,prose,equation,proof,table,optional,bookReading,reading} from "./shell.js";
 import {stateLab,bellmanLab,featureLab} from "./labs.js";
 export function mdp(root){
@@ -9,14 +10,17 @@ export function mdp(root){
       stateLab(),
       equation("s_t=(p_t,v_t),\\quad u_t\\in\\mathbb R,\\quad s_{t+1}\\sim P(\\cdot\\mid s_t,u_t),\\quad u_t\\sim\\pi(\\cdot\\mid s_t)",
         "π选择动作，P给出下一状态的分布。"),
-      table(["MDP对象","小车中的含义"],[
-        ["状态S","位置、速度；有限时域加剩余时间"],
-        ["动作A","一个采样周期内的推力"],
-        ["转移P","给定状态与推力，预测下一位置和速度"],
-        ["reward r","评价接近目标、停稳和用力"],
-        ["初始分布ρ₀","初始位置与速度的分布"],
+      table(["MDP对象","符号与公式","小车中的含义"],[
+        [h("span",{},"状态 ",tex("\\mathcal S")),tex("s_t=(p_t,v_t)\\in\\mathcal S=\\mathbb R^2"),"位置与速度"],
+        [h("span",{},"动作 ",tex("\\mathcal A")),tex("a_t=u_t\\in\\mathcal A=\\mathbb R"),"一个采样周期内的推力"],
+        [h("span",{},"转移 ",tex("P")),tex("P(\\cdot\\mid s_t,u_t)=\\delta_{f(s_t,u_t)}"),"下一状态确定为f(sₜ,uₜ)"],
+        [h("span",{},"reward ",tex("r")),tex("r(s_t,u_t)=-(p_t-g)^2-0.2v_t^2-0.5u_t^2"),"接近目标、停稳、少用力；g=0"],
+        [h("span",{},"初始分布 ",tex("\\rho_0")),tex("s_0\\sim\\rho_0,\\quad\\rho_0=\\delta_{(2,0)}"),"默认从2 m静止出发"],
       ]),
-      prose("Markov性：给定当前状态和动作，下一状态与更早的历史无关。")),
+      equation("\\boxed{\\begin{aligned}p_{t+1}&=p_t+v_t\\Delta t+\\frac{u_t}{2m}\\Delta t^2\\\\v_{t+1}&=v_t+\\frac{u_t}{m}\\Delta t\\end{aligned}}\\qquad s_{t+1}=f(s_t,u_t)",
+        "牛顿第二定律＋匀加速运动：m=1 kg、Δt=0.5 s，每步推力恒定，忽略摩擦。"),
+      prose(h("span",{},tex("\\delta_x"),"表示状态确定为x；有限时域再把剩余步数H−t加入状态。"),
+        "Markov性：给定当前状态和动作，下一状态与更早的历史无关。")),
     topic("01","values",
       prose("持续向左推可能高速穿过目标；速度反馈让小车提前反向刹车，整条轨迹的return决定哪种策略更好。",
         "令e为位置误差；例如每步r=−e²−0.2v²−0.5u²，末端r_H=−20e_H²−10v_H²，误差、速度和推力越大，reward越低。"),
