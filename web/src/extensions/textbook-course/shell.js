@@ -1,8 +1,8 @@
-import { h } from "../ui/dom.js";
-import { CHAPTERS, PARTS, chapterById, BOOK_TOC, THESIS } from "../lessons/curriculum.js";
+import { h } from "../../ui/dom.js";
+import { CHAPTERS, PARTS, chapterById, BOOK_TOC, THESIS } from "./curriculum.js";
 import { CHAPTER_KNOWLEDGE } from "./knowledge.js";
-export { prose, step, predict, optional, takeaway } from "../ui/shell.js";
-export { equation } from "../ui/math.js";
+export { prose, step, predict, optional, takeaway } from "../../ui/shell.js";
+export { equation } from "../../ui/math.js";
 export function chapterNav(id) {
   return h("aside", { class: "course-sidebar" },
     h("details", { class: "course-menu", open: !window.matchMedia?.("(max-width: 760px)")?.matches },

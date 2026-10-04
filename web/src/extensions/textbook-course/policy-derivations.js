@@ -1,6 +1,6 @@
-import { h, button, slider, segmented, replace } from "../ui/dom.js";
-import { metric, num } from "../ui/world-view.js";
-import { baselineStatistics, generalizedAdvantages, surrogateExample } from "../rl/policy-math.js";
+import { h, button, slider, segmented, replace } from "../../ui/dom.js";
+import { metric, num } from "../../ui/world-view.js";
+import { baselineStatistics, generalizedAdvantages, surrogateExample } from "../../rl/policy-math.js";
 import { prose, equation, table } from "./shell.js";
 import { readings } from "./sources.js";
 export const proof = (kind, title, ...body) => h("section", { class: "proof-step" },

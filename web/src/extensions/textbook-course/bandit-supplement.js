@@ -1,6 +1,6 @@
-import { h, button, segmented, slider, replace } from "../ui/dom.js";
-import { metric, num } from "../ui/world-view.js";
-import { BanditLab } from "../rl/teaching-labs.js";
+import { h, button, segmented, slider, replace } from "../../ui/dom.js";
+import { metric, num } from "../../ui/world-view.js";
+import { BanditLab } from "../../rl/teaching-labs.js";
 import { step, prose, equation, table, predict } from "./shell.js";
 export function mount(root) {
   let lab = new BanditLab(), mode = "epsilon", epsilon = 0.1, reveal = false, constantAlpha = false;

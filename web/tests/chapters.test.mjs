@@ -6,11 +6,12 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { CHAPTERS, CHAPTER_IDS, LEGACY_ROUTES, CHAPTER_ROUTE_ALIASES, resolveRoute } from "../src/lessons/curriculum.js";
-import { CHAPTER_KNOWLEDGE } from "../src/chapters/knowledge.js";
+import { CHAPTERS, CHAPTER_IDS, LEGACY_ROUTES, CHAPTER_ROUTE_ALIASES, resolveRoute } from "../src/extensions/textbook-course/curriculum.js";
+import { CHAPTER_KNOWLEDGE } from "../src/extensions/textbook-course/knowledge.js";
 import { BanditLab, LinearValueLab, PolicyGradientLab, ppoObjective, lambdaWeights } from "../src/rl/teaching-labs.js";
+import {CHAPTERS as BOOK_CHAPTERS} from "../src/book/curriculum.js";
 const dir = mkdtempSync(join(tmpdir(), "visualrl-chapters-"));
-await build({ entryPoints: [fileURLToPath(new URL("../src/chapters/index.js", import.meta.url))], bundle: true, platform: "node", format: "esm", target: "node24", loader: { ".py": "text" }, outfile: join(dir, "chapters.mjs") });
+await build({ entryPoints: [fileURLToPath(new URL("../src/extensions/textbook-course/index.js", import.meta.url))], bundle: true, platform: "node", format: "esm", target: "node24", loader: { ".py": "text" }, outfile: join(dir, "chapters.mjs") });
 const { CHAPTER_MODULES } = await import(pathToFileURL(join(dir, "chapters.mjs")));
 after(() => rmSync(dir, { recursive: true, force: true }));
 function dom(html = "<html><body><main></main></body></html>") {
@@ -36,7 +37,7 @@ function range(root, window, id, value) {
   const input = root.querySelector("#" + id); assert.ok(input);
   input.value = String(value); input.dispatchEvent(new window.Event("input"));
 }
-test("ten textbook chapters have a single hierarchy, visible formulas, and complete mastery evidence", () => {
+test("preserved textbook modules have a single hierarchy, visible formulas, and complete mastery evidence", () => {
   assert.deepEqual(CHAPTER_IDS, ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10"]);
   assert.equal(CHAPTERS.at(-1).group, "研究专题");
   for (const c of CHAPTERS) {
@@ -176,15 +177,16 @@ test("public navigation resolves old links and preserves an experiment when jump
   Object.assign(globalThis, { location: { hash: "#lesson-05" }, history: { pushState: (_, __, href) => { location.hash = href; } } });
   await import(pathToFileURL(join(dir, "app.mjs")));
   const root = document.querySelector("#app");
-  assert.equal(root.querySelector("h1").textContent, CHAPTERS[1].title);
-  click(root, "策略 C"); assert.equal(metric(root, "从 S 出发的回报"), "4.783");
+  assert.equal(root.querySelector("h1").textContent, BOOK_CHAPTERS[0].title);
+  click(root, "执行一步"); assert.equal(metric(root, "位置 p (m)"), "1.875");
   function follow(href) {
     const a = [...root.querySelectorAll("a")].find(a => a.getAttribute("href") === href); assert.ok(a, "missing link: " + href);
     const event = new window.Event("click", { bubbles: true, cancelable: true }); Object.defineProperty(event, "button", { value: 0 }); a.dispatchEvent(event);
   }
-  follow("#chapter-02/returns");
-  assert.equal(metric(root, "从 S 出发的回报"), "4.783");
-  follow("#chapter-03"); assert.equal(root.querySelector("h1").textContent, CHAPTERS[2].title);
+  follow("#chapter-01/bellman");
+  assert.equal(metric(root, "位置 p (m)"), "1.875");
+  follow("#chapter-09"); assert.equal(root.querySelector("h1").textContent, BOOK_CHAPTERS[8].title);
+  assert.equal(metric(root,"轨迹累计代价 C"),"12.5");
   follow("#");
   assert.equal(root.querySelectorAll(".lesson-row").length, 10);
   assert.equal(root.querySelectorAll(".callout.error,.error-banner").length, 0);

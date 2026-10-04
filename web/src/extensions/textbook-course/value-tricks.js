@@ -1,7 +1,7 @@
-import { h, button, segmented, replace } from "../ui/dom.js";
-import { GridWorld } from "../rl/envs/gridworld.js";
-import { route, NEAR_ROUTE, FAR_ROUTE, metric, num } from "../ui/world-view.js";
-import { shapeRewards, doubleDqnTarget } from "../rl/policy-math.js";
+import { h, button, segmented, replace } from "../../ui/dom.js";
+import { GridWorld } from "../../rl/envs/gridworld.js";
+import { route, NEAR_ROUTE, FAR_ROUTE, metric, num } from "../../ui/world-view.js";
+import { shapeRewards, doubleDqnTarget } from "../../rl/policy-math.js";
 import { prose, equation, table } from "./shell.js";
 import { proof } from "./policy-derivations.js";
 import { readings } from "./sources.js";

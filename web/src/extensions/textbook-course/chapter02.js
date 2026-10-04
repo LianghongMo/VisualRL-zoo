@@ -1,6 +1,6 @@
-import * as returns from "../lessons/lesson04.js";
-import * as optimal from "../lessons/lesson05.js";
-import { h } from "../ui/dom.js";
+import * as returns from "../../lessons/lesson04.js";
+import * as optimal from "../../lessons/lesson05.js";
+import { h } from "../../ui/dom.js";
 import { chapterHeader, chapterFooter, topic, capture, prose, equation } from "./shell.js";
 import { rewardShaping } from "./value-tricks.js";
 export function mount(root) {

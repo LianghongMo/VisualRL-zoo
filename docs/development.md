@@ -74,25 +74,31 @@ npm run build
 
 重导出后检查数值差异。仅整理目录时，原有计算记录和算法不需要修改。
 
-## 章节、小节与复用实验
+## 当前公共课程
 
-公共架构由 web/src/lessons/curriculum.js 的 CHAPTERS、PARTS、LEGACY_ROUTES 定义；正文在 web/src/chapters/。章节是知识单元，具体实验放入小节。
+唯一入口是web/src/main.js → book/curriculum.js、book/index.js与book/home.js。book/组织ABJKS目录映射、十章正文、前置/承接、知识清单、来源和真实实验；不按文件名自动生成目录。
 
-1. 明确核心问题、前置知识、必学清单与例子。新主题优先归入所属章，仅独立知识层级才新增一章。
-2. 在 curriculum.js 登记章/小节、教材对应、稳定id和relation（承接、结果、下一章的问题）；地址为 #chapter-XX/topic。
-3. 在 chapters/knowledge.js 写知识、对应小节与自检问题。
-4. 用 chapters/shell.js 的 chapterHeader/topic/chapterFooter 组织，在 chapters/index.js 注册。main.js 使用统一路由。
-5. 核心方程直接显示，连接真实计算，说明模型、终止、策略和采样条件。
-6. 在 tests/chapters.test.mjs 验证有意义的行为和边界，更新导读/验收，再构建。
+1. 先明确核心问题、原书位置、机器人物理例子和成立条件。
+2. 在book/curriculum.js登记章节、小节、稳定id、source页码与relation；地址为#chapter-XX/topic。
+3. 在book/knowledge.js写必学概念、对应小节和可验证问题。
+4. 用book/shell.js的chapterHeader/topic/chapterFooter组织，在book/index.js登记mount。
+5. 在book/labs.js接真实计算；推导用proof()注明恒等式、局部近似或实践步骤。
+6. 修改相关计算与界面时，更新tests/robot-course.test.mjs及导读/验收，再构建。
 
-章内跳转只滚动、不重新挂载；跨章先调用 cleanup，取消训练与监听。旧lesson链接在LEGACY_ROUTES映射到小节，上一版本的章内链接在CHAPTER_ROUTE_ALIASES中兼容。
+book/foundations.js覆盖任务、数据、表示与探索；policy.js覆盖PG、NPG与保守更新；robotics.js覆盖模仿、LQR和机器人/GCRL。式子通过KaTeX生成MathML，浏览器本地显示，不依赖外部数学服务。
 
-原实验保存在 lessons/，lesson-catalog.js 与 lessons/knowledge.js 为旧元数据，不控制公共目录。capture 复用原模块实验，移除旧页头/页脚/导航，保留事件和 cleanup；MDP嵌入时关闭全局快捷键，避免阅读其他小节时移动机器人。
+章内跳转只滚动、不重新挂载；跨章调用cleanup。book/curriculum.js的LEGACY_ROUTES与ALIASES兼容旧lesson和章内概念链接。裸章号按新目录解释。
 
-rl/teaching-labs.js 集中新的 bandit、Dyna、线性价值、二动作梯度和表格资格迹计算；原有Python/JS一致性算法原位保留。教学计算与完整神经网络训练分开说明。
+## 真实计算与检查
 
-rl/policy-math.js 提供精确有限算例：baseline均值/方差、GAE双mask、两状态surrogate、log Jensen、熵目标/KL、势函数塑形和Double DQN。chapters/policy-derivations.js、entropy-tools.js、value-tricks.js把计算接到对应章节的公式和控件；sources.js集中公开课程与原始阅读链接。推导用proof()注明恒等式、局部近似或实践方法，避免混淆其保证。
+rl/continuous-control.js包含原创双积分动力学、有限Riccati、控制器轨迹、Gaussian score/KL/方差、目标条件反馈和改标工具。控制输入是推力，状态和动作连续，采样周期离散。有限LQR统一u=−Kx，默认参数和独立有理数算例可交叉验算。
 
-tests/policy-tools.test.mjs校验这些数学恒等式、边界与反例，并通过Node/linkedom触发真实章节控件。修改折扣、终止规则、采样分布或目标时，应同时更新对应算例与课程验收表，保持知识清单指向存在的小节。
+rl/policy-math.js保留精确GAE双mask、两状态surrogate、Jensen/熵等工具；原有Python/JS一致性算法原位保留。教学算例与完整神经训练分开说明。
 
-extensions/ 保留PPO/MuJoCo草稿，接回时适配当前章节界面与知识清单。Python新增算法放 visualrl/，浏览器对应实现放 web/src/rl/。
+tests/robot-course.test.mjs检验物理单位、独立LQR解、代价恒等、质量/扰动/限幅、数值积分Gaussian矩、HER边界、全部章节知识与公式、真实控件。tests/chapters.test.mjs保留归档模块验收，其中公共导航测试使用新main.js。其他测试继续检查算法、旧实验与Python golden一致性。
+
+## 归档与后续扩展
+
+上一版Sutton/COS435课程移到extensions/textbook-course/，包括旧curriculum、首页、章节和知识清单，不进入公共构建。lessons/保留原始单项表格/GCRL实验；extensions/还保留PPO、MuJoCo与旧视觉工具，数据和依赖均保留。
+
+接回训练材料时适配当前任务/状态/动作协议，补真实采集、训练和独立执行评估。Python新增算法放visualrl/，浏览器对应实现放web/src/rl/；不要用解析目标曲线称完成神经训练。

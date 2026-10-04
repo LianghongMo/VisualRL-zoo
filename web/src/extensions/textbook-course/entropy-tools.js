@@ -1,6 +1,6 @@
-import { h, s, slider, button, replace } from "../ui/dom.js";
-import { metric, num } from "../ui/world-view.js";
-import { logJensen, entropyBound } from "../rl/policy-math.js";
+import { h, s, slider, button, replace } from "../../ui/dom.js";
+import { metric, num } from "../../ui/world-view.js";
+import { logJensen, entropyBound } from "../../rl/policy-math.js";
 import { prose, equation, table } from "./shell.js";
 import { proof } from "./policy-derivations.js";
 import { readings } from "./sources.js";

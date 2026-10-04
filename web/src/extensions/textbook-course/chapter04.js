@@ -1,8 +1,8 @@
-import { h, button, segmented, replace } from "../ui/dom.js";
-import { GridWorld } from "../rl/envs/gridworld.js";
-import { Trajectory } from "../rl/core.js";
-import { MonteCarlo } from "../rl/tabular/monte-carlo.js";
-import { WorldView, route, NEAR_ROUTE, statesOf, metric, num } from "../ui/world-view.js";
+import { h, button, segmented, replace } from "../../ui/dom.js";
+import { GridWorld } from "../../rl/envs/gridworld.js";
+import { Trajectory } from "../../rl/core.js";
+import { MonteCarlo } from "../../rl/tabular/monte-carlo.js";
+import { WorldView, route, NEAR_ROUTE, statesOf, metric, num } from "../../ui/world-view.js";
 import { chapterHeader, chapterFooter, topic, prose, equation, table, predict } from "./shell.js";
 export function mount(root) {
   const env = GridWorld.chargingRoom(); let repeated = false, firstVisit = true, full, observed, mc, learned = false, index = 0, traces = [];

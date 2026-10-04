@@ -1,4 +1,4 @@
-import * as mdp from "../lessons/lesson01.js";
+import * as mdp from "../../lessons/lesson01.js";
 import { chapterHeader, chapterFooter, topic, capture, prose } from "./shell.js";
 export function mount(root) {
   const a = capture(mdp);

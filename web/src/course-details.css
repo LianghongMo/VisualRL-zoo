@@ -1,4 +1,11 @@
 .course-layout .page { min-width: 0; }
+.robot-scene { width: 100%; display: block; overflow: visible; }
+.robot-scene text,.robot-chart text { font-family: var(--font-body); font-size: 12px; fill: var(--ink-2); }
+.robot-chart { display: block; width: 100%; max-height: 340px; }
+.robot-plot-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
+.robot-caption,.control-configuration { font-size: 13px; color: var(--ink-2); line-height: 1.8; }
+.home-copy > .btn { margin-right: 10px; margin-top: 8px; }
+@media (max-width: 760px) { .robot-plot-grid { grid-template-columns: 1fr; } }
 .step { min-width: 0; scroll-margin-top: 90px; }
 .step > *, .experiment-content > *, .comparison-card > * { min-width: 0; }
 .essentials { padding: 16px 20px; border: 1px solid var(--rule); border-radius: 9px; }

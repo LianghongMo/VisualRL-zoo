@@ -66,7 +66,7 @@ test("Double DQN selects with the online network and terminal targets contain no
   const terminal = doubleDqnTarget([8, 7], [2, 6], { terminated: true }); close(terminal.dqn, 1); close(terminal.double, 1);
 });
 const dir = mkdtempSync(join(tmpdir(), "visualrl-policy-tools-"));
-await build({ entryPoints: [fileURLToPath(new URL("../src/chapters/index.js", import.meta.url))], bundle: true, platform: "node", format: "esm", target: "node24", loader: { ".py": "text" }, outfile: join(dir, "chapters.mjs") });
+await build({ entryPoints: [fileURLToPath(new URL("../src/extensions/textbook-course/index.js", import.meta.url))], bundle: true, platform: "node", format: "esm", target: "node24", loader: { ".py": "text" }, outfile: join(dir, "chapters.mjs") });
 const { CHAPTER_MODULES } = await import(pathToFileURL(join(dir, "chapters.mjs")));
 after(() => rmSync(dir, { recursive: true, force: true }));
 test("teaching controls demonstrate baseline, GAE, state shift, Jensen, shaping and Double DQN", () => {

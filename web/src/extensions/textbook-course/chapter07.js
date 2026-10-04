@@ -1,8 +1,8 @@
-import * as connections from "../lessons/lesson02.js";
-import { h, button, slider, replace } from "../ui/dom.js";
-import { GridWorld } from "../rl/envs/gridworld.js";
-import { DynaLab } from "../rl/teaching-labs.js";
-import { WorldView, route, FAR_ROUTE, metric, num, statesOf } from "../ui/world-view.js";
+import * as connections from "../../lessons/lesson02.js";
+import { h, button, slider, replace } from "../../ui/dom.js";
+import { GridWorld } from "../../rl/envs/gridworld.js";
+import { DynaLab } from "../../rl/teaching-labs.js";
+import { WorldView, route, FAR_ROUTE, metric, num, statesOf } from "../../ui/world-view.js";
 import { chapterHeader, chapterFooter, topic, capture, prose, equation, table } from "./shell.js";
 export function mount(root) {
   const old = capture(connections), env = GridWorld.chargingRoom(), full = route(env, FAR_ROUTE);

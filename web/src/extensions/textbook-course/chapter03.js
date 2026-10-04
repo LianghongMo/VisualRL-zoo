@@ -1,5 +1,5 @@
-import * as policy from "../lessons/lesson06.js";
-import * as value from "../lessons/lesson05.js";
+import * as policy from "../../lessons/lesson06.js";
+import * as value from "../../lessons/lesson05.js";
 import { chapterHeader, chapterFooter, topic, capture, prose, equation, table } from "./shell.js";
 export function mount(root) {
   const a = capture(policy), b = capture(value);

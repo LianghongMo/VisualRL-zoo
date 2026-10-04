@@ -1,34 +1,33 @@
-# 后续扩展路线图
+# 机器人扩展路线图
 
-[返回首页](../README.md) · [开发说明](development.md) · [保留草稿](../web/src/extensions/README.md)
+[项目首页](../README.md) · [开发说明](development.md)
 
-当前十章：九章基础加研究专题。区分可操作算例、算法package和待接入的完整训练。
+当前公共课程按ABJKS目录压缩前半基础，完整连接PG、保守优化、模仿与连续LQR。第10章单列机器人训练与GCRL补充来源。
 
-## 当前网页覆盖
+## 已实现
 
-| 方向 | 实现 |
+| 内容 | 运行或讲解范围 |
 |---|---|
-| 任务/表格方法 | MDP、G/V/Q、Bellman、DP、MC、TD、SARSA、Q-learning、Expected SARSA公式与例子 |
-| 探索 | 第4章MC控制引入ε-soft；第5章探索小节补充真实Bernoulli bandit、均值/常数步长、UCB/乐观初值 |
-| 多步/规划 | n-step、λ-return、真实表格资格迹、观测模型、Dyna-Q模型抽样 |
-| 奖励塑形 | 势函数公式与望远镜求和；正确终点设置与改变策略的反例 |
-| 近似 | 特征、线性梯度、泛化/冲突、半梯度TD；DQN结构、Double DQN目标算例与训练技巧 |
-| 策略 | 轨迹概率→log-derivative→因果性→PG定理；baseline方差、actor–critic、GAE双mask、性能差/surrogate/TRPO、PPO clipped曲线与训练流程 |
-| 数学工具 | Jensen凹log曲线、奖励加熵/softmax/KL差距、稳定logsumexp、固定动力学ELBO补充 |
-| 研究 | 第10章离线/stitching、目标改标、未来分布、分类/对比、SoRB与论文入口 |
+| 任务/规划 | 连续真实一步、完整状态、G/V/Q、Bellman与DP |
+| 数据/表示 | 三种采样接口、MC/TD控制公式、特征曲线、闭包、FQI与覆盖/stitching |
+| 探索/结构 | UCB、轨迹探索、Linear MDP/Bellman rank精简概念 |
+| 策略优化 | Gaussian样本更新、完整PG推导、baseline精确矩、GAE、KL/Fisher、surrogate、TRPO/PPO |
+| 数学工具 | Jensen、奖励加熵/softmax/KL、稳定logsumexp |
+| 模仿 | BC/NLL与专家访问；开环回放/反馈的扰动实验，不声称BC已训练 |
+| 连续控制 | 确定性双积分器、有限Riccati、反馈、相平面、推力/P/K、限幅和模型偏差 |
+| 机器人/GCRL | 接口、有界密度、SAC核心目标、目标反馈、HER/未来占用与评估 |
 
-## 保留材料和下一步
+## 保留材料与未接入训练
 
-| 方向 | 已有 | 待实现和验收 |
+| 方向 | 已有 | 待实现 |
 |---|---|---|
-| 完整DQN | 第8章前置/公式 | 神经网络、回放、目标更新、稳定性与多种子评估 |
-| 完整PPO | 第9章推导、GAE与目标实验；Python表格/深度、浏览器算法和ppo-draft | 真实采集/minibatch/网络训练接入与多种子评估 |
-| 完整SAC | 第9章熵正则目标与soft价值 | 完整soft Bellman、双critic/actor/温度训练与评估 |
-| MuJoCo/3D | 脚本、五组回放、Three.js组件 | 状态动作物理含义、数据来源、奖励/行为联系、样式适配 |
-| 神经GCRL | 第10章定义、改标、分类/对比/路标 | 真正训练表示/critic/actor，评估采样、覆盖、距离与泛化 |
-| 其他研究 | Markov、模型、规划和离线前置 | 部分可观测、随机模型、离线分布偏移、连续控制 |
-| 旧视觉组件 | extensions/ui/网格/曲线/图/3D | 按章节目的适配，用实验说明算法 |
+| 完整连续PPO | Python深度PPO、浏览器表格草稿、当前推导/GAE | 当前小车环境适配、真实采集/minibatch/训练曲线、多种子 |
+| 完整SAC | 当前目标和密度推导 | Replay、双critic、actor/温度训练与同任务评价 |
+| BC/交互模仿 | 当前理论和精确专家反馈 | 示范采样、实际回归、学生执行、新状态标注与验收 |
+| 神经GCRL | 当前定义、目标条件精确反馈；归档改标/对比/路标例子 | 多目标训练、critic/actor/表示、覆盖与长距离泛化 |
+| 非线性机器人 | LQR局部边界、保留MuJoCo脚本/日志/回放 | 摆杆/机械臂、任务物理量、动作限制、数据来源和同协议评估 |
+| 当前理论扩展 | 原书精确章/页链接 | 按需求展开复杂度、证明或SLS；不挤占机器人主线 |
 
-Python package、npm依赖、MuJoCo JSON、测试和Git历史均保留。扩展文件不注册公共导航、不进入构建。完整训练接入后才声称已训练该方法。
+新增一个困难时保留上一个可验算基线，先定义任务、条件、数据、目标和执行标准。完整训练完成并有对应证据后才标记为已训练。
 
-扩展要求：核心问题/必学知识 → 图像/例子 → 方程/假设 → 真实更新 → 数值/执行验收。
+归档课程移入web/src/extensions/textbook-course/；PPO/MuJoCo草稿、算法、依赖、数据和Git历史保留。公开课程的唯一入口为web/src/book/。

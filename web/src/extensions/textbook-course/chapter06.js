@@ -1,9 +1,9 @@
-import { h, button, slider, replace } from "../ui/dom.js";
-import { GridWorld } from "../rl/envs/gridworld.js";
-import { Trajectory } from "../rl/core.js";
-import { NStepTD } from "../rl/tabular/n-step-td.js";
-import { lambdaWeights, traceStep } from "../rl/teaching-labs.js";
-import { route, NEAR_ROUTE, routeStrip, num, metric } from "../ui/world-view.js";
+import { h, button, slider, replace } from "../../ui/dom.js";
+import { GridWorld } from "../../rl/envs/gridworld.js";
+import { Trajectory } from "../../rl/core.js";
+import { NStepTD } from "../../rl/tabular/n-step-td.js";
+import { lambdaWeights, traceStep } from "../../rl/teaching-labs.js";
+import { route, NEAR_ROUTE, routeStrip, num, metric } from "../../ui/world-view.js";
 import { chapterHeader, chapterFooter, topic, prose, equation, table } from "./shell.js";
 export function mount(root) {
   const env = GridWorld.chargingRoom(), full = route(env, NEAR_ROUTE), episode = new Trajectory(full);

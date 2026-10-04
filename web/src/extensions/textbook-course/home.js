@@ -1,8 +1,8 @@
-import { h } from "../ui/dom.js";
+import { h } from "../../ui/dom.js";
 import { PARTS, BOOK_TOC } from "./curriculum.js";
-import { WorldView, route, statesOf, NEAR_ROUTE, FAR_ROUTE, mapLegend } from "../ui/world-view.js";
-import { GridWorld } from "../rl/envs/gridworld.js";
-import { COURSE } from "../chapters/sources.js";
+import { WorldView, route, statesOf, NEAR_ROUTE, FAR_ROUTE, mapLegend } from "../../ui/world-view.js";
+import { GridWorld } from "../../rl/envs/gridworld.js";
+import { COURSE } from "./sources.js";
 export function mount(root) {
   const env = GridWorld.chargingRoom();
   const map = new WorldView(env, { caption: "同一个MDP贯穿课程：先说清任务与最优策略，再比较模型规划、经验学习和目标条件的研究方法。" });

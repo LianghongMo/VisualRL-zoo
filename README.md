@@ -1,75 +1,73 @@
-# Visual RL · 看见强化学习
+# Visual RL · 从理论到连续机器人
 
-用一台机器人，连起 **环境 → 经验 → 学习目标 → 价值更新 → 下一次行动**。每章都有物理图像、正文公式、可操作的实验和知识点自检。
+以一台连续推力小车贯穿 **任务 → 数据与表示 → 探索 → 策略优化 → 模仿 → 连续反馈控制**。位置、速度、推力、长期代价与公式对应同一组可验算计算。
 
-仓库包含当前课程网页和可继续扩展的 Python 算法 package。PPO、MuJoCo、训练数据和依赖都保留，未完成的教学草稿集中在扩展目录。
+[在线课程](https://visual-rl-learning-path.lm8598.chatgpt.site) · [连续小车实验](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-09/feedback) · [离线网页](docs/index.html) · [课程导读](docs/course-guide.md) · [内容验收](docs/course-audit.md)
 
-[在线课程](https://visual-rl-learning-path.lm8598.chatgpt.site) · [离线网页](docs/index.html) · [课程导读](docs/course-guide.md) · [课程验收表](docs/course-audit.md)
-
-离线使用时下载 `docs/index.html`，用浏览器打开即可；核心实验不需要服务器。
+主要参考 [Reinforcement Learning: Theory and Algorithms（ABJKS）](https://rltheorybook.github.io/rltheorybook_ABJKS.pdf) 的2026-06-27工作草稿目录。前面的表格基础、复杂度和探索证明压缩；后半程重点通向连续机器人。借鉴 [Harvard CS2824公开讲义](https://harvard-cs2824-s26.github.io/)从问题引出算法、让假设紧邻算法的讲解方法；正文、图像和算例独立编写。
 
 ## 当前课程
 
-参考 Sutton & Barto 第二版，按同一任务的学习依赖组织九章基础与一章研究。每章分小节，开头说明承接关系，结尾解释下一章要解决的剩余问题。策略优化、奖励塑形和训练技巧结合 [Princeton COS435 的公开课表与论文阅读材料](https://www.polarislab.org/cos435-rl/index.html)展开。
-
-| 章 | 内容 | 教材对应 / 网页入口 |
+| 网页章 | 内容 | 原书对应 |
 |---|---|---|
-| 1 | 强化学习任务与 MDP | §1、3的任务定义；[#chapter-01](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-01) |
-| 2 | 回报、价值与最优策略，含势函数奖励塑形 | §3的评价与控制目标；[#chapter-02](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-02) |
-| 3 | Bellman 方程与动态规划 | §3的Bellman、§4；[#chapter-03](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-03) |
-| 4 | Monte Carlo：预测、控制、重要性采样 | §5；[#chapter-04](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-04) |
-| 5 | TD 学习与表格控制，含探索补充 | §6；探索参考§2；[#chapter-05](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-05) |
-| 6 | 多步学习与资格迹 | §7、表格 §12；[#chapter-06](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-06) |
-| 7 | 模型、规划与 Dyna | §8；[#chapter-07](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-07) |
-| 8 | 函数近似与 Deep RL，含 Double DQN 与训练技巧 | §9–11、DQN；[#chapter-08](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-08) |
-| 9 | 策略梯度、Actor–Critic 与 PPO | §13、COS435第4–6周公开阅读；[#chapter-09](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-09) |
-| 10 | 前沿课题：离线 RL、stitching 与 GCRL | Ben Eysenbach 博士论文；[#chapter-10](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-10) |
+| [1](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-01) | MDP、价值与规划 | 第1章，压缩 |
+| [2](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-02) | 数据模型与采样学习 | 第2章；MC/TD/SARSA/Q-learning补充 |
+| [3](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-03) | 函数近似、离线覆盖与stitching | 第3–4章 |
+| [4](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-04) | 探索与可学习结构 | 第5–8章精选、压缩 |
+| [5](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-05) | 策略梯度与连续Gaussian、baseline、GAE | 第9章；连续策略与GAE补充 |
+| [6](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-06) | 最优性、自然梯度与近似 | 第10–11章 |
+| [7](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-07) | CPI、TRPO、PPO、Jensen与熵 | 第12章；熵与实践补充 |
+| [8](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-08) | 模仿学习、闭环分布偏移与专家访问 | 第13章 |
+| [9](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-09) | 连续动力学、Riccati与LQR | 第14章；原创小车实验 |
+| [10](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-10) | 机器人接口、连续PPO/SAC与GCRL | 机器人延伸；Ben Eysenbach论文 |
 
-第1章定义任务，第2章比较长期结果，第3章拆解未来并求解。模型未知时再进入MC/TD。赌博机归入第5章探索补充，表格资格迹与n-step对照，参考 [MIT Press 官方目录](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/10094/Toc.pdf?dl=1)。研究专题主要参考 Ben 的2023年论文，不作为所有最新方向的综述。
+每章有小节目录、必须掌握的知识、前置条件、公式/图像/算例、边界与逐项自检。长的LP、复杂度、集中、regret、下界、SDP/SLS证明留在原书选读。原书草稿中的增益符号等独立推导与数值核对，不逐式复制。
 
-旧链接继续兼容：lesson-01进入第1章任务，lesson-04/05进入第2章回报/最优策略；lesson-06 进入第3章策略迭代；lesson-07/08 进入第5章预测/控制；lesson-02 进入第7章模型；lesson-03/09 进入第10章离线/GCRL。旧章内链接也继续映射：chapter-01/returns与optimal进入第2章，chapter-02/bandit、exploration与nonstationary进入第5章探索。完整知识清单与边界见[课程导读](docs/course-guide.md)。
+## 连续实验
 
-第9章按七个小节展开：[动作概率](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-09/gradient) → [轨迹概率与策略梯度推导](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-09/derivation) → [baseline、Actor–Critic与GAE](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-09/actor-critic) → [surrogate与TRPO](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-09/surrogate) → [PPO](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-09/ppo) → [Jensen、熵与softmax](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-09/entropy) → [训练实践](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-09/practice)。正文区分恒等式、局部近似与实践方法，配有基线方差、终止/截断、状态访问分布和熵目标的可计算实验。
+小车状态是位置和速度，动作是连续推力，每0.5秒决策。默认有限LQR从(2,0)出发，6步任务，总代价12.500159；逐步累计与初始Riccati价值一致。可以切换控制器、初速、时域、能耗权重、质量误差、外力与推力限幅，查看相平面、推力曲线和P/K系数。
+
+网页还运行连续Gaussian样本更新、精确baseline方差、终止/截断GAE、surrogate反例、PPO曲线、Jensen/softmax与目标条件反馈。解析实验不冒充神经PPO、SAC或GCRL训练。
 
 ## 仓库结构
 
-```text
-web/
-  src/chapters/      十章正文、小节、知识清单与章节界面
-  src/lessons/       公共目录、首页、保留并复用的交互实验
-  src/ui/            当前课程使用的界面组件
-  src/rl/            浏览器算法与环境
-  src/extensions/    保留的 PPO 草稿、MuJoCo 回放与旧视觉组件
-  src/data/mujoco/   已记录的训练日志与轨迹
-  tests/             网页交互和 Python/JS 一致性检查
-visualrl/            Python package：环境、经验、表格算法、深度 PPO
-examples/            可直接运行的 Python 小例子
-scripts/             一致性记录导出和 MuJoCo 训练
-tests/              Python 测试与 golden 计算记录
-docs/               离线网页、课程导读、开发说明与路线图
-```
+~~~text
+web/src/book/                      当前唯一公共课程：目录、首页、正文、知识清单、实验
+web/src/rl/continuous-control.js    连续动力学、有限LQR、Gaussian与目标算例
+web/src/rl/                        保留的浏览器算法与环境
+web/src/ui/                        当前通用界面与MathML公式
+web/src/lessons/                    原始单项表格/GCRL实验，供复用与测试
+web/src/extensions/textbook-course/ 上一版课程归档，不进入公共构建
+web/src/extensions/                PPO/MuJoCo草稿与旧视觉工具
+web/src/data/mujoco/                保留的日志与回放
+web/tests/                         当前课程、归档算例及Python/JS一致性
+visualrl/                          Python package：表格算法、环境、深度PPO
+examples/ scripts/ tests/          Python例子、训练脚本与检查
+docs/                             离线网页、导读、验收、开发与路线图
+~~~
+
+Python package、依赖、MuJoCo数据与Git历史都保留。旧lesson和章内概念链接映射到新位置，见[导读](docs/course-guide.md)。
 
 ## 本地使用
 
-网页开发使用 Node.js 24 和 npm。在 `web/` 中运行：
+网页使用Node.js 24与npm：
 
-```bash
+~~~bash
+cd web
 npm ci
 npm run dev       # http://localhost:8000
 npm test
-npm run build     # 更新 docs/index.html 和部署产物 dist/index.html
-```
+npm run build     # docs/index.html与dist/index.html
+~~~
 
-Python package 支持 Python 3.10 及以上。在仓库根目录运行：
+下载docs/index.html直接打开即可使用核心实验，无需服务器。
 
-```bash
+Python package支持Python 3.10及以上：
+
+~~~bash
 python -m pip install -e ".[dev]"
 python -m pytest -q
 python examples/td_update.py
-```
+~~~
 
-GitHub 自动检查网页测试、构建产物与 Python package。详细安装、算法目录、深度 PPO 训练和新增章节步骤见[开发说明](docs/development.md)。
-
-## 后续扩展
-
-后续章节所需的算法、环境、Three.js 和深度 RL 依赖均保留。当前网页已加入函数近似与策略梯度基础；完整训练和教学草稿的状态见[扩展路线图](docs/roadmap.md)与[扩展目录说明](web/src/extensions/README.md)。
+GitHub检查网页测试、离线产物可重建性与Python算法。深度PPO、MuJoCo和新增章节方法见[开发说明](docs/development.md)，未接入训练状态见[路线图](docs/roadmap.md)。

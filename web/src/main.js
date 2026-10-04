@@ -2,10 +2,10 @@ import "./styles.css";
 import "./course-details.css";
 
 import { h } from "./ui/dom.js";
-import { chapterNav } from "./chapters/shell.js";
-import { resolveRoute } from "./lessons/curriculum.js";
-import { CHAPTER_MODULES } from "./chapters/index.js";
-import * as home from "./lessons/home.js";
+import { chapterNav } from "./book/shell.js";
+import { resolveRoute } from "./book/curriculum.js";
+import { CHAPTER_MODULES } from "./book/index.js";
+import * as home from "./book/home.js";
 
 const app = document.getElementById("app");
 let cleanup = () => {};
@@ -57,7 +57,7 @@ function show(key) {
   cleanup = () => {};
   current = key; activeChapter = id ?? null;
   const main = h("main", { class: "page" });
-  document.title = resolved.chapter ? "第" + resolved.chapter.number + "章 · " + resolved.chapter.title + " · Visual RL" : "Visual RL · 强化学习教材主线";
+  document.title = resolved.chapter ? "第" + resolved.chapter.number + "章 · " + resolved.chapter.title + " · Visual RL" : "Visual RL · 从理论到连续机器人";
   app.replaceChildren(topbar(), id ? h("div", { class: "course-layout" }, chapterNav(id), main) : main);
   try { cleanup = (id ? CHAPTER_MODULES[id] : home).mount(main) ?? (() => {}); }
   catch (err) {

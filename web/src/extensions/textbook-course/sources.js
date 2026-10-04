@@ -1,4 +1,4 @@
-import { h } from "../ui/dom.js";
+import { h } from "../../ui/dom.js";
 export const COURSE = "https://www.polarislab.org/cos435-rl/index.html";
 export const SOURCES = {
   pg: ["Policy Gradient · 对数导数与零期望引理", "https://spinningup.openai.com/en/latest/spinningup/rl_intro3.html"],

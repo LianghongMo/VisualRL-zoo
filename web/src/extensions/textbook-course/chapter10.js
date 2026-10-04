@@ -1,8 +1,8 @@
-import * as offline from "../lessons/lesson03.js";
-import * as goals from "../lessons/lesson09.js";
-import { h } from "../ui/dom.js";
+import * as offline from "../../lessons/lesson03.js";
+import * as goals from "../../lessons/lesson09.js";
+import { h } from "../../ui/dom.js";
 import { chapterHeader, chapterFooter, topic, capture, prose, equation, table } from "./shell.js";
-import { THESIS } from "../lessons/curriculum.js";
+import { THESIS } from "./curriculum.js";
 export function mount(root) {
   const a = capture(offline), b = capture(goals);
   root.append(chapterHeader("10"),

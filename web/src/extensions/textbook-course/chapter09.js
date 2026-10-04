@@ -1,7 +1,7 @@
-import { h, s, button, segmented, slider, replace } from "../ui/dom.js";
-import { GridWorld } from "../rl/envs/gridworld.js";
-import { PolicyGradientLab, ppoObjective } from "../rl/teaching-labs.js";
-import { WorldView, metric, num } from "../ui/world-view.js";
+import { h, s, button, segmented, slider, replace } from "../../ui/dom.js";
+import { GridWorld } from "../../rl/envs/gridworld.js";
+import { PolicyGradientLab, ppoObjective } from "../../rl/teaching-labs.js";
+import { WorldView, metric, num } from "../../ui/world-view.js";
 import { chapterHeader, chapterFooter, topic, prose, equation, table } from "./shell.js";
 import { trajectoryDerivation, baselinePanel, gaePanel, surrogateDerivation } from "./policy-derivations.js";
 import { entropyTools, practiceNotes } from "./entropy-tools.js";

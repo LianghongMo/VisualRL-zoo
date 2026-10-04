@@ -1,6 +1,6 @@
-import { h, button, segmented, replace } from "../ui/dom.js";
-import { LinearValueLab } from "../rl/teaching-labs.js";
-import { metric, num } from "../ui/world-view.js";
+import { h, button, segmented, replace } from "../../ui/dom.js";
+import { LinearValueLab } from "../../rl/teaching-labs.js";
+import { metric, num } from "../../ui/world-view.js";
 import { chapterHeader, chapterFooter, topic, prose, equation, table, predict } from "./shell.js";
 import { dqnTricks } from "./value-tricks.js";
 export function mount(root) {

@@ -1,7 +1,7 @@
-import * as prediction from "../lessons/lesson07.js";
-import * as control from "../lessons/lesson08.js";
+import * as prediction from "../../lessons/lesson07.js";
+import * as control from "../../lessons/lesson08.js";
 import * as bandit from "./bandit-supplement.js";
-import { h } from "../ui/dom.js";
+import { h } from "../../ui/dom.js";
 import { chapterHeader, chapterFooter, topic, capture, prose, equation, table } from "./shell.js";
 export function mount(root) {
   const a = capture(prediction), b = capture(control), c = capture(bandit);
