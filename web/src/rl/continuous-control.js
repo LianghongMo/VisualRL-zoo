@@ -10,7 +10,7 @@ const dot=(a,b)=>a.reduce((sum,x,i)=>sum+x*b[i],0);
 export const quadratic=(state,P)=>dot(state,P.map(row=>dot(row,state)));
 export function finiteLqr({horizon=6,dt=0.5,mass=1,positionWeight=1,velocityWeight=0.2,effort=0.5,terminal=[20,10]}={}){
   if(!Number.isInteger(horizon)||horizon<1||!(dt>0&&mass>0&&effort>0))throw Error("LQR needs positive time, mass, effort and a finite positive integer horizon");
-  const A=[[1,dt],[0,1]],B=[dt*dt/(2*mass),dt/mass],Q=[[positionWeight,0],[0,velocityWeight]];
+  const A=[[1,dt],[0,1]],B=[dt*dt/(2*mass),dt/mass],M=[[positionWeight,0],[0,velocityWeight]];
   const P=Array(horizon+1),K=Array(horizon);
   P[horizon]=[[terminal[0],0],[0,terminal[1]]];
   for(let t=horizon-1;t>=0;t--){
@@ -18,34 +18,34 @@ export function finiteLqr({horizon=6,dt=0.5,mass=1,positionWeight=1,velocityWeig
     const denominator=effort+dot(B,PB);
     K[t]=cross.map(x=>x/denominator);
     const apa=multiply(multiply(transpose(A),next),A);
-    P[t]=apa.map((row,i)=>row.map((x,j)=>Q[i][j]+x-cross[i]*cross[j]/denominator));
+    P[t]=apa.map((row,i)=>row.map((x,j)=>M[i][j]+x-cross[i]*cross[j]/denominator));
   }
-  return {A,B,Q,R:effort,P,K,horizon,dt,mass,terminal};
+  return {A,B,M,R:effort,P,K,horizon,dt,mass,terminal};
 }
 export function rolloutController({initial=[2,0],goal=0,mode="lqr",horizon=6,effort=0.5,mass=1,limit=Infinity,disturbance=0}={}){
   const plan=finiteLqr({horizon,effort}),nominal=[];
   let nominalState=[initial[0]-goal,initial[1]];
   for(let t=0;t<horizon;t++){const u=-dot(plan.K[t],nominalState);nominal.push(u);nominalState=robotStep(nominalState,u);}
-  let state=[initial[0]-goal,initial[1]],cost=0,clipped=0;
-  const states=[state.slice()],forces=[],stageCosts=[];
+  let state=[initial[0]-goal,initial[1]],totalReturn=0,clipped=0;
+  const states=[state.slice()],forces=[],rewards=[];
   for(let t=0;t<horizon;t++){
     const wanted=mode==="none"?0:mode==="position"?-state[0]:mode==="pd"?-state[0]-state[1]:mode==="replay"?nominal[t]:-dot(plan.K[t],state);
     const force=Math.max(-limit,Math.min(limit,wanted));
     if(Math.abs(force-wanted)>1e-10)clipped++;
-    const stage=state[0]**2+0.2*state[1]**2+effort*force**2;
-    stageCosts.push(stage);cost+=stage;forces.push(force);
+    const reward=-(state[0]**2+0.2*state[1]**2+effort*force**2);
+    rewards.push(reward);totalReturn+=reward;forces.push(force);
     state=robotStep(state,force,{mass});
     if(t===2)state[1]+=disturbance;
     states.push(state.slice());
   }
-  const terminalCost=quadratic(state,plan.P[horizon]);cost+=terminalCost;
-  return {states,forces,stageCosts,terminalCost,cost,clipped,plan,goal,
-    predicted:quadratic([initial[0]-goal,initial[1]],plan.P[0]),peakForce:Math.max(...forces.map(Math.abs))};
+  const terminalReward=-quadratic(state,plan.P[horizon]);totalReturn+=terminalReward;
+  return {states,forces,rewards,terminalReward,totalReturn,clipped,plan,goal,
+    optimalValue:-quadratic([initial[0]-goal,initial[1]],plan.P[0]),peakForce:Math.max(...forces.map(Math.abs))};
 }
 export function oneStepControl(error,tail=4,effort=0.5){
   const force=-tail*error/(effort+tail);
-  const evaluate=u=>error**2+effort*u*u+tail*(error+u)**2;
-  return {force,next:error+force,cost:evaluate(force),evaluate};
+  const evaluate=u=>-(error**2+effort*u*u+tail*(error+u)**2);
+  return {force,next:error+force,value:evaluate(force),evaluate};
 }
 export function gaussianScore(action,mean,sigma){
   if(!(sigma>0))throw Error("Gaussian standard deviation must be positive");
@@ -63,7 +63,7 @@ export function gaussianKl(meanOld,sigmaOld,meanNew,sigmaNew){
   return Math.log(sigmaNew/sigmaOld)+(sigmaOld*sigmaOld+(meanOld-meanNew)**2)/(2*sigmaNew*sigmaNew)-0.5;
 }
 export function quadraticFit(mode,x){
-  return mode==="quadratic"?x*x:2/3;
+  return mode==="quadratic"?-x*x:-2/3;
 }
 export function goalFeedback(position,velocity,goal,gain=[0.9291510326,1.4469941333]){
   return -gain[0]*(position-goal)-gain[1]*velocity;

@@ -186,7 +186,7 @@ test("public navigation resolves old links and preserves an experiment when jump
   follow("#chapter-01/bellman");
   assert.equal(metric(root, "位置 p (m)"), "1.875");
   follow("#chapter-09"); assert.equal(root.querySelector("h1").textContent, BOOK_CHAPTERS[8].title);
-  assert.equal(metric(root,"轨迹累计代价 C"),"12.5");
+  assert.equal(metric(root,"轨迹回报 G₀"),"-12.5");
   follow("#");
   assert.equal(root.querySelectorAll(".lesson-row").length, 10);
   assert.equal(root.querySelectorAll(".callout.error,.error-banner").length, 0);

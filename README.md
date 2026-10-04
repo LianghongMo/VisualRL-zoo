@@ -1,10 +1,10 @@
 # Visual RL · 从理论到连续机器人
 
-以一台连续推力小车贯穿 **任务 → 数据与表示 → 探索 → 策略优化 → 模仿 → 连续反馈控制**。位置、速度、推力、长期代价与公式对应同一组可验算计算。
+用连续推力小车贯穿 **任务 → 数据与表示 → 探索 → 策略优化 → 模仿 → 连续反馈控制**，把位置、速度、推力与reward、return、V/Q连到可验算的公式。
 
 [在线课程](https://visual-rl-learning-path.lm8598.chatgpt.site) · [连续小车实验](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-09/feedback) · [离线网页](docs/index.html) · [课程导读](docs/course-guide.md) · [内容验收](docs/course-audit.md)
 
-主要参考 [Reinforcement Learning: Theory and Algorithms（ABJKS）](https://rltheorybook.github.io/rltheorybook_ABJKS.pdf) 的2026-06-27工作草稿目录。前面的表格基础、复杂度和探索证明压缩；后半程重点通向连续机器人。借鉴 [Harvard CS2824公开讲义](https://harvard-cs2824-s26.github.io/)从问题引出算法、让假设紧邻算法的讲解方法；正文、图像和算例独立编写。
+按 [Reinforcement Learning: Theory and Algorithms（ABJKS）](https://rltheorybook.github.io/rltheorybook_ABJKS.pdf) 2026-06-27工作草稿组织：压缩表格基础与证明，逐步走向连续机器人。借鉴 [Harvard CS2824公开讲义](https://harvard-cs2824-s26.github.io/)从问题引出算法、紧邻公式说明条件的讲解方式；正文、图像与算例独立编写。
 
 ## 当前课程
 
@@ -21,13 +21,13 @@
 | [9](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-09) | 连续动力学、Riccati与LQR | 第14章；原创小车实验 |
 | [10](https://visual-rl-learning-path.lm8598.chatgpt.site/#chapter-10) | 机器人接口、连续PPO/SAC与GCRL | 机器人延伸；Ben Eysenbach论文 |
 
-每章有小节目录、必须掌握的知识、前置条件、公式/图像/算例、边界与逐项自检。长的LP、复杂度、集中、regret、下界、SDP/SLS证明留在原书选读。原书草稿中的增益符号等独立推导与数值核对，不逐式复制。
+每章有目录、前置知识、公式、实验与自检。LP、复杂度、集中、regret、下界、SDP/SLS证明列为选读；增益符号等独立推导并验算。
 
 ## 连续实验
 
-小车状态是位置和速度，动作是连续推力，每0.5秒决策。默认有限LQR从(2,0)出发，6步任务，总代价12.500159；逐步累计与初始Riccati价值一致。可以切换控制器、初速、时域、能耗权重、质量误差、外力与推力限幅，查看相平面、推力曲线和P/K系数。
+小车状态为位置和速度，每0.5秒选择连续推力。LQR使用reward权重M、R、M_H，最大化return；V*=−xᵀPx。默认从(2,0)出发、H=6，return为−12.500159，与初始Riccati价值一致。可调控制器、初速、时域、推力权重、质量、外力与限幅，查看相平面、推力和P/K。
 
-网页还运行连续Gaussian样本更新、精确baseline方差、终止/截断GAE、surrogate反例、PPO曲线、Jensen/softmax与目标条件反馈。解析实验不冒充神经PPO、SAC或GCRL训练。
+还可运行Gaussian更新、baseline方差、终止/截断GAE、surrogate反例、PPO、Jensen/softmax与目标反馈；网页尚未接入完整神经PPO/SAC/GCRL训练。
 
 ## 仓库结构
 

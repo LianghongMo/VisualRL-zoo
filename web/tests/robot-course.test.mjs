@@ -15,35 +15,39 @@ test("continuous force changes both velocity and position in physical time units
   assert.deepEqual(robotStep([2,1],0),[2.5,1]);
   assert.deepEqual(robotStep([2,-1],0),[1.5,-1]);
   assert.deepEqual(robotStep([2,0],-1,{mass:2}),[1.9375,-0.25]);
-  const one=oneStepControl(2,4);close(one.force,-16/9);close(one.cost,52/9);
-  assert.ok(one.evaluate(one.force+0.1)>one.cost);
+  const one=oneStepControl(2,4);close(one.force,-16/9);close(one.value,-52/9);
+  assert.ok(one.evaluate(one.force+0.1)<one.value);
 });
 test("finite LQR agrees with independently derived default and rational two-step solutions",()=>{
   const plan=finiteLqr();close(plan.K[0][0],0.929151032623924);close(plan.K[0][1],1.44699413332648);
-  const result=rolloutController();close(result.cost,12.50015923106644);
+  const result=rolloutController();close(result.totalReturn,-12.50015923106644);
   close(result.forces[0],-1.858302065247848);close(result.states.at(-1)[0],0.001310394197886);
-  close(result.states.at(-1)[1],-0.058023843228121);close(result.cost,result.predicted);
+  close(result.states.at(-1)[1],-0.058023843228121);close(result.totalReturn,result.optimalValue);
   const rational=finiteLqr({horizon:2,dt:1,positionWeight:1,velocityWeight:1,effort:1,terminal:[1,1]});
   close(rational.K[1][0],2/9);close(rational.K[1][1],2/3);
   close(rational.K[0][0],58/149);close(rational.K[0][1],142/149);
   close(rational.P[0][0][0],337/149);close(rational.P[0][0][1],152/149);close(rational.P[0][1][1],367/149);
 });
-test("Riccati initial value equals rollout cost across states, goals, horizons and effort weights",()=>{
+test("Riccati value equals reward return and satisfies Bellman across states, goals, horizons and effort weights",()=>{
   for(const initial of [[2,0],[-1,0.7],[0,-0.5]])for(const goal of [-0.4,1])for(const horizon of [4,6,12])for(const effort of [0.1,0.5,2]){
-    const r=rolloutController({initial,goal,horizon,effort});close(r.cost,r.predicted,1e-8);
-    for(let t=0;t<horizon;t++)close(r.states[t+1][0],robotStep(r.states[t],r.forces[t])[0]);
-    close(quadratic([initial[0]-goal,initial[1]],r.plan.P[0]),r.cost,1e-8);
+    const r=rolloutController({initial,goal,horizon,effort});close(r.totalReturn,r.optimalValue,1e-8);
+    for(let t=0;t<horizon;t++){
+      close(r.states[t+1][0],robotStep(r.states[t],r.forces[t])[0]);
+      close(-quadratic(r.states[t],r.plan.P[t]),r.rewards[t]-quadratic(r.states[t+1],r.plan.P[t+1]),1e-8);
+    }
+    close(-quadratic([initial[0]-goal,initial[1]],r.plan.P[0]),r.totalReturn,1e-8);
+    close(r.totalReturn,r.rewards.reduce((sum,reward)=>sum+reward,0)+r.terminalReward,1e-8);
   }
-  close(rolloutController({mode:"none"}).cost,104);
-  close(rolloutController({mode:"position"}).cost,193.10837212018832,1e-6);
-  close(rolloutController({mode:"pd"}).cost,17.77440821006521,1e-6);
+  close(rolloutController({mode:"none"}).totalReturn,-104);
+  close(rolloutController({mode:"position"}).totalReturn,-193.10837212018832,1e-6);
+  close(rolloutController({mode:"pd"}).totalReturn,-17.77440821006521,1e-6);
 });
 test("actuator limits, model error and disturbances change the solved task without inventing optimality",()=>{
   const limited=rolloutController({limit:1});assert.ok(limited.clipped>0);assert.ok(limited.forces.every(u=>Math.abs(u)<=1));
-  assert.ok(limited.cost>limited.predicted);
-  const wrong=rolloutController({mass:1.6});assert.ok(Math.abs(wrong.cost-wrong.predicted)>0.1);
+  assert.ok(limited.totalReturn<limited.optimalValue);
+  const wrong=rolloutController({mass:1.6});assert.ok(Math.abs(wrong.totalReturn-wrong.optimalValue)>0.1);
   const feedback=rolloutController({disturbance:0.8}),replay=rolloutController({disturbance:0.8,mode:"replay"});
-  assert.ok(feedback.cost<replay.cost);
+  assert.ok(feedback.totalReturn>replay.totalReturn);
   assert.notDeepEqual(feedback.forces.slice(3),replay.forces.slice(3));
   close(closedLoopRadius(1,0),Math.sqrt(1.125));close(closedLoopRadius(1,1),Math.sqrt(0.625));
 });
@@ -107,8 +111,8 @@ test("the public book sequence maps all selected source chapters, equations and 
 test("continuous state and feature controls reveal velocity and representation effects",()=>{
   let {root,window}=mount("01");click(root,"同位置，初速改为 +1");click(root,"执行一步");assert.equal(metric(root,"位置 p (m)"),"2.375");
   click(root,"同位置，初速改为 −1");click(root,"执行一步");assert.equal(metric(root,"位置 p (m)"),"1.375");
-  ({root,window}=mount("03"));assert.equal(metric(root,"拟合预测"),"0.667");click(root,"二次特征");assert.equal(metric(root,"拟合预测"),"4");
-  input(root,window,"feature-query",0.5);assert.equal(metric(root,"拟合预测"),"0.25");
+  ({root,window}=mount("03"));assert.equal(metric(root,"拟合预测"),"-0.667");click(root,"二次特征");assert.equal(metric(root,"拟合预测"),"-4");
+  input(root,window,"feature-query",0.5);assert.equal(metric(root,"拟合预测"),"-0.25");
 });
 test("Gaussian, baseline, GAE, PPO and Jensen controls operate within their stated mathematical examples",()=>{
   let {root,window}=mount("05");click(root,"用这个样本更新均值");assert.equal(metric(root,"均值 μ"),"-0.2");
@@ -120,10 +124,10 @@ test("Gaussian, baseline, GAE, PPO and Jensen controls operate within their stat
   input(root,window,"new-jensen-value",1);assert.equal(metric(root,"Jensen差距"),"0");click(root,"设为当前softmax");assert.equal(metric(root,"差距=温度×KL"),"0");
 });
 test("LQR, disturbance, saturation and goal controls display computed continuous trajectories",()=>{
-  let {root,window}=mount("09");assert.equal(metric(root,"轨迹累计代价 C"),"12.5");
+  let {root,window}=mount("09");assert.equal(metric(root,"轨迹回报 G₀"),"-12.5");
   click(root,"真实执行下一步");assert.equal(metric(root,"当前执行步"),"1");
   click(root,"展示完整轨迹");assert.equal(metric(root,"当前执行步"),"6");
-  click(root,"只看位置");assert.equal(metric(root,"轨迹累计代价 C"),"193.108");click(root,"有限时域LQR");
+  click(root,"只看位置");assert.equal(metric(root,"轨迹回报 G₀"),"-193.108");click(root,"有限时域LQR");
   click(root,"切换推力限幅");assert.ok(Number(metric(root,"峰值推力 (N)"))<=1);
   input(root,window,"lqr-horizon",10);assert.equal(metric(root,"当前执行步"),"0");
   ({root,window}=mount("10"));assert.ok(Number(metric(root,"反馈推力 u"))<0);input(root,window,"goal-location",3);

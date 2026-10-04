@@ -1,5 +1,5 @@
 {
   "url": "https://visual-rl-learning-path.lm8598.chatgpt.site",
   "title": "Visual RL · 看见强化学习",
-  "description": "按RL Theory and Algorithms目录学习：MDP、数据与函数近似、探索、策略梯度与PPO、模仿学习、连续机器人LQR与GCRL。用位置、速度、推力和可验算轨迹连接公式与物理图像。"
+  "description": "用物理图像、公式和交互实验，从MDP学到连续机器人控制与GCRL。"
 }

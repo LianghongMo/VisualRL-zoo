@@ -4,7 +4,7 @@
 
 ## 网页
 
-当前构建和测试使用 Node.js 24、npm。依赖及锁定版本保留在 `web/package.json` 和 `web/package-lock.json`；Three.js 用于之后的 3D 实验，仍然保留。
+构建和测试使用 Node.js 24、npm；依赖由 `web/package.json` 与 `web/package-lock.json` 锁定，Three.js 留供 3D 实验。
 
 ```bash
 cd web
@@ -49,16 +49,16 @@ python examples/cliff_sarsa_vs_qlearning.py
 
 ## 深度 PPO 与 MuJoCo
 
-深度依赖作为 `deep` 可选安装项保留；不影响只学习表格算法的安装。要使用原有训练脚本，再安装：
+深度训练使用 `deep` 可选依赖，表格算法无需安装：
 
 ```bash
 python -m pip install -e ".[deep]"
 python scripts/train_mujoco_ppo.py Hopper-v5 --steps 1000000 --out web/src/data/mujoco/hopper.json
 ```
 
-脚本导出训练日志、轨迹和模型快照。已有回放 JSON 保留在 `web/src/data/mujoco/`；新快照 `*.pt`、`*.pth` 与临时日志忽略，避免误提交大型训练产物。使用这些文件前注意输出路径，训练脚本会写入指定文件。
+脚本导出日志、轨迹与模型快照，写入指定输出路径。已有回放在 `web/src/data/mujoco/`；新快照 `*.pt`、`*.pth` 与临时日志由 Git 忽略。
 
-`tests/test_deep_ppo.py` 在缺少 Torch 或 MuJoCo 时跳过；普通检查不安装深度依赖，也不运行长时间训练。后续需要验收深度模块时，在安装 `deep` 后运行相关测试。
+缺少 Torch 或 MuJoCo 时，`tests/test_deep_ppo.py` 跳过；深度模块需安装 `deep` 后单独验收，普通检查不运行长训练。
 
 ## Python 与浏览器算法一致性
 
@@ -76,7 +76,7 @@ npm run build
 
 ## 当前公共课程
 
-唯一入口是web/src/main.js → book/curriculum.js、book/index.js与book/home.js。book/组织ABJKS目录映射、十章正文、前置/承接、知识清单、来源和真实实验；不按文件名自动生成目录。
+入口为web/src/main.js → book/curriculum.js、book/index.js与book/home.js。book/显式登记十章目录、前置知识、来源与实验。
 
 1. 先明确核心问题、原书位置、机器人物理例子和成立条件。
 2. 在book/curriculum.js登记章节、小节、稳定id、source页码与relation；地址为#chapter-XX/topic。
@@ -85,17 +85,17 @@ npm run build
 5. 在book/labs.js接真实计算；推导用proof()注明恒等式、局部近似或实践步骤。
 6. 修改相关计算与界面时，更新tests/robot-course.test.mjs及导读/验收，再构建。
 
-book/foundations.js覆盖任务、数据、表示与探索；policy.js覆盖PG、NPG与保守更新；robotics.js覆盖模仿、LQR和机器人/GCRL。式子通过KaTeX生成MathML，浏览器本地显示，不依赖外部数学服务。
+book/foundations.js负责基础与探索，policy.js负责PG/NPG和保守更新，robotics.js负责模仿、LQR与GCRL。KaTeX生成MathML，公式在浏览器本地显示。
 
 章内跳转只滚动、不重新挂载；跨章调用cleanup。book/curriculum.js的LEGACY_ROUTES与ALIASES兼容旧lesson和章内概念链接。裸章号按新目录解释。
 
 ## 真实计算与检查
 
-rl/continuous-control.js包含原创双积分动力学、有限Riccati、控制器轨迹、Gaussian score/KL/方差、目标条件反馈和改标工具。控制输入是推力，状态和动作连续，采样周期离散。有限LQR统一u=−Kx，默认参数和独立有理数算例可交叉验算。
+rl/continuous-control.js提供双积分动力学、有限Riccati、反馈轨迹、Gaussian score/KL/方差与目标改标。状态和动作连续、决策时间离散；LQR用M、R、M_H定义负二次reward，最大化return，u=−Kx、Vₜ*=−xᵀPₜx，默认return为−12.500159。
 
-rl/policy-math.js保留精确GAE双mask、两状态surrogate、Jensen/熵等工具；原有Python/JS一致性算法原位保留。教学算例与完整神经训练分开说明。
+rl/policy-math.js提供GAE双mask、两状态surrogate与Jensen/熵工具；Python/JS一致性算法保留，完整神经训练单独验收。
 
-tests/robot-course.test.mjs检验物理单位、独立LQR解、代价恒等、质量/扰动/限幅、数值积分Gaussian矩、HER边界、全部章节知识与公式、真实控件。tests/chapters.test.mjs保留归档模块验收，其中公共导航测试使用新main.js。其他测试继续检查算法、旧实验与Python golden一致性。
+网页共66项检查。tests/robot-course.test.mjs核对物理单位、独立LQR解、reward/return与Bellman恒等式、质量/扰动/限幅、Gaussian矩、HER边界、章节知识、公式与控件；LQR项名称含`reward return and satisfies Bellman`。tests/chapters.test.mjs保留归档验收，公共导航使用新main.js；其他测试检查算法、旧实验与Python golden一致性。
 
 ## 归档与后续扩展
 
